@@ -1,0 +1,3 @@
+#!
+
+# This script will be used to automate tasks, fix common issues...
