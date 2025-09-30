@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Upload de Arquivos - FilePriv</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #f1f3f5;
+    }
+    footer {
+      background-color: #343a40;
+      color: #fff;
+      padding: 20px 0;
+    }
+    .upload-card {
+      background-color: #ffffff;
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 0 12px rgba(0,0,0,0.1);
+    }
+    .navbar-brand {
+      font-weight: bold;
+      color: #0d6efd !important;
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+    <div class="container">
+      <a class="navbar-brand" href="index.html">FilePriv</a>
+      <div class="collapse navbar-collapse justify-content-end">
+        <ul class="navbar-nav">
+          <li class="nav-item mx-2">
+            <span class="nav-link text-light">
+              <strong>User:</strong> Ryan
+            </span>
+          </li>
+          <li class="nav-item mx-2">
+            <span class="nav-link text-light">
+              <strong>3</strong> files stored
+            </span>
+          </li>
+          <li class="nav-item mx-2">
+            <span class="nav-link text-light">
+              <strong>4</strong> files consulted
+            </span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container my-5">
+    <div class="row justify-content-center">
+      <div class="col-lg-6">
+        <div class="upload-card">
+          <h2 class="text-center text-primary mb-4">Files upload</h2>
+          <form>
+            <div class="mb-3">
+              <label for="fileName" class="form-label">File name</label>
+              <input type="text" class="form-control" id="fileName" placeholder="Put a file name">
+            </div>
+            <div class="mb-3">
+              <label for="fileInput" class="form-label">Choose</label>
+              <input class="form-control" type="file" id="fileInput">
+            </div>
+            <div class="mb-4">
+              <label for="fileDesc" class="form-label">Description (optional)</label>
+              <textarea class="form-control" id="fileDesc" rows="3" placeholder="Add a description, if you want"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Send</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="row mt-5">
+      <div class="col-md-6">
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <h5 class="card-title text-primary">Security clue</h5>
+            <p class="card-text">
+              All files will be automatically encrypted with AES-GCM.
+              So, this guarantee maximum data protection!
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 mt-4 mt-md-0">
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <h5 class="card-title text-primary">Status Atual</h5>
+            <p class="card-text">
+              <strong>3</strong> files has been sent to the server.
+              You can consult them at any time!
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="text-center mt-5">
+    <div class="container">
+      <p class="mb-1">&copy; 2025 FilePriv Project</p>
+      <a href="support.html" class="text-decoration-none text-light mx-2">Support</a> |
+      <a href="index.html" class="text-decoration-none text-light mx-2">Home</a>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

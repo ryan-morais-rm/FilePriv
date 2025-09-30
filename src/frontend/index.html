@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Home - FilePriv</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: #e0e0e0;
+      color: #000;
+    }
+    .navbar-brand {
+      font-weight: bold;
+      color: #0d6efd !important;
+    }
+    .hero-section {
+      background: linear-gradient(135deg, #f1f3f5 0%, #e0e0e0 100%);
+      padding: 80px 20px;
+      text-align: center;
+      border-radius: 15px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.1);
+      margin-bottom: 50px;
+    }
+    .hero-section h1 {
+      color: #0d6efd;
+      font-size: 2.8rem;
+      margin-bottom: 20px;
+    }
+    .hero-section p {
+      font-size: 1.2rem;
+    }
+    .feature-card {
+      background: #ffffff;
+      border-radius: 15px;
+      padding: 25px;
+      transition: transform 0.3s ease;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .feature-card:hover {
+      transform: translateY(-5px);
+    }
+    footer {
+      background-color: #343a40;
+      color: #fff;
+      padding: 20px 0;
+      margin-top: 50px;
+    }
+    .btn-primary {
+      background-color: #0d6efd;
+      border: none;
+    }
+    .logo {
+      max-width: 180px;
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+    <div class="container">
+      <a class="navbar-brand" href="homepage.html">FilePriv</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+        <ul class="navbar-nav">
+          <li class="nav-item mx-2">
+            <a href="homepage.html" class="nav-link">Home Page</a>
+          </li>
+          <li class="nav-item mx-2">
+            <a href="pushFile.html" class="nav-link">Send</a>
+          </li>
+          <li class="nav-item mx-2">
+            <a href="pullFile.html" class="nav-link">Retrieve</a>
+          </li>
+          <li class="nav-item mx-2">
+            <a href="signup.html" class="nav-link">Sign UP</a>
+          </li>
+          <li class="nav-item mx-2">
+            <a href="about.html" class="nav-link">About</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container my-5">
+    <div class="hero-section">
+      <img src="../../../assets/FilePriv Logo.jpg" alt="FilePriv Logo" class="logo mb-4">
+      <h1><strong>WELCOME</strong></h1>
+      <p>
+        Your academic solution for your distributed storage and safe.<br> 
+      </p>
+      <div class="mt-4">
+        <a href="pushFile.html" class="btn btn-primary btn-lg mx-2">Send Files</a>
+        <a href="pullFile.html" class="btn btn-outline-primary btn-lg mx-2">Consult</a>
+      </div>
+    </div>
+
+    <div class="row text-center">
+      <div class="col-md-4 mb-4">
+        <div class="feature-card">
+          <h4 class="text-primary mb-3">Advanced cryptography</h4>
+          <p>Files protected with AES-GCM and requested keys, ensuring maximum security against unauthorized access.</p>
+        </div>
+      </div>
+      <div class="col-md-4 mb-4">
+        <div class="feature-card">
+          <h4 class="text-primary mb-3">Distributed storage</h4>
+          <p>Files are split into chunks and distributed across different servers for greater resilience.</p>
+        </div>
+      </div>
+      <div class="col-md-4 mb-4">
+        <div class="feature-card">
+          <h4 class="text-primary mb-3">Interface Intuitiva</h4>
+          <p>Simple, clean, and responsive interface makes it easy to send and view files on any device.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="text-center mt-5">
+      <h4 class="mb-3">Do you have no account?</h4>
+      <a href="signup.html" class="btn btn-primary btn-lg">Sign up now!</a>
+    </div>
+  </div>
+
+  <footer class="text-center">
+    <div class="container">
+      <p class="mb-1">&copy; 2025 FilePriv Project</p>
+      <a href="support.html" class="text-decoration-none text-light mx-2">Support</a> |
+      <a href="homepage.html" class="text-decoration-none text-light mx-2">Home Page</a>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
