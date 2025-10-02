@@ -11,36 +11,29 @@
       color: #212529;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
-
     .navbar-light {
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
     }
-
-    .content-section {
+    .support-card {
       background: #f8f9fa;
-      padding: 2rem;
-      margin-top: 2rem;
+      padding: 1.5rem;
       border-radius: 10px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      margin-bottom: 1.5rem;
     }
-
-    .accordion .card {
-      border-radius: 10px;
-      overflow: hidden;
-      margin-bottom: 1rem;
-      border: 1px solid #d1d1d1;
+    .table thead {
+      background-color: #343a40;
+      color: #fff;
     }
-    .accordion .card-header {
-      background: #f1f1f1;
-    }
-    .accordion button {
-      color: #007bff;
-      font-weight: bold;
-      text-decoration: none;
-    }
-
     h4 {
       color: #007bff;
+      font-weight: 600;
+    }
+    footer {
+      background-color: #343a40;
+      color: #fff;
+      padding: 15px 0;
+      margin-top: 30px;
     }
   </style>
 </head>
@@ -53,59 +46,90 @@
     </button>
 
     <div class="collapse navbar-collapse" id="navbarTop">
-      <ul class="navbar-nav mr-auto">
-        <li class="nav-item active"><a class="nav-link" href="#">Support</a></li>
-        <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+      <ul class="navbar-nav ml-auto">
+        <li class="nav-item active"><a class="nav-link" href="homepage.html">Home page</a></li>
+        <li class="nav-item"><a class="nav-link" href="index.html">Index</a></li>
+        <li class="nav-item"><a class="nav-link" href="about.html">About</a></li>
       </ul>
     </div>
   </nav>
 
-  <div class="container content-section">
-    <div class="row mb-4">
-      <div class="col-md-6">
-        <h4><strong>Column 1</strong></h4>
-        <p>First paragraph</p>
-      </div>
-      <div class="col-md-6">
-        <h4><strong>Column 2</strong></h4>
-        <p>Second paragraph</p>
-      </div>
-    </div>
-
-    <div class="accordion" id="accordionExample">
-      <div class="card">
-        <div class="card-header" id="headingOne">
-          <h5 class="mb-0">
-            <button class="btn btn-link" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true">
-              📩 Local Contact #1
-            </button>
-          </h5>
+  <div class="container my-5">
+    <div class="row">
+      
+      <div class="col-lg-6">
+        <div class="support-card">
+          <h4>Problem History</h4>
+          <div class="table-responsive">
+            <table class="table table-bordered table-striped mb-0">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Problem</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>2025-01-15</td><td>Login timeout</td></tr>
+                <tr><td>2025-02-02</td><td>Upload failed</td></tr>
+                <tr><td>2025-02-18</td><td>Reset password error</td></tr>
+                <tr><td>2025-03-05</td><td>Slow download</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
-        <div id="collapseOne" class="collapse show" data-parent="#accordionExample">
-          <div class="card-body">
-            <p>Are you having any trouble?</p>
-            <p>Send an e-mail to <strong>ryan.morais.workspace@gmail.com</strong></p>
+
+        <div class="support-card">
+          <h4>Solutions Applied</h4>
+          <div class="table-responsive">
+            <table class="table table-bordered table-striped mb-0">
+              <thead>
+                <tr>
+                  <th>Problem</th>
+                  <th>Solution</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>Login timeout</td><td>Improved session management</td></tr>
+                <tr><td>Upload failed</td><td>Fixed node synchronization</td></tr>
+                <tr><td>Password error</td><td>Updated email service</td></tr>
+                <tr><td>Slow download</td><td>Optimized caching system</td></tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
 
-      <div class="card">
-        <div class="card-header" id="headingTwo">
-          <h5 class="mb-0">
-            <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseTwo">
-              🛠️ Local Mitigation #2
-            </button>
-          </h5>
-        </div>
-        <div id="collapseTwo" class="collapse" data-parent="#accordionExample">
-          <div class="card-body">
-            <p>If you would like local mitigations,</p>
-            <p>you can use these scripts in the <strong>bin</strong> directory to mitigate!</p>
+      <div class="col-lg-6">
+        <div class="support-card h-100">
+          <h4>Common Issues & Mitigations</h4>
+          <div class="table-responsive">
+            <table class="table table-bordered table-striped mb-0">
+              <thead>
+                <tr>
+                  <th>Issue</th>
+                  <th>Mitigation</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>Forgot password</td><td>Use "Reset Password" feature</td></tr>
+                <tr><td>Upload too slow</td><td>Check internet connection & retry</td></tr>
+                <tr><td>File not visible</td><td>Refresh dashboard or relogin</td></tr>
+                <tr><td>Access denied</td><td>Verify account permissions</td></tr>
+                <tr><td>Decryption error</td><td>Confirm correct private key</td></tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
+
     </div>
   </div>
+
+  <footer class="text-center">
+    <div class="container">
+      &copy; 2025 FilePriv
+    </div>
+  </footer>
 
   <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.3/dist/umd/popper.min.js"></script>
