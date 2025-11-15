@@ -15,6 +15,13 @@
     .navbar-light {
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
     }
+    
+    .navbar-logo-img {
+      height: 40px; 
+      width: auto;
+      margin-right: 10px; 
+      border-radius: 4px; 
+    }
 
     .content-section {
       background: #f8f9fa;
@@ -53,21 +60,6 @@
       box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.15);
     }
 
-    .logo-footer {
-      position: fixed;
-      bottom: 80px;
-      right: 6%;
-      transform: translateX(50%);
-      z-index: 1050;
-      text-align: center;
-    }
-    .logo-footer .logo-img {
-      width: 180px;
-      height: auto;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    }
-
     .topology-image {
       display: block;
       margin: 20px auto 40px auto;
@@ -85,6 +77,8 @@
 <body>
 
   <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <img src="../../assets/FilePriv Logo.jpg" alt="FilePriv Logo" class="navbar-logo-img">
+    
     <a class="navbar-brand font-weight-bold text-primary" href="#">FilePriv</a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarTop" aria-controls="navbarTop" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
@@ -121,11 +115,9 @@
       <div class="col-md-6">
         <div class="info-card">
           <h4 class="mb-3"><strong>Storage Topology</strong></h4>
-          <ul>
-            <li><strong>Server 1:</strong></li>
-            <li><strong>Server 2:</strong></li>
-            <li><strong>Server 3:</strong></li>
-          </ul>
+          <p><strong>Server 1:</strong></p>
+          <p><strong>Server 2:</strong></p>
+          <p><strong>Server 3:</strong></p>
         </div>
       </div>
     </div>
@@ -135,67 +127,6 @@
         <img src="../../assets/Toppology.jpg" alt="Topology Diagram" class="topology-image">
       </div>
     </div>
-
-    <div class="accordion" id="accordionExample">
-      <div class="card">
-        <div class="card-header" id="headingOne">
-          <h5 class="mb-0">
-            <button class="btn btn-link" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true">
-              🔒 Security Details
-            </button>
-          </h5>
-        </div>
-        <div id="collapseOne" class="collapse show" data-parent="#accordionExample">
-          <div class="card-body">
-            <ul>
-              <li>End-to-end AES-GCM encryption for all files. Protection against unauthorized deletion or tampering.</li>
-              <li>Unique keys generated per file.</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-header" id="headingTwo">
-          <h5 class="mb-0">
-            <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseTwo">
-              ⚙️ Distribution Method
-            </button>
-          </h5>
-        </div>
-        <div id="collapseTwo" class="collapse" data-parent="#accordionExample">
-          <div class="card-body">
-            <ul>
-              <li>Files are pushed to the network and automatically segmented.</li>
-              <li>Partitions distributed across 3 independent nodes. Guarantees redundancy and high availability.</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-header" id="headingThree">
-          <h5 class="mb-0">
-            <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseThree">
-              🎯 Prototype Goals
-            </button>
-          </h5>
-        </div>
-        <div id="collapseThree" class="collapse" data-parent="#accordionExample">
-          <div class="card-body">
-            <ul>
-              <li>Demonstrate a secure and distributed file storage model.</li>
-              <li>Highlight encryption and distributed infrastructure benefits.</li>
-              <li>Serve as a foundation for a future production-ready system.</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="logo-footer">
-    <img src="../../assets/FilePriv Logo.jpg" alt="FilePriv Logo" class="logo-img">
   </div>
 
   <nav class="navbar fixed-bottom navbar-dark bg-dark">

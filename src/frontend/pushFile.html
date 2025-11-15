@@ -8,11 +8,21 @@
   <style>
     body {
       background-color: #f1f3f5;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    .content {
+      flex: 1;
+    }
+    .navbar-custom {
+      background-color: #1a1a2e !important;
     }
     footer {
-      background-color: #343a40;
+      background-color: #1a1a2e;
       color: #fff;
       padding: 20px 0;
+      margin-top: auto;
     }
     .upload-card {
       background-color: #ffffff;
@@ -22,13 +32,13 @@
     }
     .navbar-brand {
       font-weight: bold;
-      color: #0d6efd !important;
+      color: whitesmoke !important;
     }
   </style>
 </head>
 <body>
 
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+  <nav class="navbar navbar-expand-lg navbar-dark navbar-custom shadow-sm">
     <div class="container">
       <a class="navbar-brand" href="index.html">FilePriv</a>
       <div class="collapse navbar-collapse justify-content-end">
@@ -53,7 +63,7 @@
     </div>
   </nav>
 
-  <div class="container my-5">
+  <div class="container my-5 content">
     <div class="row justify-content-center">
       <div class="col-lg-6">
         <div class="upload-card">
@@ -76,35 +86,9 @@
         </div>
       </div>
     </div>
-
-    <div class="row mt-5">
-      <div class="col-md-6">
-        <div class="card shadow-sm">
-          <div class="card-body">
-            <h5 class="card-title text-primary">Security clue</h5>
-            <p class="card-text">
-              All files will be automatically encrypted with AES-GCM.
-              So, this guarantee maximum data protection!
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-md-6 mt-4 mt-md-0">
-        <div class="card shadow-sm">
-          <div class="card-body">
-            <h5 class="card-title text-primary">Status Atual</h5>
-            <p class="card-text">
-              <strong>3</strong> files has been sent to the server.
-              You can consult them at any time!
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 
-  <footer class="text-center mt-5">
+  <footer class="text-center">
     <div class="container">
       <p class="mb-1">&copy; 2025 FilePriv Project</p>
       <a href="support.html" class="text-decoration-none text-light mx-2">Support</a> |

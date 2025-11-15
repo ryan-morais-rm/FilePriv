@@ -8,34 +8,82 @@
 
   <style>
     body {
-      background-color: #e0e0e0;
-      color: #000;
+      background-color: #e0e0e0; 
+      color: #212529;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
     h1, h2 {
-      color: #0d6efd;
+      color: black; 
     }
+    
+    /* Novo estilo customizado para a cor desejada (#1a1a2e) */
+    .navbar-custom-bg {
+        background-color: #1a1a2e !important;
+    }
+    
+    .main-content-wrapper {
+        display: flex;
+        gap: 30px;
+        padding-top: 3rem;
+    }
+
+    .logo-header {
+      padding: 30px 0;
+      background-color: #f8f9fa; 
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+      margin-bottom: 2rem;
+    }
+
     .logo {
-      max-width: 160px;
-      margin-bottom: 20px;
+      max-width: 120px;  
+      height: auto;
+      border-radius: 8px; 
+      transition: transform 0.3s ease;
     }
-    .card-header button {
-      text-decoration: none;
-      font-weight: bold;
-      color: #0d6efd;
+    .logo:hover {
+        transform: scale(1.05);
     }
+
+    .info-card {
+        border: none;
+        border-left: 5px solid #0d6efd;
+        border-radius: 8px;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.08); 
+        margin-bottom: 1.5rem;
+    }
+
+    .sidebar {
+        position: sticky;
+        top: 80px; 
+        align-self: flex-start;
+    }
+
+    .accordion-button:not(.collapsed) {
+        background-color: #e9f3ff; 
+        color: #0d6efd;
+    }
+    .accordion-button {
+        font-weight: 600;
+        color: #212529;
+    }
+
+    /* Alteração: Definindo o fundo do footer com a cor desejada (#1a1a2e) */
     footer {
-      background-color: #343a40;
+      background-color: #1a1a2e; 
       color: #fff;
-      padding: 15px 0;
+      padding: 20px 0; 
+      margin-top: 4rem;
+      box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
     }
   </style>
 </head>
 <body>
 
-  <!-- Navbar -->
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+  <nav class="navbar navbar-expand-lg navbar-dark navbar-custom-bg sticky-top shadow-lg">
     <div class="container">
-      <a class="navbar-brand fw-bold text-primary" href="index.html">FilePriv</a>
+      <a class="navbar-brand fw-bold text-white" href="index.html">
+        FilePriv
+      </a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
         <span class="navbar-toggler-icon"></span>
       </button>
@@ -46,110 +94,108 @@
       </div>
     </div>
   </nav>
-
-  <div class="container my-5">
-    <div class="text-center">
+  <header class="logo-header">
+    <div class="container text-center">
       <img src="../../../assets/FilePriv Logo.jpg" alt="FilePriv Logo" class="logo">
-      <h1 class="fw-bold"><strong>HISTORY</strong></h1>
+      <h1 class="fw-bold display-5"></h1>
+      <p class="lead text-secondary">Conheça nossa história, motivação e tecnologia.</p>
     </div>
+  </header>
+  <div class="container">
+    <div class="row main-content-wrapper">
+      
+      <div class="col-lg-8">
+        <div class="p-4 bg-white rounded-3 shadow-lg"> <section class="mb-5">
+              <h2 class="mb-3 border-bottom pb-2">Descrição do Projeto</h2>
+              <p class="fs-5">
+                FilePriv é um **protótipo funcional** de um servidor de armazenamento seguro distribuído.
+                Os usuários podem fazer upload e download de arquivos com criptografia forte e particionamento.
+              </p>
+              <p>
+                Os arquivos são criptografados em **nível de bit** e divididos em partes independentes,
+                cada uma protegida com uma chave privada exclusiva para garantir a **segurança máxima**.
+              </p>
+            </section>
 
-    <div class="row mt-5">
-      <!-- Left column -->
-      <div class="col-lg-3 mb-4">
-        <div class="card shadow-sm mb-3">
-          <div class="card-body">
-            <h5 class="card-title text-primary">Creator</h5>
-            <p class="card-text mb-1">Ryan de Morais Correia</p>
-            <p class="small text-muted">Student & Developer</p>
-          </div>
-        </div>
+            <section>
+              <h2 class="mb-4 border-bottom pb-2">Funcionalidades e Tecnologias</h2>
+              <div class="accordion" id="featuresAccordion">
+                
+                <div class="accordion-item shadow-sm mb-3">
+                  <h2 class="accordion-header" id="headingFeatures">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFeatures">
+                      🚀 Principais Funcionalidades
+                    </button>
+                  </h2>
+                  <div id="collapseFeatures" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
+                    <div class="accordion-body">
+                      <ul class="list-group list-group-flush">
+                        <li class="list-group-item">Upload & Download: Envie e recupere arquivos criptografados via interface web.</li>
+                        <li class="list-group-item">Criptografia: Criptografia AES-GCM segura por arquivo.</li>
+                        <li class="list-group-item">Chaves Aleatórias: Geração de chave exclusiva para cada upload de arquivo.</li>
+                        <li class="list-group-item">Proteção de Partição: Cada partição protegida individualmente.</li>
+                        <li class="list-group-item">Reconstrução: Recupere arquivos completos usando reconstrução baseada em senha.</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
 
-        <div class="card shadow-sm">
-          <div class="card-body">
-            <h5 class="card-title text-primary">Motivation</h5>
-            <p class="card-text">Bringing secure distributed file storage to everyone.</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Center column -->
-      <div class="col-lg-6 mb-4">
-        <section class="mb-4">
-          <h2>Description</h2>
-          <p>
-            FilePriv is a functional prototype of a distributed secure storage server.  
-            Users can upload and download files with strong encryption and partitioning.
-          </p>
-          <p>
-            Files are encrypted on the <strong>bit level</strong> and split into independent parts,
-            each protected with a unique private key to ensure maximum security.
-          </p>
-        </section>
-
-        <section>
-          <h2 class="mb-3">Features & Technologies</h2>
-          <div class="accordion" id="featuresAccordion">
-            <!-- Features -->
-            <div class="accordion-item">
-              <h2 class="accordion-header" id="headingFeatures">
-                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFeatures">
-                  Main Features
-                </button>
-              </h2>
-              <div id="collapseFeatures" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
-                <div class="accordion-body">
-                  <ul>
-                    <li>Upload & Download: Send and retrieve encrypted files via the web interface.</li>
-                    <li>Encryption: Secure AES-GCM encryption per file.</li>
-                    <li>Random Keys: Unique key generation for every file upload.</li>
-                    <li>Partition Protection: Each partition secured individually.</li>
-                    <li>Reconstruction: Recover full files using password-based reconstruction.</li>
-                  </ul>
+                <div class="accordion-item shadow-sm">
+                  <h2 class="accordion-header" id="headingTech">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTech">
+                      💻 Tecnologias Utilizadas
+                    </button>
+                  </h2>
+                  <div id="collapseTech" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
+                    <div class="accordion-body">
+                      <ul class="list-group list-group-flush">
+                        <li class="list-group-item">Bootstrap 5</li>
+                        <li class="list-group-item">AES-GCM Encryption</li>
+                        <li class="list-group-item">HTML / CSS</li>
+                        <li class="list-group-item">JavaScript</li>
+                        <li class="list-group-item">Python</li>
+                      </ul>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-
-            <!-- Technologies -->
-            <div class="accordion-item">
-              <h2 class="accordion-header" id="headingTech">
-                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTech">
-                  Technologies Used
-                </button>
-              </h2>
-              <div id="collapseTech" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
-                <div class="accordion-body">
-                  <ul>
-                    <li>Bootstrap 5</li>
-                    <li>AES-GCM Encryption</li>
-                    <li>HTML / CSS</li>
-                    <li>JavaScript</li>
-                    <li>Python</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-      </div>
-
-      <!-- Right column -->
-      <div class="col-lg-3 mb-4">
-        <div class="card shadow-sm mb-3">
-          <div class="card-body">
-            <h5 class="card-title text-primary">Project Type</h5>
-            <p class="card-text">Academic prototype for secure file management and distributed systems.</p>
-          </div>
+            </section>
         </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="sidebar d-grid gap-3">
+          
+          <div class="card info-card bg-light">
+            <div class="card-body">
+              <h5 class="card-title text-primary">Creator</h5>
+              <p class="card-text mb-1">Ryan de Morais Correia</p>
+              <p class="small text-muted">Student & Developer</p>
+            </div>
+          </div>
 
-        <div class="card shadow-sm">
-          <div class="card-body">
-            <h5 class="card-title text-primary">Status</h5>
-            <p class="card-text">Prototype stage, focusing on security, encryption, and distributed file handling.</p>
+          <div class="card info-card bg-light">
+            <div class="card-body">
+              <h5 class="card-title text-primary">Motivation</h5>
+              <p class="card-text">Bringing secure distributed file storage to everyone.</p>
+            </div>
+          </div>
+
+          <div class="card info-card bg-light">
+            <div class="card-body">
+              <h5 class="card-title text-primary">Project Type</h5>
+              <p class="card-text">Academic prototype for secure file management and distributed systems.</p>
+            </div>
+          </div>
+
+          <div class="card info-card bg-light">
+            <div class="card-body">
+              <h5 class="card-title text-primary">Status</h5>
+              <p class="card-text">Prototype stage, focusing on security, encryption, and distributed file handling.</p>
+            </div>
           </div>
         </div>
       </div>
-
-    </div>
+      </div>
   </div>
 
   <footer class="text-center">
@@ -157,7 +203,6 @@
       &copy; 2025 FilePriv - Academic Project
     </div>
   </footer>
-
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
