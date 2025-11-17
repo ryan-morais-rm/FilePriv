@@ -1,15 +1,21 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-br">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <title>FilePriv - Home</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.1.3/dist/css/bootstrap.min.css">
+  <title>FilePriv - Página Inicial</title>
+  <!-- Link Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Link Poppins Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <!-- Link Font Awesome para ícones -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
+    /* Paleta: Azul, Branco, Preto, Cinza */
     body {
-      background-color: #e0e0e0;
-      color: #212529;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f1f3f5; /* Cinza Claro */
+      color: #212529; /* Preto/Cinza Escuro */
+      font-family: 'Poppins', sans-serif;
     }
 
     .navbar-light {
@@ -24,122 +30,739 @@
     }
 
     .content-section {
-      background: #f8f9fa;
+      background: #ffffff; /* Branco */
       padding: 2rem;
       margin-top: 2rem;
       padding-bottom: 6rem;
-      border-radius: 10px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
-
-    .accordion .card {
-      border-radius: 10px;
-      overflow: hidden;
-      margin-bottom: 1rem;
-      border: 1px solid #d1d1d1;
-    }
-    .accordion .card-header {
-      background: #f1f1f1;
-    }
-    .accordion button {
-      color: #007bff;
-      font-weight: bold;
-      text-decoration: none;
+      border-radius: 12px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.1);
     }
 
     .info-card {
-      background: #ffffff;
-      border: 1px solid #d1d1d1;
+      background: #f8f9fa; /* Cinza Claro (muito próximo ao branco) */
+      border: 1px solid #e9ecef;
       border-radius: 10px;
       padding: 1.5rem;
       margin-bottom: 1.5rem;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      height: 100%;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
     }
 
-    .navbar-dark {
-      box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.15);
+    .info-card p {
+        margin-bottom: 0.5rem;
+        font-size: 0.95rem;
     }
-
-    .topology-image {
-      display: block;
-      margin: 20px auto 40px auto;
-      max-width: 100%;
-      height: auto;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    
+    .server-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 5px 0;
+        border-bottom: 1px dashed #ced4da; /* Cinza */
+    }
+    
+    .server-item:last-child {
+        border-bottom: none;
     }
 
     h4 {
-      color: #007bff;
+      color: #0d6efd; /* Azul Primário */
+      font-weight: 600;
+    }
+    
+    /* Footer Fixo */
+    .fixed-bottom {
+      z-index: 1030;
+    }
+
+    /* ============================================== */
+    /* ESTILOS DA TOPOLOGIA INTERATIVA (NOVO) */
+    /* ============================================== */
+    .topology-container {
+      /* Estilo que substitui .topology-image */
+      padding: 2rem 0;
+      overflow-x: auto;
+    }
+
+    .topology-map {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 3rem 1rem;
+      background-color: #f8f9fa; /* Fundo levemente cinza para o mapa */
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      position: relative;
+      perspective: 1000px; 
+      width: 100%;
+      min-width: 500px; /* Garante que não fique muito pequeno em mobile */
+      margin: 0 auto; /* Centraliza o mapa dentro do container */
+    }
+
+    /* Estilo base para todos os nós (User, App, Server) */
+    .node {
+      background-color: #adb5bd; 
+      color: #fff;
+      padding: 1rem 1.5rem;
+      margin: 1rem 0;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      text-align: center;
+      transition: all 0.3s ease; 
+      cursor: pointer;
+      position: relative;
+      transform-style: preserve-3d; 
+      transform: rotateX(10deg) translateZ(0); /* Inclinação 3D centralizada */
+    }
+
+    .node i {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    .node span {
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+
+    .node.user {
+      background-color: #0d6efd; /* Azul Primário */
+      padding: 1.5rem 2rem;
+      z-index: 3; 
+    }
+
+    .node.application {
+      background-color: #1a1a2e; /* Preto/Roxo escuro */
+      color: #fff;
+      padding: 1.5rem 2.5rem;
+      z-index: 2;
+    }
+
+    .server-nodes {
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem; 
+      margin-top: 1rem;
+      width: 100%;
+      flex-wrap: wrap; 
+      z-index: 1;
+    }
+
+    .node.server {
+      background-color: #6c757d; /* Cinza escuro */
+      width: 150px;
+      padding: 1rem;
+    }
+
+    /* Animação de Hover */
+    .node:hover {
+      transform: rotateX(10deg) translateZ(20px); 
+      box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+      filter: brightness(1.1); 
+    }
+
+    /* Animação de Click para Servidores */
+    .node.server.clicked {
+      animation: serverClick 0.4s ease-out;
+      border: 3px solid #0d6efd; 
+    }
+
+    @keyframes serverClick {
+      0% { transform: rotateX(10deg) translateZ(20px); }
+      50% { transform: rotateX(10deg) translateZ(35px) scale(1.05); }
+      100% { transform: rotateX(10deg) translateZ(20px); }
+    }
+
+    /* Linhas de Conexão */
+    .connection-line {
+      position: absolute;
+      background-color: #495057; 
+      height: 3px;
+      transform-origin: 0 0;
+      z-index: 0;
+    }
+
+    .line-user-app {
+      width: 4px;
+      height: 60px; 
+      background-color: #0d6efd;
+      top: 130px; /* Posição entre usuário e app - Ajustado */
+      left: 50%;
+      transform: translateX(-50%) rotateX(10deg) translateZ(0);
+      animation: pulseBlue 1.5s infinite alternate ease-in-out;
+    }
+    .line-app-servers {
+        width: 4px;
+        height: 60px; 
+        background-color: #1a1a2e;
+        top: 290px; /* Posição entre app e servidores - Ajustado */
+        left: 50%;
+        transform: translateX(-50%) rotateX(10deg) translateZ(0);
+        animation: pulseDark 1.5s infinite alternate ease-in-out;
+    }
+
+    @keyframes pulseBlue {
+        from { box-shadow: 0 0 10px #0d6efd; }
+        to { box-shadow: 0 0 20px #0d6efd, 0 0 30px #0d6efd; }
+    }
+    @keyframes pulseDark {
+        from { box-shadow: 0 0 10px #1a1a2e; }
+        to { box-shadow: 0 0 20px #1a1a2e, 0 0 30px #1a1a2e; }
+    }
+
+    /* Detalhes do Servidor */
+    .server-details {
+      position: absolute;
+      background-color: #fff;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      padding: 1rem;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+      z-index: 10;
+      min-width: 200px;
+      display: none; 
+      opacity: 0;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      animation: fadeInFromTop 0.3s ease-out forwards;
+    }
+
+    .server-details.active {
+        display: block;
+        opacity: 1;
+    }
+
+    @keyframes fadeInFromTop {
+        0% { transform: translate(-50%, -60%) translateZ(40px); opacity: 0; }
+        100% { transform: translate(-50%, -50%) translateZ(50px); opacity: 1; }
+    }
+
+    .server-details h6 {
+        color: #0d6efd;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .server-details p {
+        margin-bottom: 0.3rem;
+        font-size: 0.9rem;
+        color: #495057;
     }
   </style>
 </head>
 <body>
 
-  <nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <img src="../../assets/FilePriv Logo.jpg" alt="FilePriv Logo" class="navbar-logo-img">
-    
-    <a class="navbar-brand font-weight-bold text-primary" href="#">FilePriv</a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarTop" aria-controls="navbarTop" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
+    <div class="container-fluid container">
+      <img src="../../assets/FilePriv Logo.jpg" alt="FilePriv Logo" class="navbar-logo-img">
+      
+      <a class="navbar-brand font-weight-bold text-primary" href="#"><strong>FilePriv</strong></a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarTop">
+        <span class="navbar-toggler-icon"></span>
+      </button>
 
-    <div class="collapse navbar-collapse" id="navbarTop">
-      <ul class="navbar-nav mr-auto">
-        <li class="nav-item active"><a class="nav-link" href="index.html">Index</a></li>
-        <li class="nav-item"><a class="nav-link" href="support.html">Support</a></li>
-        <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown">Options</a>
-          <div class="dropdown-menu">
-            <a class="dropdown-item" href="pushFile.html">Push File</a>
-            <a class="dropdown-item" href="pullFile.html">Pull File</a>
-          </div>
-        </li>
-      </ul>
+      <div class="collapse navbar-collapse" id="navbarTop">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item active"><a class="nav-link" href="index.html">Índice</a></li>
+          <li class="nav-item"><a class="nav-link" href="support.html">Suporte</a></li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">Opções</a>
+            <div class="dropdown-menu">
+              <a class="dropdown-item" href="pushFile.html">Enviar Arquivo</a>
+              <a class="dropdown-item" href="pullFile.html">Baixar Arquivo</a>
+            </div>
+          </li>
+        </ul>
+      </div>
     </div>
   </nav>
 
+  <!-- Conteúdo Principal -->
   <div class="container content-section">
+    <h2 class="mb-4 text-center text-secondary"> <strong>Dashboard principal</strong></h2>
     <div class="row mb-4">
+      
+      <!-- Informação de Usuário e Redefinir Atributos -->
       <div class="col-md-6">
         <div class="info-card">
-          <h4 class="mb-3"><strong>User Information</strong></h4>
-          <p><strong>Name:</strong></p>
-          <p><strong>Email:</strong></p>
-          <p><strong>State:</strong></p>
-          <p><strong>Phone:</strong></p>
-          <p><strong>Institution:</strong></p>
+          <h4 class="mb-3"><strong>Informação do Usuário</strong></h4>
+          <div id="userInfoDisplay">
+            <p><strong>Nome:</strong> <span id="display-name">Ryan</span></p>
+            <p><strong>Email:</strong> <span id="display-email">ryan.morais@academico.ifpb.edu.br</span></p>
+            <p><strong>Estado:</strong> <span id="display-state">Paraíba</span></p>
+            <p><strong>Telefone:</strong> <span id="display-phone">8391234-5678</span></p>
+            <p class="mb-3"><strong>Instituição:</strong> <span id="display-institution">IFPB</span></p>
+          </div>
+          
+          <button class="btn btn-primary mt-3 w-100 fw-bold" data-bs-toggle="modal" data-bs-target="#updateAttributesModal">
+            Redefinir Atributos
+          </button>
         </div>
       </div>
 
+      <!-- Informação dos Servidores e Gerenciamento -->
       <div class="col-md-6">
         <div class="info-card">
-          <h4 class="mb-3"><strong>Storage Topology</strong></h4>
-          <p><strong>Server 1:</strong></p>
-          <p><strong>Server 2:</strong></p>
-          <p><strong>Server 3:</strong></p>
+          <h4 class="mb-3"><strong>Informação dos Servidores</strong></h4>
+          
+          <div id="serverListContainer" class="mb-3">
+              <!-- Servidores serão injetados aqui -->
+          </div>
+          
+          <button class="btn btn-primary mt-3 w-100 fw-bold" data-bs-toggle="modal" data-bs-target="#manageServersModal">
+            Gerenciar Servidores
+          </button>
         </div>
       </div>
     </div>
 
+    <!-- Seção da Topologia Interativa (Substitui a imagem estática) -->
     <div class="row">
-      <div class="col-12 text-center">
-        <img src="../../assets/Toppology.jpg" alt="Topology Diagram" class="topology-image">
+      <div class="col-12 text-center topology-container">
+        <h4 class="mt-4 mb-3">Topologia da Rede Distribuída (Interativa)</h4>
+        
+        <div class="topology-map">
+            <!-- Linha de Conexão: Usuário -> Aplicação --><div class="connection-line line-user-app"></div>
+
+            <!-- Nó de Usuário --><div class="node user" onclick="showUserDetails()">
+                <i class="fas fa-user-circle"></i>
+                <span>Usuário</span>
+            </div>
+
+            <!-- Linha de Conexão: Aplicação -> Servidores --><div class="connection-line line-app-servers"></div>
+
+            <!-- Nó de Aplicação --><div class="node application" onclick="showApplicationDetails()">
+                <i class="fas fa-server"></i>
+                <span>Aplicação FilePriv (Máquina local)
+                </span>
+            </div>
+
+            <!-- Grupo de Nós de Servidor --><div class="server-nodes" id="serverNodesContainer">
+                <!-- Servidores serão injetados aqui via JS --></div>
+            
+            <!-- Card de Detalhes do Servidor (posicionamento dinâmico) --><div class="server-details" id="serverDetailsCard">
+                <button type="button" class="btn-close btn-sm position-absolute top-0 end-0 m-2" aria-label="Fechar" onclick="hideServerDetails()"></button>
+                <h6 id="detail-server-name"></h6>
+                <p><strong>IP:</strong> <span id="detail-server-ip"></span></p>
+                <p><strong>Porta:</strong> <span id="detail-server-port"></span></p>
+                <p><strong>Status:</strong> <span id="detail-server-status" class="text-success fw-bold">Online</span></p>
+                <p><strong>Carga:</strong> <span id="detail-server-load">25%</span></p>
+            </div>
+
+        </div>
       </div>
     </div>
   </div>
 
   <nav class="navbar fixed-bottom navbar-dark bg-dark">
     <div class="container justify-content-center">
-      <a class="nav-link text-white" href="#">Begin</a>
-      <a class="nav-link text-white" href="support.html">Help</a>
-      <a class="nav-link text-white" href="about.html">About</a>
-      <a class="nav-link text-white" href="index.html">Index</a>
+      <a class="nav-link text-white mx-3" href="#">Início</a>
+      <a class="nav-link text-white mx-3" href="support.html">Suporte</a>
+      <a class="nav-link text-white mx-3" href="about.html">Sobre</a>
+      <a class="nav-link text-white mx-3" href="index.html">Índice</a>
     </div>
   </nav>
 
-  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.3/dist/umd/popper.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.1.3/dist/js/bootstrap.min.js"></script>
+  <!-- ============================================== -->
+  <!-- MODAIS (Sem Alterações) -->
+  <!-- ============================================== -->
+  <!-- MODAL: Atualizar Atributos (Frontend Only) -->
+  <div class="modal fade" id="updateAttributesModal" tabindex="-1" aria-labelledby="updateAttributesModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-secondary text-white">
+          <h5 class="modal-title" id="updateAttributesModalLabel">Atualizar Atributos do Perfil</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+          <p class="text-dark">Preencha apenas os campos que deseja alterar. Os campos vazios serão ignorados. **Atenção: A atualização é simulada em frontend.**</p>
+          <form id="updateAttributesForm">
+            <div class="mb-3">
+              <label for="update-name" class="form-label">Nome</label>
+              <input type="text" class="form-control" id="update-name" placeholder="Nome completo (opcional)">
+            </div>
+            <div class="mb-3">
+              <label for="update-email" class="form-label">Email</label>
+              <input type="email" class="form-control" id="update-email" placeholder="Novo email (opcional)">
+            </div>
+            <div class="mb-3">
+              <label for="update-state" class="form-label">Estado</label>
+              <input type="text" class="form-control" id="update-state" placeholder="Estado (opcional)">
+            </div>
+            <div class="mb-3">
+              <label for="update-phone" class="form-label">Telefone</label>
+              <input type="text" class="form-control" id="update-phone" placeholder="Telefone (opcional)">
+            </div>
+            <div class="mb-3">
+              <label for="update-institution" class="form-label">Instituição</label>
+              <input type="text" class="form-control" id="update-institution" placeholder="Instituição (opcional)">
+            </div>
+            <hr class="my-4">
+            <h6 class="text-primary">Atualização de Senha</h6>
+            <div class="mb-3">
+              <label for="update-newPassword" class="form-label">Nova Senha</label>
+              <input type="password" class="form-control" id="update-newPassword" placeholder="Preencha para alterar a senha (mín. 8 caracteres)">
+            </div>
+            <div class="mb-3">
+              <label for="update-confirmPassword" class="form-label">Confirmar Nova Senha</label>
+              <input type="password" class="form-control" id="update-confirmPassword" placeholder="Confirme a nova senha">
+            </div>
+          </form>
+          <div id="updateMessage" class="mt-3 text-center text-primary fw-bold" style="display: none;"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-primary fw-bold" onclick="updateAttributes()">Atualizar Atributos</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Gerenciar Servidores (Frontend Only) -->
+  <div class="modal fade" id="manageServersModal" tabindex="-1" aria-labelledby="manageServersModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="manageServersModalLabel">Gerenciar Servidores</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+          
+          <h6 class="text-primary mb-3">Adicionar Novo Servidor</h6>
+          <form class="row g-3 mb-4" onsubmit="addServer(event)">
+            <div class="col-md-5">
+              <input type="text" class="form-control" id="newServerIp" placeholder="Endereço IP (e.g., 192.168.1.1)" required>
+            </div>
+            <div class="col-md-4">
+              <input type="number" class="form-control" id="newServerPort" placeholder="Porta (e.g., 30120)" required>
+            </div>
+            <div class="col-md-3">
+              <button type="submit" class="btn btn-primary w-100">Adicionar Servidor</button>
+            </div>
+            <div class="col-12" id="addServerMessage" style="display: none;"></div>
+          </form>
+
+          <hr>
+
+          <h6 class="text-primary mb-3">Servidores Atuais (<span id="serverCount">0</span>)</h6>
+          <div class="list-group" id="modalServerList">
+            <!-- Servidores serão listados aqui -->
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts Bootstrap 5 e Lógica Frontend -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Variáveis de Estado (Simulação de Backend)
+    let userProfile = {
+        name: 'Ryan',
+        email: 'ryan.morais@academico.ifpb.edu.br',
+        state: 'Paraíba',
+        phone: '8391234-5678',
+        institution: 'IFPB'
+    };
+    
+    // DADOS UNIFICADOS: Usados tanto para o mapa quanto para o painel de listagem
+    let currentServersData = [
+        { id: 'server1', name: 'Servidor 1', ip: '192.168.10.1', port: '30120', status: 'Online', load: '25%' },
+        { id: 'server2', name: 'Servidor 2', ip: '192.168.10.2', port: '30210', status: 'Online', load: '38%' },
+        { id: 'server3', name: 'Servidor 3', ip: '192.168.10.3', port: '30120', status: 'Online', load: '19%' },
+    ];
+
+    // Elementos DOM
+    const serverListContainer = document.getElementById('serverListContainer');
+    const modalServerList = document.getElementById('modalServerList');
+    const serverCountSpan = document.getElementById('serverCount');
+    const updateMessage = document.getElementById('updateMessage');
+    const addServerMessageDiv = document.getElementById('addServerMessage');
+
+    // Elementos DOM do Mapa
+    const serverNodesContainer = document.getElementById('serverNodesContainer');
+    const serverDetailsCard = document.getElementById('serverDetailsCard');
+    let activeServerNode = null; 
+    
+    // ===================================
+    // FUNÇÕES DE PERFIL
+    // ===================================
+
+    function renderUserProfile() {
+        document.getElementById('display-name').textContent = userProfile.name;
+        document.getElementById('display-email').textContent = userProfile.email;
+        document.getElementById('display-state').textContent = userProfile.state;
+        document.getElementById('display-phone').textContent = userProfile.phone;
+        document.getElementById('display-institution').textContent = userProfile.institution;
+    }
+
+    function updateAttributes() {
+        // ... (lógica de atualização de atributos do perfil) ...
+        const nameInput = document.getElementById('update-name').value.trim();
+        const emailInput = document.getElementById('update-email').value.trim();
+        const stateInput = document.getElementById('update-state').value.trim();
+        const phoneInput = document.getElementById('update-phone').value.trim();
+        const institutionInput = document.getElementById('update-institution').value.trim();
+        
+        const newPass = document.getElementById('update-newPassword').value;
+        const confirmPass = document.getElementById('update-confirmPassword').value;
+        
+        let changesMade = false;
+        
+        updateMessage.style.display = 'block';
+        updateMessage.className = 'mt-3 text-center fw-bold text-primary';
+        updateMessage.textContent = 'Verificando alterações...';
+
+        if (newPass || confirmPass) {
+            if (newPass.length < 8) {
+                updateMessage.className = 'mt-3 text-center fw-bold text-dark';
+                updateMessage.textContent = 'Erro: A nova senha deve ter no mínimo 8 caracteres.';
+                return;
+            }
+            if (newPass !== confirmPass) {
+                updateMessage.className = 'mt-3 text-center fw-bold text-dark';
+                updateMessage.textContent = 'Erro: As novas senhas não coincidem!';
+                return;
+            }
+            changesMade = true;
+        }
+
+        if (nameInput) { userProfile.name = nameInput; changesMade = true; }
+        if (emailInput) { userProfile.email = emailInput; changesMade = true; }
+        if (stateInput) { userProfile.state = stateInput; changesMade = true; }
+        if (phoneInput) { userProfile.phone = phoneInput; changesMade = true; }
+        if (institutionInput) { userProfile.institution = institutionInput; changesMade = true; }
+
+        if (changesMade) {
+            renderUserProfile();
+            document.getElementById('updateAttributesForm').reset();
+            updateMessage.className = 'mt-3 text-center fw-bold text-primary';
+            updateMessage.textContent = 'Perfil atualizado com sucesso! (Simulação)';
+
+            setTimeout(() => {
+                const modalElement = document.getElementById('updateAttributesModal');
+                if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                    const modal = bootstrap.Modal.getInstance(modalElement);
+                    if (modal) {
+                        modal.hide();
+                    }
+                }
+                updateMessage.style.display = 'none';
+            }, 2000);
+            
+        } else {
+            updateMessage.className = 'mt-3 text-center fw-bold text-dark';
+            updateMessage.textContent = 'Nenhum campo foi preenchido para alteração.';
+        }
+    }
+
+
+    // ===================================
+    // FUNÇÕES DE SERVIDOR E MAPA
+    // ===================================
+
+    // Função para renderizar a lista de servidores no Dashboard (Usa currentServersData)
+    function renderServerListDashboard() {
+        if (!serverListContainer) return;
+        
+        serverListContainer.innerHTML = '';
+        if (currentServersData.length === 0) {
+            serverListContainer.innerHTML = '<p class="text-dark">Nenhum servidor ativo.</p>';
+            return;
+        }
+
+        currentServersData.forEach((server, index) => {
+            const p = document.createElement('p');
+            const statusClass = server.status === 'Online' ? 'text-success' : 'text-danger';
+            p.innerHTML = `<strong class="${statusClass}"><i class="fas fa-circle me-1" style="font-size: 0.7rem;"></i>${server.name}</strong>: ${server.ip} | Carga: ${server.load}`;
+            serverListContainer.appendChild(p);
+        });
+    }
+
+    // Função para renderizar a lista de servidores no Modal (Usa currentServersData)
+    function renderServerListModal() {
+        if (!modalServerList) return;
+        
+        modalServerList.innerHTML = '';
+        serverCountSpan.textContent = currentServersData.length;
+
+        if (currentServersData.length === 0) {
+            modalServerList.innerHTML = '<div class="list-group-item text-center text-muted">Nenhum servidor cadastrado.</div>';
+            return;
+        }
+
+        currentServersData.forEach((server, index) => {
+            const item = document.createElement('div');
+            item.className = 'list-group-item server-item';
+            item.innerHTML = `
+                <div>
+                    <strong>${server.name} (#${index + 1})</strong>: ${server.ip} : ${server.port}
+                </div>
+                <button class="btn btn-sm btn-danger" onclick="removeServer(${index})">
+                    Remover
+                </button>
+            `;
+            modalServerList.appendChild(item);
+        });
+    }
+
+    // Função para adicionar servidor (simulação) - Atualizada para nova estrutura
+    function addServer(event) {
+        event.preventDefault();
+        
+        const ipInput = document.getElementById('newServerIp');
+        const portInput = document.getElementById('newServerPort');
+        
+        const newIp = ipInput.value.trim();
+        const newPort = portInput.value.trim();
+        
+        addServerMessageDiv.style.display = 'block';
+
+        const ipRegex = /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/;
+        if (!ipRegex.test(newIp) || isNaN(newPort) || newPort.length < 4) {
+            addServerMessageDiv.className = 'col-12 mt-2 text-dark'; 
+            addServerMessageDiv.textContent = 'Erro: Verifique o formato do IP (ex: 192.168.1.1) e a Porta.';
+            return;
+        }
+        
+        const newId = `server${currentServersData.length + 1}`;
+
+        currentServersData.push({ 
+            id: newId, 
+            name: `Servidor ${currentServersData.length + 1}`,
+            ip: newIp, 
+            port: newPort,
+            status: 'Online', // Novo servidor começa Online
+            load: '0%' 
+        });
+        
+        ipInput.value = '';
+        portInput.value = '';
+        
+        addServerMessageDiv.className = 'col-12 mt-2 text-primary'; 
+        addServerMessageDiv.textContent = `Servidor ${newIp}:${newPort} adicionado com sucesso!`;
+
+        // Atualiza todas as views
+        renderServerListDashboard();
+        renderServerListModal();
+        renderServerNodes(); // Atualiza o mapa
+
+        setTimeout(() => {
+            addServerMessageDiv.style.display = 'none';
+        }, 3000);
+    }
+
+    // Função para remover servidor (simulação)
+    function removeServer(indexToRemove) {
+        currentServersData.splice(indexToRemove, 1);
+        // Atualiza todas as views
+        renderServerListDashboard();
+        renderServerListModal();
+        renderServerNodes(); // Atualiza o mapa
+    }
+
+
+    // ===================================
+    // FUNÇÕES DO MAPA DE TOPOLOGIA
+    // ===================================
+
+    function renderServerNodes() {
+      if (!serverNodesContainer) return;
+      
+      serverNodesContainer.innerHTML = ''; 
+      currentServersData.forEach(server => {
+        const serverNode = document.createElement('div');
+        serverNode.id = server.id;
+        // Se estiver Offline, usa bg-danger (vermelho)
+        serverNode.className = `node server ${server.status === 'Offline' ? 'bg-danger' : ''}`;
+        serverNode.innerHTML = `
+          <i class="fas fa-database"></i>
+          <span>${server.name}</span>
+        `;
+        serverNode.onclick = (event) => showServerDetails(event, server);
+        serverNodesContainer.appendChild(serverNode);
+      });
+    }
+
+    function showServerDetails(event, server) {
+        if (!serverDetailsCard) return;
+
+        if (activeServerNode && activeServerNode !== event.currentTarget) {
+            activeServerNode.classList.remove('clicked');
+        }
+
+        activeServerNode = event.currentTarget;
+        activeServerNode.classList.add('clicked'); 
+        
+        document.getElementById('detail-server-name').textContent = server.name;
+        document.getElementById('detail-server-ip').textContent = server.ip;
+        document.getElementById('detail-server-port').textContent = server.port;
+        document.getElementById('detail-server-load').textContent = server.load;
+
+        // Estiliza o status
+        const statusSpan = document.getElementById('detail-server-status');
+        statusSpan.textContent = server.status;
+        statusSpan.className = ''; 
+        if (server.status === 'Online') {
+            statusSpan.classList.add('text-success', 'fw-bold');
+        } else {
+            statusSpan.classList.add('text-danger', 'fw-bold');
+        }
+
+        // Posiciona o card próximo ao servidor clicado
+        const rect = activeServerNode.getBoundingClientRect();
+        // O elemento pai que define o sistema de coordenadas absoluto é o .topology-map
+        const mapRect = serverNodesContainer.closest('.topology-map').getBoundingClientRect();
+        
+        // Calcular a posição relativa dentro do mapa
+        // 1. Topo: Posição Y do nó - Posição Y do mapa - Altura do card (aprox 150px) - Margem
+        serverDetailsCard.style.top = `${rect.top - mapRect.top - 150}px`; 
+        // 2. Esquerda: Posição X do nó - Posição X do mapa + metade da largura do nó (para centralizar o card)
+        serverDetailsCard.style.left = `${rect.left - mapRect.left + (rect.width / 2)}px`; 
+        
+        serverDetailsCard.classList.add('active'); 
+    }
+
+    function hideServerDetails() {
+      if (!serverDetailsCard) return;
+      serverDetailsCard.classList.remove('active');
+      if (activeServerNode) {
+          activeServerNode.classList.remove('clicked');
+          activeServerNode = null;
+      }
+    }
+
+    function showUserDetails() {
+      console.log('Detalhes do Usuário: Conectado à Aplicação FilePriv.');
+    }
+
+    function showApplicationDetails() {
+      console.log('Detalhes da Aplicação FilePriv: Gerencia o armazenamento e acesso distribuído.');
+    }
+
+    // Esconde os detalhes do servidor ao clicar fora do card ou de outro nó
+    document.addEventListener('click', function(event) {
+        if (!serverDetailsCard) return;
+        const isClickInsideCard = serverDetailsCard.contains(event.target);
+        const isClickOnServerNode = event.target.closest('.node.server');
+
+        if (serverDetailsCard.classList.contains('active') && !isClickInsideCard && !isClickOnServerNode) {
+            hideServerDetails();
+        }
+    });
+
+
+    // Inicializa todas as vistas ao carregar a página
+    window.onload = function() {
+        renderUserProfile();
+        renderServerListDashboard();
+        renderServerListModal();
+        renderServerNodes(); // Renderiza os nós do mapa
+    }
+  </script>
 </body>
 </html>
