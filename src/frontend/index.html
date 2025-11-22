@@ -5,67 +5,137 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Home - FilePriv</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
+    /* Cores Consistentes com Login/Cadastro */
+    :root {
+        --dark-bg: #1a1a2e; /* Navbar/Footer */
+        --light-bg: #e0e0e0; /* Fundo do Corpo */
+        --card-bg: #ffffff;
+        --primary-color: #0d6efd; /* Azul Padrão */
+    }
+
     body {
-      background: #e0e0e0;
-      color: #000;
+      background-color: var(--light-bg);
+      color: #212529;
+      font-family: 'Poppins', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
+    
+    /* Navbar Styles */
+    .navbar-custom-bg {
+        background-color: var(--dark-bg) !important;
+    }
+    
     .navbar-brand {
-      font-weight: bold;
-      color: whitesmoke !important;
+      font-weight: 700;
+      color: #ffffff !important; 
     }
+
+    .nav-link {
+        color: rgba(255, 255, 255, 0.8) !important;
+        font-weight: 400;
+    }
+
+    .nav-link:hover {
+        color: #ffffff !important;
+    }
+
+    /* Hero Section - Central e em destaque */
     .hero-section {
-      background: linear-gradient(135deg, #f1f3f5 0%, #e0e0e0 100%);
-      padding: 80px 20px;
+      background: var(--card-bg);
+      padding: 60px 20px;
       text-align: center;
-      border-radius: 15px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.1);
+      border-radius: 12px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.1);
       margin-bottom: 50px;
     }
+    
     .hero-section h1 {
-      color: #0d6efd;
+      color: var(--primary-color);
       font-size: 2.8rem;
-      margin-bottom: 20px;
+      font-weight: 700;
+      margin-bottom: 15px;
     }
+
     .hero-section p {
-      font-size: 1.2rem;
+      font-size: 1.1rem;
+      color: #6c757d;
+      margin-bottom: 30px;
     }
+    
+    /* Feature Cards - Mais alinhados e limpos */
     .feature-card {
-      background: #ffffff;
-      border-radius: 15px;
-      padding: 25px;
-      transition: transform 0.3s ease;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 30px;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+      border: 1px solid #dee2e6;
+      height: 100%; /* Garante que todos os cards tenham a mesma altura */
     }
+
     .feature-card:hover {
       transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
     }
+    
+    .feature-card h4 {
+        font-weight: 600;
+    }
+
+    /* Botões */
+    .btn-primary {
+      background-color: var(--primary-color);
+      border-color: var(--primary-color);
+      font-weight: 600;
+      border-radius: 8px;
+    }
+
+    .btn-outline-primary {
+        font-weight: 600;
+        border-radius: 8px;
+    }
+
+    /* Logo */
+    .logo {
+      max-width: 150px;
+      border-radius: 8px;
+    }
+
+    /* Footer */
     footer {
-      background-color: #343a40;
+      background-color: var(--dark-bg);
       color: #fff;
       padding: 20px 0;
-      margin-top: 50px;
+      margin-top: auto;
     }
-    .btn-primary {
-      background-color:#0d6efd;
-      border: none;
+    
+    /* Ajustes para Responsividade */
+    @media (max-width: 768px) {
+        .hero-section h1 {
+            font-size: 2rem;
+        }
+        .hero-section {
+            padding: 40px 15px;
+        }
     }
-    .logo {
-      max-width: 180px;
-    }
+
   </style>
 </head>
 <body>
 
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+  <!-- Navbar (IDÊNTICA ao Login/Cadastro) -->
+  <nav class="navbar navbar-expand-lg navbar-dark navbar-custom-bg shadow-sm">
     <div class="container">
-      <a class="navbar-brand" href="homepage.html"><strong>FilePriv</strong></a>
+      <a class="navbar-brand" href="index.html"><strong>FilePriv</strong></a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
         <span class="navbar-toggler-icon"></span>
       </button>
-      <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
-        <ul class="navbar-nav">
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
           <li class="nav-item mx-2">
             <a href="homepage.html" class="nav-link">Home</a>
           </li>
@@ -89,52 +159,83 @@
     </div>
   </nav>
 
+  <!-- Conteúdo Principal -->
   <div class="container my-5">
+    
+    <!-- Seção Principal (Hero) -->
     <div class="hero-section">
-      <img src="../../../assets/FilePriv Logo.jpg" alt="FilePriv Logo" class="logo mb-4">
-      <h1><strong>BEM-VINDO</strong></h1>
-      <p style="font-family: 'Poppins', sans-serif;">
-        Solução acadêmica para seu armazenamento distribuído e seguro 
+      <!-- Placeholder de Logo -->
+      <img src="../../assets/FilePriv Logo.jpg" alt="FilePriv Logo" class="logo mb-4">
+      
+      <h1><strong>BEM-VINDO AO FILEPRIV</strong></h1>
+      <p>
+        Sua solução acadêmica para armazenamento distribuído e seguro de dados sensíveis.
       </p>
+      
       <div class="mt-4">
-        <a href="pushFile.html" class="btn btn-primary btn-lg mx-2" style="font-family: 'Poppins', sans-serif;">Enviar</a>
-        <a href="pullFile.html" class="btn btn-outline-primary btn-lg mx-2" style="font-family: 'Poppins', sans-serif;">Consultar</a>
+        <a href="pushFile.html" class="btn btn-primary btn-lg mx-2 my-1">
+            <i class="fas fa-upload me-2"></i> Enviar Arquivo
+        </a>
+        <a href="pullFile.html" class="btn btn-outline-primary btn-lg mx-2 my-1">
+            <i class="fas fa-download me-2"></i> Consultar Arquivo
+        </a>
       </div>
     </div>
 
-    <div class="row text-center">
-      <div class="col-md-4 mb-4">
+    <!-- Seção de Recursos (Features) -->
+    <div class="row text-center g-4">
+      
+      <div class="col-md-6 col-lg-4 mb-4">
         <div class="feature-card">
-          <h4 class="text-primary mb-3" style="font-family: 'Poppins', sans-serif;">Criptografia avançada</h4>
-          <p style="font-family: 'Poppins', sans-serif;">
-            Os arquivos são protegidos com AES-GCM e chaves solicitadas, garantindo segurança máxima contra acesso não autorizado.
+          <i class="fas fa-lock fa-3x text-primary mb-3"></i>
+          <h4 class="text-primary mb-3">Criptografia Avançada</h4>
+          <p>
+            Garantimos segurança máxima com proteção AES-GCM e chaves solicitadas, blindando seus dados contra acessos não autorizados.
           </p>        
         </div>
       </div>
-      <div class="col-md-4 mb-4">
+      
+      <div class="col-md-6 col-lg-4 mb-4">
         <div class="feature-card">
-          <h4 class="text-primary mb-3" style="font-family: 'Poppins', sans-serif;">Armazenamento distribuído</h4>
-          <p style="font-family: 'Poppins', sans-serif;">
-            Os arquivos são divididos em partes e distribuídos em diferentes servidores para maior resiliência.
+          <i class="fas fa-cubes fa-3x text-primary mb-3"></i>
+          <h4 class="text-primary mb-3">Armazenamento Distribuído</h4>
+          <p>
+            Seus arquivos são divididos e armazenados em múltiplos servidores, garantindo resiliência e alta disponibilidade.
+          </p>
+        </div>
+      </div>
+
+      <div class="col-md-12 col-lg-4 mb-4">
+        <div class="feature-card">
+          <i class="fas fa-user-shield fa-3x text-primary mb-3"></i>
+          <h4 class="text-primary mb-3">Foco Acadêmico</h4>
+          <p>
+            Uma plataforma desenvolvida sob rigor acadêmico, ideal para projetos e dados de pesquisa que exigem sigilo.
           </p>
         </div>
       </div>
     </div>
 
-    <div class="text-center mt-5">
-      <h4 class="mb-3" style="font-family: 'Poppins', sans-serif;">Você não tem uma conta?</h4>
-      <a href="signup.html" class="btn btn-primary btn-lg">Cadastre agora!</a>
+    <!-- Call to Action -->
+    <div class="text-center mt-5 p-4 bg-white rounded-3 shadow-sm">
+      <h3 class="mb-3 text-dark">Pronto para começar?</h3>
+      <p class="mb-4 text-muted">Proteja seus dados e projetos de pesquisa com a segurança do FilePriv.</p>
+      <a href="signup.html" class="btn btn-primary btn-lg px-5">Cadastre agora!</a>
+      <a href="login.html" class="btn btn-outline-primary btn-lg px-5 ms-3">Fazer Login</a>
     </div>
   </div>
 
+  <!-- Footer (IDÊNTICO ao Login/Cadastro) -->
   <footer class="text-center">
     <div class="container">
-      <p class="mb-1">&copy; 2025 Projeto FilePriv </p>
-      <a href="support.html" class="text-decoration-none text-light mx-2">Suporte</a> |
-      <a href="homepage.html" class="text-decoration-none text-light mx-2">Home</a>
+      &copy; 2025 FilePriv | 
+      <a href="support.html" class="text-light text-decoration-none mx-2">Suporte</a> | 
+      <a href="index.html" class="text-light text-decoration-none mx-2">Início</a>
     </div>
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Adicionando Font Awesome para os ícones nas features -->
+  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
 </body>
 </html>

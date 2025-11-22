@@ -6,42 +6,59 @@
   <title>Consultar Arquivos - FilePriv</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
+    /* Cores Consistentes */
+    :root {
+        --dark-bg: #1a1a2e; 
+        --light-bg: #e0e0e0; /* Ajustado para consistência */
+        --card-bg: #ffffff;
+        --primary-color: #0d6efd; 
+    }
+
     body {
-      background-color: #f1f3f5;
+      background-color: var(--light-bg);
       display: flex;
       flex-direction: column;
       min-height: 100vh;
+      color: #333;
     }
     .content {
       flex: 1;
     }
     
     footer {
-      background-color: #1a1a2e;
+      background-color: var(--dark-bg);
       color: #fff;
       padding: 20px 0;
       margin-top: auto;
     }
 
     .navbar-custom-bg {
-        background-color: #1a1a2e !important;
+        background-color: var(--dark-bg) !important;
     }
     
     .navbar-brand {
       font-weight: bold;
       color: #ffffff !important; 
     }
-    .table-container {
-      background-color: #ffffff;
+    .table-container, .search-box {
+      background-color: var(--card-bg);
       padding: 25px;
       border-radius: 12px;
-      box-shadow: 0 0 12px rgba(0,0,0,0.08);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     }
-    .search-box {
-      background-color: #ffffff;
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 0 12px rgba(0,0,0,0.08);
+    .btn-primary {
+      background-color: var(--primary-color);
+      border-color: var(--primary-color);
+    }
+
+    .btn-outline-primary {
+        --bs-btn-color: var(--primary-color);
+        --bs-btn-border-color: var(--primary-color);
+    }
+
+    .table-primary {
+        --bs-table-bg: var(--primary-color);
+        --bs-table-color: #fff;
     }
   </style>
 </head>
@@ -67,11 +84,21 @@
   </nav>
 
   <div class="container my-5 content">
-    <h2 class="text-center text-primary mb-4">Recupere seus arquivos aqui</h2>
-
+    
     <div class="row justify-content-center mb-4">
-      <div class="col-lg-8">
-        <div class="search-box">
+      <div class="col-lg-10 d-flex justify-content-between align-items-center">
+        <!-- Botão para ir para a página de Upload/Enviar -->
+        <a href="pushFile.html" class="btn btn-outline-primary">
+          Ir para Enviar Arquivos
+        </a>
+      </div>
+    </div>
+    <!-- FIM DO NOVO BOTÃO -->
+
+    <!-- CAIXA DE PESQUISA (Ajustada para col-lg-10) -->
+    <div class="row justify-content-center mb-4">
+      <div class="col-lg-10">
+        <div class="search-box p-3">
           <form class="d-flex">
             <input class="form-control me-2" type="search" placeholder="Buscar por nome, data ou descrição..." aria-label="Search">
             <button class="btn btn-primary" type="submit">Procurar</button>
@@ -80,6 +107,7 @@
       </div>
     </div>
 
+    <!-- TABELA DE ARQUIVOS -->
     <div class="row justify-content-center">
       <div class="col-lg-10">
         <div class="table-container">

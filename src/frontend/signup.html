@@ -4,113 +4,138 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cadastro - FilePriv</title>
+  <!-- Link Bootstrap 5 -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  
   <style>
+    /* Cores Consistentes com a Página de Login */
+    :root {
+        --dark-bg: #1a1a2e; /* Fundo da Navbar/Footer */
+        --light-bg: #e0e0e0; /* Fundo do Corpo */
+        --card-bg: #ffffff;
+        --primary-color: #0d6efd; /* Azul Padrão */
+    }
+
     body {
-      background: linear-gradient(135deg, #d3d3d3 0%, #f1f3f5 100%);
-      min-height: 100vh;
+      background-color: var(--light-bg);
+      color: #000;
       display: flex;
       flex-direction: column;
+      min-height: 100vh;
+      font-family: sans-serif; /* Usando a fonte padrão para consistência */
+    }
+    
+    .content-wrapper {
+        flex: 1; /* Garante que o conteúdo ocupe o espaço restante */
+        display: flex;
+        align-items: center; /* Centraliza o card verticalmente */
     }
 
+    /* Estilo da Navbar e Footer (Fundo Escuro) */
+    .navbar-custom-bg {
+        background-color: var(--dark-bg) !important;
+    }
+    
     .navbar-brand {
       font-weight: bold;
-      color: #0d6efd !important;
-    }
-
-    .register-card {
-      background: #ffffff;
-      padding: 40px;
-      border-radius: 18px;
-      box-shadow: 0 0 25px rgba(0,0,0,0.15);
-      transition: all 0.3s ease-in-out;
-    }
-
-    .register-card:hover {
-      box-shadow: 0 0 35px rgba(0,0,0,0.25);
-    }
-
-    .form-control:focus {
-      border-color: #0d6efd;
-      box-shadow: 0 0 5px rgba(13,110,253,.5);
-    }
-
-    .btn-primary {
-      background: linear-gradient(135deg, #0d6efd 0%, #3b7ddd 100%);
-      border: none;
+      color: #ffffff !important; 
     }
 
     footer {
-      background-color: #343a40;
+      background-color: var(--dark-bg);
       color: #fff;
       padding: 15px 0;
-      margin-top: auto;
     }
 
+    .register-card {
+      background-color: var(--card-bg);
+      border-radius: 12px;
+      padding: 40px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+      width: 100%;
+    }
+    
     .logo {
-      width: 140px;
+      max-width: 120px;
       margin-bottom: 20px;
     }
+    
+    .btn-primary {
+      background-color: var(--primary-color);
+      border-color: var(--primary-color);
+      font-weight: bold;
+    }
 
-    .descrition{
-      font-size: small;
-      color:gray;
+    .form-control:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 5px rgba(13,110,253,.5);
+    }
+    
+    .description {
+      font-size: 0.85rem;
+      color: #6c757d;
+      margin-top: 5px;
     }
   </style>
 </head>
 <body>
 
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+  <nav class="navbar navbar-expand-lg navbar-dark navbar-custom-bg shadow-sm">
     <div class="container">
-      <a class="navbar-brand" href="index.html">FilePriv</a>
-      <div class="collapse navbar-collapse justify-content-end">
-        <ul class="navbar-nav">
-          <li class="nav-item mx-2">
-            <a class="nav-link text-light" href="index.html">Índice</a>
-          </li>
-          <li class="nav-item mx-2">
-            <a class="nav-link text-light" href="support.html">Suporte</a>
-          </li>
+      <a class="navbar-brand text-white" href="index.html"><strong>FilePriv</strong></a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="index.html">Índice</a></li>
+          <li class="nav-item"><a class="nav-link" href="support.html">Suporte</a></li>
         </ul>
       </div>
     </div>
   </nav>
 
-  <div class="container my-5">
-    <div class="row justify-content-center">
-      <div class="col-lg-6 col-md-8">
+  <!-- Conteúdo Principal do Cadastro -->
+  <div class="container my-5 content-wrapper">
+    <div class="row justify-content-center w-100">
+      <div class="col-md-6 col-lg-5">
         <div class="register-card text-center">
 
-          <img src="../../../assets/FilePriv Logo.jpg" alt="Logo FilePriv" class="logo">
+          <!-- Logo Placeholder (Consistente) -->
+          <img src="../../assets/FilePriv Logo.jpg" alt="Logo FilePriv" class="logo">
 
-          <h2 class="text-primary mb-4">Create account</h2>
+          <h2 class="mb-4 #1a1a2e"><strong>CADASTRO</strong></h2>
 
           <form id="registerForm">
             <div class="mb-3 text-start">
-              <label for="username" class="form-label"><strong>Usuário</strong></label>
-              <input type="text" class="form-control" id="username" placeholder="Digite seu nome" required>
+              <label for="username" class="form-label">Usuário</label>
+              <input type="text" class="form-control" id="username" placeholder="Digite seu nome de usuário ou apelido" required>
             </div>
 
             <div class="mb-3 text-start">
-              <label for="email" class="form-label"><strong>Email</strong></label>
-              <input type="email" class="form-control" id="email" placeholder="exemplo@email.com" required>
+              <label for="email" class="form-label">Email</label>
+              <input type="email" class="form-control" id="email" placeholder="exemplo@academico.edu.br" required>
             </div>
 
             <div class="mb-3 text-start">
-              <label for="password" class="form-label"><strong>Senha</strong></label>
-              <input type="password" class="form-control" id="password" placeholder="Digite sua senha" required>
+              <label for="password" class="form-label">Senha</label>
+              <input type="password" class="form-control" id="password" placeholder="Digite uma senha forte" required>
             </div>
 
             <div class="mb-4 text-start">
-              <label for="confirmPassword" class="form-label"><strong>Repetir senha</strong></label>
-              <input type="password" class="form-control" id="confirmPassword" placeholder="Digite sua senha de novo!" required>
-              <p class="descrition">Password must be more than 6 characters</p>
+              <label for="confirmPassword" class="form-label">Repetir senha</label>
+              <input type="password" class="form-control" id="confirmPassword" placeholder="Confirme a senha digitada" required>
+              <p class="description">A senha deve ter no mínimo 6 caracteres.</p>
             </div>
 
             <button type="submit" class="btn btn-primary w-100 py-2">Cadastrar</button>
           </form>
 
           <div id="messageArea" class="mt-4"></div>
+          
+          <p class="mt-3">
+            Já tem conta? <a href="login.html" class="text-primary fw-bold text-decoration-none">Faça Login</a>
+          </p>
 
         </div>
       </div>
@@ -119,16 +144,15 @@
 
   <footer class="text-center">
     <div class="container">
-      <p class="mb-1">&copy; 2025 Projeto FilePriv</p>
-      <a href="index.html" class="text-decoration-none text-light mx-2">Índice</a> |
-      <a href="support.html" class="text-decoration-none text-light mx-2">Suporte</a>
+      &copy; 2025 FilePriv | <a href="support.html" class="text-light text-decoration-none">Suporte</a> | <a href="index.html" class="text-light text-decoration-none">Índice</a>
     </div>
   </footer>
   
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    const form = document.getElementById('signupForm');
-    const msgArea = document.getElementById('msgArea');
+    // Script de validação e simulação de cadastro
+    const form = document.getElementById('registerForm');
+    const msgArea = document.getElementById('messageArea');
 
     form.addEventListener('submit', function (e) {
       e.preventDefault();
@@ -136,19 +160,32 @@
       const user = document.getElementById('username').value.trim();
       const email = document.getElementById('email').value.trim();
       const pass = document.getElementById('password').value.trim();
+      const confirmPass = document.getElementById('confirmPassword').value.trim();
 
-      if (!user || !email || !pass) {
-        msgArea.innerHTML = `<div class="alert alert-danger">Fill all fields!</div>`;
+
+      if (!user || !email || !pass || !confirmPass) {
+        msgArea.innerHTML = `<div class="alert alert-danger">Preencha todos os campos!</div>`;
+        return;
+      }
+      
+      if (pass !== confirmPass) {
+        msgArea.innerHTML = `<div class="alert alert-danger">As senhas digitadas não coincidem!</div>`;
+        return;
+      }
+
+      if (pass.length < 6) {
+        msgArea.innerHTML = `<div class="alert alert-danger">A senha deve ter no mínimo 6 caracteres.</div>`;
         return;
       }
 
       msgArea.innerHTML = `
         <div class="alert alert-success">
-          Welcome, <strong>${user}</strong>!<br>
-          Redirecting to HomePage...
+          Bem-vindo(a), <strong>${user}</strong>!<br>
+          Simulação de cadastro bem-sucedida. Redirecionando...
         </div>`;
 
       setTimeout(() => {
+        // Redireciona para a página principal após o cadastro
         window.location.href = "homepage.html";
       }, 1500);
     });
