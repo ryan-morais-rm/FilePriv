@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentação de Nós de Armazenamento Virtualizados - FilePriv</title>
+    <!-- Inclui Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inclui Chart.js para o gráfico de desempenho -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Configuração de Cores e Fontes (Exatamente como solicitado) */
+        :root {
+            --dark-bg: #1a1a2e; 
+            --light-bg: #e0e0e0; /* Ajustado para consistência */
+            --card-bg: #ffffff;
+            --primary-color: #0d6efd; 
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--light-bg);
+            color: #1f2937; /* Gray 800 para legibilidade */
+        }
+        /* Classes customizadas para usar as variáveis */
+        .navbar-custom, .footer-custom {
+            background-color: var(--dark-bg);
+        }
+        .bg-card-custom {
+            background-color: var(--card-bg);
+        }
+        /* Utilitários para a cor primária */
+        .text-primary-custom { color: var(--primary-color); }
+        .bg-primary-custom { background-color: var(--primary-color); }
+        .border-primary-custom { border-color: var(--primary-color); }
+        
+        /* Hover states para botões primários */
+        .btn-primary-custom {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        .btn-primary-custom:hover {
+            background-color: #0b5ed7; /* Um tom mais escuro para hover */
+        }
+
+        .card-shadow {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        .chart-container {
+            position: relative;
+            height: 400px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+    <!-- Navegação -->
+    <nav class="navbar-custom sticky top-0 z-50 shadow-lg">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-3 flex justify-between items-center">
+            <a class="text-2xl font-bold text-white tracking-wider hover:text-gray-200 transition" href="index.html">
+                FilePriv
+            </a>
+            <div class="hidden sm:flex space-x-4">
+                <!-- Link para Home Page -->
+                <a class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition duration-150" href="homepage.html">Home</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Cabeçalho Principal -->
+    <header class="bg-card-custom pt-10 pb-10 shadow-sm mb-8">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <p class="text-xl text-black-500">
+                Gerenciamento e especificações da infraestrutura local.
+            </p>
+        </div>
+    </header>
+
+    <!-- Conteúdo Principal -->
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 pb-16 flex-grow">
+        
+        <!-- Bloco 1: Informações Rápidas -->
+        <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+            
+            <!-- Arquitetura -->
+            <div class="bg-card-custom p-6 rounded-xl card-shadow border-t-4 border-gray-500 col-span-2">
+                <p class="text-sm font-medium text-gray-500">Arquitetura</p>
+                <p class="mt-1 text-lg font-semibold text-gray-900">
+                    <span class="text-primary-custom">Host (Aplicação)</span> &harr; <span class="text-green-600">VMs (Armazenamento)</span>
+                </p>
+                <p class="text-xs text-gray-500 mt-1">Rede Interna Virtualizada</p>
+            </div>
+        </section>
+
+        <!-- Bloco 2: Tabela Editável -->
+        <section class="mb-12 bg-card-custom p-8 rounded-xl card-shadow">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2">Especificações de Hardware</h2>
+            
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nó</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">IP Interno</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">CPU (vCores)</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Memória (RAM)</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Disco</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200" id="specsTableBody">
+                        <!-- Linha 1 -->
+                        <tr id="row-1">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-primary-custom">NODE-01</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">10.0.10.10</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700" id="cpu-1">4</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700" id="ram-1">8 GB</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">100 GB SSD</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <button onclick="toggleEdit(1)" class="text-primary-custom hover:text-blue-800 font-bold bg-blue-50 px-3 py-1 rounded border border-blue-200 hover:bg-blue-100 transition">Editar</button>
+                            </td>
+                        </tr>
+                        <!-- Linha 2 -->
+                        <tr id="row-2">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-yellow-600">NODE-02</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">10.0.2.11</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700" id="cpu-2">2</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700" id="ram-2">4 GB</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">50 GB SSD</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <button onclick="toggleEdit(2)" class="text-primary-custom hover:text-blue-800 font-bold bg-blue-50 px-3 py-1 rounded border border-blue-200 hover:bg-blue-100 transition">Editar</button>
+                            </td>
+                        </tr>
+                        <!-- Linha 3 -->
+                        <tr id="row-3">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">NODE-03</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">10.0.2.12</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700" id="cpu-3">1</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700" id="ram-3">2 GB</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">80 GB HDD</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <button onclick="toggleEdit(3)" class="text-primary-custom hover:text-blue-800 font-bold bg-blue-50 px-3 py-1 rounded border border-blue-200 hover:bg-blue-100 transition">Editar</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Bloco 3: Gráfico -->
+        <section class="mb-12 bg-card-custom p-8 rounded-xl card-shadow">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2">Monitoramento de Recursos</h2>
+            <div class="chart-container">
+                <canvas id="performanceChart"></canvas>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer-custom text-white py-6 mt-auto">
+        <div class="container mx-auto text-center px-4">
+            <p class="text-sm">&copy; 2025 Projeto FilePriv</p>
+        </div>
+    </footer>
+
+    <!-- Script Lógica -->
+    <script>
+        let chartInstance;
+
+        // Dados iniciais
+        const nodesData = {
+            1: { name: 'NODE-01', cpu: 4, ram: 8, color: '#0d6efd' }, // Azul Primário
+            2: { name: 'NODE-02', cpu: 2, ram: 4, color: 'rgb(234, 179, 8)' }, // Amarelo
+            3: { name: 'NODE-03', cpu: 1, ram: 2, color: 'rgb(22, 163, 74)' } // Verde
+        };
+
+        // Função para alternar edição
+        function toggleEdit(id) {
+            const row = document.getElementById(`row-${id}`);
+            const btn = row.querySelector('button');
+            const cpuCell = document.getElementById(`cpu-${id}`);
+            const ramCell = document.getElementById(`ram-${id}`);
+
+            if (btn.innerText === 'Editar') {
+                // Entrar no modo de edição
+                const currentCpu = cpuCell.innerText.replace(' Cores', '').trim();
+                const currentRam = ramCell.innerText.replace(' GB', '').trim();
+
+                cpuCell.innerHTML = `<input type="number" id="input-cpu-${id}" value="${currentCpu}" class="w-20 border border-gray-300 rounded px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500">`;
+                ramCell.innerHTML = `<input type="number" id="input-ram-${id}" value="${currentRam}" class="w-20 border border-gray-300 rounded px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500">`;
+                
+                btn.innerText = 'Salvar';
+                btn.classList.remove('bg-blue-50', 'text-primary-custom');
+                btn.classList.add('bg-green-100', 'text-green-700', 'border-green-300');
+            } else {
+                // Salvar alterações
+                const newCpu = document.getElementById(`input-cpu-${id}`).value;
+                const newRam = document.getElementById(`input-ram-${id}`).value;
+
+                // Atualiza visualização
+                cpuCell.innerText = newCpu; 
+                ramCell.innerText = newRam + ' GB';
+
+                // Atualiza dados internos
+                nodesData[id].cpu = newCpu;
+                nodesData[id].ram = newRam;
+
+                // Atualiza Gráfico
+                updateChartLabels();
+
+                // Restaura botão
+                btn.innerText = 'Editar';
+                btn.classList.add('bg-blue-50', 'text-primary-custom');
+                btn.classList.remove('bg-green-100', 'text-green-700', 'border-green-300');
+            }
+        }
+
+        function updateChartLabels() {
+            if(chartInstance) {
+                chartInstance.data.datasets[0].label = `${nodesData[1].name} (${nodesData[1].cpu}vCPU)`;
+                chartInstance.data.datasets[1].label = `${nodesData[2].name} (${nodesData[2].cpu}vCPU)`;
+                chartInstance.data.datasets[2].label = `${nodesData[3].name} (${nodesData[3].cpu}vCPU)`;
+                chartInstance.update();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const ctx = document.getElementById('performanceChart').getContext('2d');
+            
+            const data = {
+                labels: ['08:00', '09:00', '10:00', '11:00', '12:00'],
+                datasets: [
+                    {
+                        label: `${nodesData[1].name}`,
+                        data: [45, 50, 75, 65, 55],
+                        borderColor: nodesData[1].color,
+                        backgroundColor: 'rgba(13, 110, 253, 0.1)', 
+                        tension: 0.4, borderWidth: 2, pointRadius: 4
+                    },
+                    {
+                        label: `${nodesData[2].name}`,
+                        data: [20, 25, 30, 22, 18],
+                        borderColor: nodesData[2].color,
+                        backgroundColor: 'rgba(234, 179, 8, 0.1)',
+                        tension: 0.4, borderWidth: 2, pointRadius: 4
+                    },
+                    {
+                        label: `${nodesData[3].name}`,
+                        data: [10, 15, 40, 12, 10],
+                        borderColor: nodesData[3].color,
+                        backgroundColor: 'rgba(22, 163, 74, 0.1)',
+                        tension: 0.4, borderWidth: 2, pointRadius: 4
+                    }
+                ]
+            };
+
+            const config = {
+                type: 'line',
+                data: data,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: { position: 'top', labels: { color: '#1f2937', usePointStyle: true } },
+                        tooltip: { mode: 'index', intersect: false }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, max: 100, title: { display: true, text: 'Carga (%)' } },
+                        x: { title: { display: true, text: 'Horário' } }
+                    }
+                }
+            };
+
+            chartInstance = new Chart(ctx, config);
+        });
+    </script>
+</body>
+</html>
