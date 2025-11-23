@@ -1,37 +1,40 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-br">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>About - FilePriv</title>
+  <title>Sobre - FilePriv</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 
   <style>
+    :root {
+        --dark-bg: #1a1a2e; 
+        --light-bg: #e0e0e0;
+        --primary-color: #0d6efd;
+        --text-color: #212529;
+    }
+
     body {
-      background-color: #e0e0e0; 
-      color: #212529;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--light-bg); 
+      color: var(--text-color);
+      font-family: 'Poppins', sans-serif;
+      line-height: 1.6;
     }
     h1, h2 {
-      color: black; 
+      color: var(--text-color); 
+      font-weight: 600;
     }
     
     .navbar-custom-bg {
-        background-color: #1a1a2e !important;
+        background-color: var(--dark-bg) !important;
     }
     
-    .main-content-wrapper {
-        display: flex;
-        gap: 30px;
-        padding-top: 3rem;
-    }
-
     .logo-header {
       padding: 30px 0;
       background-color: #f8f9fa; 
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
-      margin-bottom: 2rem;
+      margin-bottom: 3rem;
     }
 
     .logo {
@@ -39,40 +42,59 @@
       height: auto;
       border-radius: 8px; 
       transition: transform 0.3s ease;
+      /* Ajuste para centralizar visualmente a imagem */
+      margin-bottom: 1rem;
     }
     .logo:hover {
         transform: scale(1.05);
     }
 
+    /* Estilo para a barra lateral e cards de informação */
     .info-card {
         border: none;
-        border-left: 5px solid #0d6efd;
+        border-left: 5px solid var(--primary-color); /* Linha de destaque */
         border-radius: 8px;
         box-shadow: 0 0 15px rgba(0, 0, 0, 0.08); 
         margin-bottom: 1.5rem;
     }
 
+    /* Garantir que a sidebar fique "grudada" no topo durante a rolagem */
     .sidebar {
         position: sticky;
-        top: 80px; 
+        top: 90px; /* Distância do topo (abaixo da navbar) */
         align-self: flex-start;
+        /* Adicionado padding-top para alinhar melhor com o conteúdo principal */
+        padding-top: 0; 
     }
 
+    /* Estilo do Acordeão */
     .accordion-button:not(.collapsed) {
         background-color: #e9f3ff; 
-        color: #0d6efd;
+        color: var(--primary-color);
     }
     .accordion-button {
         font-weight: 600;
-        color: #212529;
+        color: var(--text-color);
+    }
+    .accordion-body {
+        font-size: 0.95rem;
     }
 
+    /* Footer */
     footer {
-      background-color: #1a1a2e; 
+      background-color: var(--dark-bg); 
       color: #fff;
       padding: 20px 0; 
       margin-top: 4rem;
       box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Estilo para o bloco de conteúdo principal */
+    .main-content-block {
+        padding: 25px;
+        background-color: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
     }
   </style>
 </head>
@@ -88,36 +110,42 @@
       </button>
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav ms-auto">
-          <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+          <li class="nav-item"><a class="nav-link" href="index.html">Índice</a></li>
         </ul>
       </div>
     </div>
   </nav>
+
+  <!-- HEADER / TÍTULO PRINCIPAL -->
   <header class="logo-header">
     <div class="container text-center">
-      <img src="../../../assets/FilePriv Logo.jpg" alt="FilePriv Logo" class="logo">
-      <h1 class="fw-bold display-5"></h1>
-      <p class="lead text-secondary">Conheça nossa história, motivação e tecnologia.</p>
+      <!-- Imagem de logo adicionada para contexto -->
+      <img src="../../assets/FilePriv Logo.jpg" alt="FilePriv Logo" class="logo">
+      <p class="lead text-secondary"><strong>Conheça nossa história, motivação e tecnologia.</strong></p>
     </div>
   </header>
+  
   <div class="container">
-    <div class="row main-content-wrapper">
+    <div class="row">
       
-      <div class="col-lg-8">
-        <div class="p-4 bg-white rounded-3 shadow-lg"> <section class="mb-5">
-              <h2 class="mb-3 border-bottom pb-2" style="font-family: 'Poppins', sans-serif;">Descrição do Projeto</h2>
-              <p class="fs-5" style="font-family: 'Poppins', sans-serif;">
+      <!-- COLUNA DE CONTEÚDO PRINCIPAL (8) -->
+      <div class="col-lg-8 mb-4">
+        <div class="main-content-block"> 
+            <section class="mb-5">
+              <h2 class="mb-4 border-bottom pb-2">Descrição do Projeto</h2>
+              <p class="fs-5">
                 FilePriv é um protótipo funcional de um servidor de armazenamento seguro distribuído.
                 Os usuários podem fazer upload e download de arquivos com criptografia forte e particionamento.
               </p>
-              <p style="font-family: 'Poppins', sans-serif;">
+              <p>
                 Os arquivos são criptografados em nível de bit e divididos em partes independentes,
                 cada uma protegida com uma chave privada exclusiva para garantir a segurança máxima.
+                
               </p>
             </section>
 
             <section>
-              <h2 class="mb-4 border-bottom pb-2" style="font-family: 'Poppins', sans-serif;">Funcionalidades e Tecnologias</h2>
+              <h2 class="mb-4 border-bottom pb-2">Funcionalidades e Tecnologias</h2>
               <div class="accordion" id="featuresAccordion">
                 
                 <div class="accordion-item shadow-sm mb-3">
@@ -128,7 +156,7 @@
                   </h2>
                   <div id="collapseFeatures" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
                     <div class="accordion-body">
-                      <ul class="list-group list-group-flush" style="font-family: 'Poppins', sans-serif;">
+                      <ul class="list-group list-group-flush">
                         <li class="list-group-item">Upload & Download: Envie e recupere arquivos criptografados via interface web.</li>
                         <li class="list-group-item">Criptografia: Criptografia AES-GCM segura por arquivo.</li>
                         <li class="list-group-item">Chaves Aleatórias: Geração de chave exclusiva para cada upload de arquivo.</li>
@@ -147,12 +175,12 @@
                   </h2>
                   <div id="collapseTech" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
                     <div class="accordion-body">
-                      <ul class="list-group list-group-flush" style="font-family: 'Poppins', sans-serif;">
+                      <ul class="list-group list-group-flush">
                         <li class="list-group-item">Bootstrap 5</li>
                         <li class="list-group-item">AES-GCM Encryption</li>
                         <li class="list-group-item">HTML / CSS</li>
                         <li class="list-group-item">JavaScript</li>
-                        <li class="list-group-item">Python</li>
+                        <li class="list-group-item">Python (como backend simulado)</li>
                       </ul>
                     </div>
                   </div>
@@ -161,40 +189,43 @@
             </section>
         </div>
       </div>
-      <div class="col-lg-4">
+
+      <!-- COLUNA DE BARRA LATERAL (4) -->
+      <div class="col-lg-4 mb-4">
         <div class="sidebar d-grid gap-3">
           
-          <div class="card info-card bg-light">
+          <div class="card info-card bg-white">
             <div class="card-body">
               <h5 class="card-title text-primary">Criador</h5>
-              <p class="card-text mb-1">Ryan de Morais Correia</p>
+              <p class="card-text mb-1 fw-bold">Ryan de Morais Correia</p>
               <p class="small text-muted">Estudante</p>
             </div>
           </div>
 
-          <div class="card info-card bg-light">
+          <div class="card info-card bg-white">
             <div class="card-body">
               <h5 class="card-title text-primary">Motivação</h5>
-              <p class="card-text">Ferramenta local que funcione de maneira simples e efetiva</p>
+              <p class="card-text">Desenvolver uma ferramenta local que funcione de maneira simples e efetiva, focada em segurança e privacidade.</p>
             </div>
           </div>
 
-          <div class="card info-card bg-light">
+          <div class="card info-card bg-white">
             <div class="card-body">
               <h5 class="card-title text-primary">Tipo de projeto</h5>
               <p class="card-text">Projeto acadêmico para gerenciamento seguro de arquivos distribuídos.</p>
             </div>
           </div>
 
-          <div class="card info-card bg-light">
+          <div class="card info-card bg-white">
             <div class="card-body">
               <h5 class="card-title text-primary">Status</h5>
-              <p class="card-text">Estágio de protótipo.</p>
+              <p class="card-text fw-bold text-success">Estágio de protótipo funcional.</p>
             </div>
           </div>
         </div>
       </div>
-      </div>
+
+    </div>
   </div>
 
   <footer class="text-center">
