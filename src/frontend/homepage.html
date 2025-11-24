@@ -264,10 +264,10 @@
 
       <div class="collapse navbar-collapse" id="navbarTop">
         <ul class="navbar-nav me-auto">
-          <li class="nav-item active"><a class="nav-link" href="index.html">Índice</a></li>
-          <li class="nav-item"><a class="nav-link" href="support.html">Suporte</a></li>
+          <li class="nav-item active"><a class="nav-link text-dark" href="index.html">Índice</a></li>
+          <li class="nav-item"><a class="nav-link text-dark" href="support.html">Suporte</a></li>
           <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">Opções</a>
+            <a class="nav-link dropdown-toggle text-dark" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">Opções</a>
             <div class="dropdown-menu">
               <a class="dropdown-item" href="pushFile.html">Enviar Arquivo</a>
               <a class="dropdown-item" href="pullFile.html">Baixar Arquivo</a>
@@ -312,7 +312,7 @@
           </div>
           
           <button class="btn btn-primary mt-3 w-100 fw-bold" data-bs-toggle="modal" data-bs-target="#manageServersModal">
-            Alterar IP - Porta
+            Configuração resumida
           </button>
         </div>
       </div>
@@ -356,13 +356,13 @@
     </div>
   </div>
 
-  <nav class="navbar fixed-bottom navbar-dark bg-dark">
+  <nav class="navbar fixed-bottom navbar-light bg-light">
     <div class="container justify-content-center">
-      <a class="nav-link text-white mx-3" href="#">Início</a>
-      <a class="nav-link text-white mx-3" href="index.html">Índice</a>
-      <a class="nav-link text-white mx-3" href="support.html">Suporte</a>
-      <a class="nav-link text-white mx-3" href="about.html">Sobre</a>
-      <a class="nav-link text-white mx-3" href="servers.html">Servidores</a>
+      <a class="nav-link text-dark mx-3" href="#"><strong>Início</strong></a>
+      <a class="nav-link text-dark mx-3" href="index.html"><strong>Índice</strong></a>
+      <a class="nav-link text-dark mx-3" href="support.html"><strong>Suporte</strong></a>
+      <a class="nav-link text-dark mx-3" href="about.html"><strong>Sobre</strong></a>
+      <a class="nav-link text-dark mx-3" href="servers.html"><strong>Servidores</strong></a>
     </div>
   </nav>
 
@@ -378,7 +378,7 @@
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
         </div>
         <div class="modal-body">
-          <p class="text-dark">Preencha apenas os campos que deseja alterar. Os campos vazios serão ignorados. **Atenção: A atualização é simulada em frontend.**</p>
+          <p class="text-dark">Preencha apenas os campos que deseja alterar. Os campos vazios serão ignorados.</p>
           <form id="updateAttributesForm">
             <div class="mb-3">
               <label for="update-name" class="form-label">Nome</label>
@@ -451,7 +451,16 @@
           <div class="list-group" id="modalServerList">
             <!-- Servidores serão listados aqui -->
           </div>
+
+          <!-- NOVO LINK PARA DOCUMENTAÇÃO AVANÇADA -->
+          <div class="mt-4 pt-3 border-top text-center">
+            <p class="small text-muted mb-2">Deseja alterar especificações detalhadas (CPU, RAM, Disco)?</p>
+            <a href="servers.html" class="btn btn-outline-primary btn-sm">
+              <i class="fas fa-server me-2"></i>Acessar Configurações Avançadas de Servidores
+            </a>
+          </div>
         </div>
+
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
         </div>
@@ -473,9 +482,9 @@
     
     // DADOS UNIFICADOS: Usados tanto para o mapa quanto para o painel de listagem
     let currentServersData = [
-        { id: 'server1', name: 'Servidor 1', ip: '192.168.10.1', port: '30120', status: 'Online', load: '25%' },
-        { id: 'server2', name: 'Servidor 2', ip: '192.168.10.2', port: '30210', status: 'Online', load: '38%' },
-        { id: 'server3', name: 'Servidor 3', ip: '192.168.10.3', port: '30120', status: 'Online', load: '19%' },
+        { id: 'server1', name: 'Servidor 1', ip: '10.0.10.10', port: '30120', status: 'Online', load: '25%' },
+        { id: 'server2', name: 'Servidor 2', ip: '10.0.10.11', port: '30210', status: 'Online', load: '38%' },
+        { id: 'server3', name: 'Servidor 3', ip: '10.0.10.12', port: '30120', status: 'Online', load: '19%' },
     ];
 
     // Elementos DOM

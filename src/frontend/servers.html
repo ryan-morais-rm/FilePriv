@@ -10,60 +10,67 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        /* Configuração de Cores e Fontes (Exatamente como solicitado) */
+        /* Configuração de Cores Exata do Pedido */
         :root {
             --dark-bg: #1a1a2e; 
-            --light-bg: #e0e0e0; /* Ajustado para consistência */
+            --light-bg: #e0e0e0; 
             --card-bg: #ffffff;
             --primary-color: #0d6efd; 
         }
+
         body {
             font-family: 'Poppins', sans-serif;
             background-color: var(--light-bg);
-            color: #1f2937; /* Gray 800 para legibilidade */
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
         }
-        /* Classes customizadas para usar as variáveis */
-        .navbar-custom, .footer-custom {
-            background-color: var(--dark-bg);
-        }
-        .bg-card-custom {
-            background-color: var(--card-bg);
-        }
-        /* Utilitários para a cor primária */
+
+        /* Classes utilitárias para Tailwind usar as variáveis CSS nativas */
+        .bg-dark-custom { background-color: var(--dark-bg); }
+        .bg-card-custom { background-color: var(--card-bg); }
         .text-primary-custom { color: var(--primary-color); }
-        .bg-primary-custom { background-color: var(--primary-color); }
         .border-primary-custom { border-color: var(--primary-color); }
         
-        /* Hover states para botões primários */
+        /* Botões customizados */
         .btn-primary-custom {
             background-color: var(--primary-color);
             color: white;
+            transition: background-color 0.2s;
         }
         .btn-primary-custom:hover {
-            background-color: #0b5ed7; /* Um tom mais escuro para hover */
+            background-color: #0a58ca; 
         }
 
         .card-shadow {
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
         }
+        
         .chart-container {
             position: relative;
             height: 400px;
             width: 100%;
+        }
+
+        /* Ajuste para a Navbar */
+        .navbar-brand {
+            font-weight: bold;
+            color: #ffffff; 
         }
     </style>
 </head>
 <body class="flex flex-col min-h-screen">
 
     <!-- Navegação -->
-    <nav class="navbar-custom sticky top-0 z-50 shadow-lg">
+    <nav class="bg-dark-custom sticky top-0 z-50 shadow-lg">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-3 flex justify-between items-center">
-            <a class="text-2xl font-bold text-white tracking-wider hover:text-gray-200 transition" href="index.html">
+            <a class="text-2xl font-bold text-white tracking-wider hover:text-gray-200 transition" href="homepage.html">
                 FilePriv
             </a>
             <div class="hidden sm:flex space-x-4">
                 <!-- Link para Home Page -->
-                <a class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition duration-150" href="homepage.html">Home</a>
+                <a class="text-gray-300 hover:text-white px-6 py-4 rounded-md text-sm font-medium transition duration-150" href="homepage.html"><strong>HOME</strong></a>
             </div>
         </div>
     </nav>
@@ -71,9 +78,9 @@
     <!-- Cabeçalho Principal -->
     <header class="bg-card-custom pt-10 pb-10 shadow-sm mb-8">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-            <p class="text-xl text-black-500">
-                Gerenciamento e especificações da infraestrutura local.
-            </p>
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">
+                Gerenciamento e especificações da infraestrutura local           
+            </h1>
         </div>
     </header>
 
@@ -95,7 +102,7 @@
 
         <!-- Bloco 2: Tabela Editável -->
         <section class="mb-12 bg-card-custom p-8 rounded-xl card-shadow">
-            <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2">Especificações de Hardware</h2>
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2">Especificações dos Nodes</h2>
             
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
@@ -103,6 +110,8 @@
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nó</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">IP Interno</th>
+                            <!-- NOVA COLUNA PORTA -->
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Porta</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">CPU (vCores)</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Memória (RAM)</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Disco</th>
@@ -113,10 +122,11 @@
                         <!-- Linha 1 -->
                         <tr id="row-1">
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-primary-custom">NODE-01</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">10.0.10.10</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700" id="ip-1">10.0.10.10</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700" id="port-1">30120</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700" id="cpu-1">4</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700" id="ram-1">8 GB</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">100 GB SSD</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700" id="disk-1">100 GB SSD</td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                 <button onclick="toggleEdit(1)" class="text-primary-custom hover:text-blue-800 font-bold bg-blue-50 px-3 py-1 rounded border border-blue-200 hover:bg-blue-100 transition">Editar</button>
                             </td>
@@ -124,10 +134,11 @@
                         <!-- Linha 2 -->
                         <tr id="row-2">
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-yellow-600">NODE-02</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">10.0.2.11</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700" id="ip-2">10.0.10.11</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700" id="port-2">30210</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700" id="cpu-2">2</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700" id="ram-2">4 GB</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">50 GB SSD</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700" id="disk-2">50 GB SSD</td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                 <button onclick="toggleEdit(2)" class="text-primary-custom hover:text-blue-800 font-bold bg-blue-50 px-3 py-1 rounded border border-blue-200 hover:bg-blue-100 transition">Editar</button>
                             </td>
@@ -135,10 +146,11 @@
                         <!-- Linha 3 -->
                         <tr id="row-3">
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">NODE-03</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">10.0.2.12</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700" id="ip-3">10.0.10.12</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700" id="port-3">30120</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700" id="cpu-3">1</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700" id="ram-3">2 GB</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">80 GB HDD</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700" id="disk-3">80 GB HDD</td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                 <button onclick="toggleEdit(3)" class="text-primary-custom hover:text-blue-800 font-bold bg-blue-50 px-3 py-1 rounded border border-blue-200 hover:bg-blue-100 transition">Editar</button>
                             </td>
@@ -159,7 +171,7 @@
     </main>
 
     <!-- Footer -->
-    <footer class="footer-custom text-white py-6 mt-auto">
+    <footer class="bg-dark-custom text-white py-6 mt-auto">
         <div class="container mx-auto text-center px-4">
             <p class="text-sm">&copy; 2025 Projeto FilePriv</p>
         </div>
@@ -171,7 +183,7 @@
 
         // Dados iniciais
         const nodesData = {
-            1: { name: 'NODE-01', cpu: 4, ram: 8, color: '#0d6efd' }, // Azul Primário
+            1: { name: 'NODE-01', cpu: 4, ram: 8, color: '#0d6efd' }, // Azul
             2: { name: 'NODE-02', cpu: 2, ram: 4, color: 'rgb(234, 179, 8)' }, // Amarelo
             3: { name: 'NODE-03', cpu: 1, ram: 2, color: 'rgb(22, 163, 74)' } // Verde
         };
@@ -180,30 +192,48 @@
         function toggleEdit(id) {
             const row = document.getElementById(`row-${id}`);
             const btn = row.querySelector('button');
+            
+            // Células
+            const ipCell = document.getElementById(`ip-${id}`);
+            const portCell = document.getElementById(`port-${id}`); // NOVA CÉLULA
             const cpuCell = document.getElementById(`cpu-${id}`);
             const ramCell = document.getElementById(`ram-${id}`);
+            const diskCell = document.getElementById(`disk-${id}`);
 
             if (btn.innerText === 'Editar') {
                 // Entrar no modo de edição
-                const currentCpu = cpuCell.innerText.replace(' Cores', '').trim();
+                const currentIp = ipCell.innerText.trim();
+                const currentPort = portCell.innerText.trim(); // Captura valor atual da porta
+                const currentCpu = cpuCell.innerText.trim();
                 const currentRam = ramCell.innerText.replace(' GB', '').trim();
+                const currentDisk = diskCell.innerText.trim();
 
-                cpuCell.innerHTML = `<input type="number" id="input-cpu-${id}" value="${currentCpu}" class="w-20 border border-gray-300 rounded px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500">`;
-                ramCell.innerHTML = `<input type="number" id="input-ram-${id}" value="${currentRam}" class="w-20 border border-gray-300 rounded px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500">`;
+                ipCell.innerHTML = `<input type="text" id="input-ip-${id}" value="${currentIp}" class="w-28 border border-gray-300 rounded px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500">`;
+                // Input da porta
+                portCell.innerHTML = `<input type="number" id="input-port-${id}" value="${currentPort}" class="w-20 border border-gray-300 rounded px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500">`;
+                cpuCell.innerHTML = `<input type="number" id="input-cpu-${id}" value="${currentCpu}" class="w-16 border border-gray-300 rounded px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500">`;
+                ramCell.innerHTML = `<input type="number" id="input-ram-${id}" value="${currentRam}" class="w-16 border border-gray-300 rounded px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500">`;
+                diskCell.innerHTML = `<input type="text" id="input-disk-${id}" value="${currentDisk}" class="w-28 border border-gray-300 rounded px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500">`;
                 
                 btn.innerText = 'Salvar';
                 btn.classList.remove('bg-blue-50', 'text-primary-custom');
                 btn.classList.add('bg-green-100', 'text-green-700', 'border-green-300');
             } else {
-                // Salvar alterações
+                // Salvar alterações (Frontend)
+                const newIp = document.getElementById(`input-ip-${id}`).value;
+                const newPort = document.getElementById(`input-port-${id}`).value; // Valor da porta
                 const newCpu = document.getElementById(`input-cpu-${id}`).value;
                 const newRam = document.getElementById(`input-ram-${id}`).value;
+                const newDisk = document.getElementById(`input-disk-${id}`).value;
 
                 // Atualiza visualização
-                cpuCell.innerText = newCpu; 
+                ipCell.innerText = newIp;
+                portCell.innerText = newPort; // Atualiza texto da porta
+                cpuCell.innerText = newCpu;
                 ramCell.innerText = newRam + ' GB';
+                diskCell.innerText = newDisk;
 
-                // Atualiza dados internos
+                // Atualiza dados internos para o gráfico
                 nodesData[id].cpu = newCpu;
                 nodesData[id].ram = newRam;
 
