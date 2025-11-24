@@ -9,7 +9,7 @@
     /* Cores Consistentes */
     :root {
         --dark-bg: #1a1a2e; 
-        --light-bg: #e0e0e0; /* Ajustado para consistência */
+        --light-bg: #e0e0e0; 
         --card-bg: #ffffff;
         --primary-color: #0d6efd; 
     }
@@ -56,6 +56,11 @@
         --bs-btn-border-color: var(--primary-color);
     }
 
+    .btn-outline-primary:hover {
+        background-color: var(--primary-color);
+        color: #fff;
+    }
+
     .table-primary {
         --bs-table-bg: var(--primary-color);
         --bs-table-color: #fff;
@@ -73,10 +78,12 @@
             <span class="nav-link text-light"><strong>Usuário:</strong> Ryan</span>
           </li>
           <li class="nav-item mx-2">
-            <span class="nav-link text-light"><strong>3</strong> arquivos armazenados</span>
+            <!-- Contador de Armazenados (Dinâmico via DB) -->
+            <span class="nav-link text-light" id="storedFilesCount"><strong>...</strong> arquivos armazenados</span>
           </li>
           <li class="nav-item mx-2">
-            <span class="nav-link text-light"><strong>4</strong> arquivos consultados</span>
+            <!-- Contador de Consultados (Dinâmico via LocalStorage) -->
+            <span class="nav-link text-light" id="consultedFilesCount"><strong>0</strong> arquivos consultados</span>
           </li>
         </ul>
       </div>
@@ -87,20 +94,19 @@
     
     <div class="row justify-content-center mb-4">
       <div class="col-lg-10 d-flex justify-content-between align-items-center">
-        <!-- Botão para ir para a página de Upload/Enviar -->
+        <h3 class="text-primary m-0">Recupere seus arquivos aqui</h3>
         <a href="pushFile.html" class="btn btn-outline-primary">
           Ir para Enviar Arquivos
         </a>
       </div>
     </div>
-    <!-- FIM DO NOVO BOTÃO -->
 
-    <!-- CAIXA DE PESQUISA (Ajustada para col-lg-10) -->
+    <!-- CAIXA DE PESQUISA -->
     <div class="row justify-content-center mb-4">
       <div class="col-lg-10">
         <div class="search-box p-3">
-          <form class="d-flex">
-            <input class="form-control me-2" type="search" placeholder="Buscar por nome, data ou descrição..." aria-label="Search">
+          <form class="d-flex" onsubmit="event.preventDefault(); filterFiles();">
+            <input class="form-control me-2" id="searchInput" type="search" placeholder="Buscar por nome, data ou descrição..." aria-label="Search" onkeyup="filterFiles()">
             <button class="btn btn-primary" type="submit">Procurar</button>
           </form>
         </div>
@@ -111,6 +117,9 @@
     <div class="row justify-content-center">
       <div class="col-lg-10">
         <div class="table-container">
+          <!-- Mensagem de Erro (Oculta por padrão) -->
+          <div id="errorMessage" class="alert alert-warning" style="display: none;"></div>
+
           <table class="table table-hover align-middle">
             <thead class="table-primary">
               <tr>
@@ -120,32 +129,11 @@
                 <th scope="col" class="text-center">Ações</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody id="filesTableBody">
               <tr>
-                <td>Relatorio_2025.pdf</td>
-                <td>27/09/2025</td>
-                <td>Relatório de desempenho mensal</td>
-                <td class="text-center">
-                  <a href="#" class="btn btn-sm btn-primary">Download</a>
-                </td>
+                  <td colspan="4" class="text-center py-4">Conectando ao banco de dados local...</td>
               </tr>
-              <tr>
-                <td>Backup_DB.zip</td>
-                <td>22/09/2025</td>
-                <td>Backup criptografado do banco de dados</td>
-                <td class="text-center">
-                  <a href="#" class="btn btn-sm btn-primary">Download</a>
-                </td>
-              </tr>
-              <tr>
-                <td>Contrato_Cliente.docx</td>
-                <td>19/09/2025</td>
-                <td>Contrato assinado pelo cliente</td>
-                <td class="text-center">
-                  <a href="#" class="btn btn-sm btn-primary">Download</a>
-                </td>
-              </tr>
-              </tbody>
+            </tbody>
           </table>
         </div>
       </div>
@@ -161,5 +149,104 @@
   </footer>
   
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Script Lógica Local (Fetch API -> JSON Server) -->
+  <script>
+    const API_URL = 'http://localhost:3000/files';
+    let allFiles = [];
+    
+    // Inicializa a contagem de downloads lendo do localStorage
+    let consultedCount = parseInt(localStorage.getItem('consultedCount')) || 0;
+
+    async function fetchFiles() {
+        const tbody = document.getElementById('filesTableBody');
+        const errorMsg = document.getElementById('errorMessage');
+
+        // Atualiza visualmente os contadores ao carregar
+        updateConsultedCounterUI();
+
+        try {
+            // REQUISIÇÃO GET PARA O JSON SERVER
+            const response = await fetch(API_URL);
+            
+            if (!response.ok) throw new Error('Servidor não respondeu.');
+            
+            allFiles = await response.json();
+            
+            // Ordena por ID decrescente (mais recente primeiro)
+            allFiles.reverse(); 
+
+            updateStoredCounterUI(allFiles.length);
+            renderTable(allFiles);
+            errorMsg.style.display = 'none';
+
+        } catch (error) {
+            console.error("Erro ao buscar arquivos:", error);
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-danger">Falha ao carregar dados.</td></tr>';
+            errorMsg.style.display = 'block';
+            errorMsg.innerHTML = `
+                <strong>Atenção:</strong> Não foi possível conectar ao banco de dados local.<br>
+                Certifique-se de rodar o comando: <code>json-server --watch db.json</code> no terminal.
+            `;
+        }
+    }
+
+    function renderTable(files) {
+        const tbody = document.getElementById('filesTableBody');
+        tbody.innerHTML = '';
+
+        if (files.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted">Nenhum arquivo encontrado no banco.</td></tr>';
+            return;
+        }
+
+        files.forEach(file => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${file.name}</td>
+                <td>${file.date}</td>
+                <td>${file.desc}</td>
+                <td class="text-center">
+                  <button class="btn btn-sm btn-primary" onclick="downloadFile('${file.name}')">Download</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // Atualiza contador de ARMAZENADOS (Vem do Banco de Dados)
+    function updateStoredCounterUI(count) {
+        const counterEl = document.getElementById('storedFilesCount');
+        if (counterEl) counterEl.innerHTML = `<strong>${count}</strong> arquivos armazenados`;
+    }
+
+    // Atualiza contador de CONSULTADOS (Vem do LocalStorage)
+    function updateConsultedCounterUI() {
+        const counterEl = document.getElementById('consultedFilesCount');
+        if (counterEl) counterEl.innerHTML = `<strong>${consultedCount}</strong> arquivos consultados`;
+    }
+
+    window.filterFiles = () => {
+        const term = document.getElementById('searchInput').value.toLowerCase();
+        const filtered = allFiles.filter(file => 
+            (file.name && file.name.toLowerCase().includes(term)) || 
+            (file.desc && file.desc.toLowerCase().includes(term)) ||
+            (file.date && file.date.includes(term))
+        );
+        renderTable(filtered);
+    };
+
+    window.downloadFile = (filename) => {
+        // Incrementa contador local
+        consultedCount++;
+        localStorage.setItem('consultedCount', consultedCount);
+        updateConsultedCounterUI();
+
+        alert(`Simulando download do servidor local: ${filename}\n(Contador de consultas atualizado!)`);
+    };
+
+    // Carrega os dados ao abrir a página
+    window.onload = fetchFiles;
+  </script>
 </body>
 </html>
