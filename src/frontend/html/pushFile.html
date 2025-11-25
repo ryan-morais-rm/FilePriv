@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Upload de Arquivos - FilePriv</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <style>
+    <style>
     /* Cores Consistentes */
     :root {
         --dark-bg: #1a1a2e; /* Navbar/Footer */
@@ -70,13 +70,15 @@
             </span>
           </li>
           <li class="nav-item mx-2">
-            <span class="nav-link text-light">
-              <strong>3</strong> arquivos armazenados
+            <!-- ID Adicionado: storedFilesCount -->
+            <span class="nav-link text-light" id="storedFilesCount">
+              <strong>...</strong> arquivos armazenados
             </span>
           </li>
           <li class="nav-item mx-2">
-            <span class="nav-link text-light">
-              <strong>4</strong> arquivos consultados
+            <!-- ID Adicionado: consultedFilesCount -->
+            <span class="nav-link text-light" id="consultedFilesCount">
+              <strong>...</strong> arquivos consultados
             </span>
           </li>
         </ul>
@@ -91,13 +93,11 @@
           
           <div class="d-flex justify-content-between align-items-center mb-4">
               <h2 class="text-primary m-0">Upload de Arquivos</h2>
-              <!-- BOTÃO ADICIONADO AQUI -->
               <a href="pullFile.html" class="btn btn-outline-primary btn-sm">
                   Ir para Consultar Arquivos
               </a>
           </div>
 
-          <!-- Adicionado ID ao formulário -->
           <form id="uploadForm">
             <div class="mb-3">
               <label for="fileName" class="form-label">Nome do arquivo</label>
@@ -109,12 +109,11 @@
             </div>
             <div class="mb-4">
               <label for="fileDesc" class="form-label">Descrição</label>
-              <textarea class="form-control" id="fileDesc" rows="3" placeholder="Adicionar uma descrição, se desejado..."></textarea>
+              <textarea class="form-control" id="fileDesc" rows="3" placeholder="Adicionar uma descrição..."></textarea>
             </div>
             <button type="submit" id="submitBtn" class="btn btn-primary w-100">Enviar</button>
           </form>
 
-          <!-- Área de Mensagens de Status -->
           <div id="uploadStatus"></div>
 
         </div>
@@ -123,80 +122,13 @@
   </div>
 
   <footer class="text-center">
-    <div class="container">
-      <p class="mb-1">&copy; 2025 Projeto FilePriv </p>
-      <a href="support.html" class="text-decoration-none text-light mx-2">Suporte</a> |
-      <a href="homepage.html" class="text-decoration-none text-light mx-2">Home</a>
-    </div>
+    <div class="container"><p class="mb-1">&copy; 2025 Projeto FilePriv </p></div>
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-  <!-- Lógica para comunicação com o db.json local -->
-  <script>
-    // URL do seu JSON Server local
-    const API_URL = 'http://localhost:3000/files';
-
-    document.getElementById('uploadForm').addEventListener('submit', async function(event) {
-        event.preventDefault(); // Impede o recarregamento da página
-
-        const fileName = document.getElementById('fileName').value.trim();
-        const fileDesc = document.getElementById('fileDesc').value.trim();
-        const statusDiv = document.getElementById('uploadStatus');
-        const btn = document.getElementById('submitBtn');
-
-        if (!fileName) {
-            statusDiv.innerHTML = `<div class="alert alert-danger mt-3">Por favor, insira um nome para o arquivo.</div>`;
-            return;
-        }
-
-        // Feedback visual de carregamento
-        const originalBtnText = btn.innerHTML;
-        btn.disabled = true;
-        btn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Enviando...`;
-        statusDiv.innerHTML = '';
-
-        try {
-            // Gera a data atual formatada
-            const today = new Date();
-            const dateString = today.toLocaleDateString('pt-BR'); // ex: 24/11/2025
-
-            // Cria o objeto do novo arquivo
-            const newFile = {
-                name: fileName,
-                desc: fileDesc || "Sem descrição",
-                date: dateString
-            };
-
-            // Faz a requisição POST para o JSON Server
-            const response = await fetch(API_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(newFile)
-            });
-
-            if (!response.ok) throw new Error('Falha na conexão com o servidor local');
-
-            // Sucesso
-            statusDiv.innerHTML = `<div class="alert alert-success mt-3">Arquivo <strong>${fileName}</strong> registrado com sucesso!</div>`;
-            document.getElementById('uploadForm').reset(); // Limpa o formulário
-
-        } catch (error) {
-            console.error("Erro:", error);
-            statusDiv.innerHTML = `
-                <div class="alert alert-danger mt-3">
-                    <strong>Erro de Conexão!</strong><br>
-                    Não foi possível salvar no <code>db.json</code>.<br>
-                    Verifique se rodou o comando: <code>json-server --watch db.json</code>
-                </div>`;
-        } finally {
-            // Restaura o botão
-            btn.disabled = false;
-            btn.innerHTML = originalBtnText;
-        }
-    });
+  <script type="module">
+    import { pushFile } from '../js/pushFile.js';
+    pushFile();
   </script>
 </body>
 </html>
