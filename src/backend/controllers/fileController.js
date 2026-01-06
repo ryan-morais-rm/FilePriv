@@ -1,84 +1,96 @@
 const FileMetadata = require('../models/FileMetadata');
-// Importaremos os services futuramente:
-// const encryptionService = require('../services/encryptionService');
-// const storageService = require('../services/storageService');
 
 /**
  * Controller responsável pelo upload, download e listagem de arquivos.
+ * Integrado ao PostgreSQL.
  */
 exports.uploadFile = async (req, res) => {
     try {
-        const { fileName, description, ownerId } = req.body;
-        // O arquivo binário viria em req.file ou req.files (usando multer)
+        // Recebe os dados exatamente como o Frontend (pushFile.js) envia
+        const { name, desc } = req.body; 
+        
+        // Simulação de usuário logado (Futuramente virá do req.user via token)
+        const ownerId = 1; 
 
-        // 1. Validação
-        if (!fileName || !ownerId) {
-            return res.status(400).json({ error: "Nome do arquivo e ID do proprietário são obrigatórios." });
+        if (!name) {
+            return res.status(400).json({ error: "Nome do arquivo é obrigatório." });
         }
 
-        console.log(`Iniciando processo de upload para: ${fileName}`);
+        console.log(`Iniciando upload no Banco para: ${name}`);
 
-        // 2. Orquestração dos Serviços (O Garçom manda para a Cozinha)
-        // const encryptedData = await encryptionService.encrypt(req.file.buffer);
-        // const shards = await shardingService.split(encryptedData);
-        // const locations = await storageService.distribute(shards);
+        // 1. Criar o registro principal na tabela 'files'
+        const newFile = await FileMetadata.create({
+            fileName: name,
+            originalName: name, // Em upload real, viria do multer
+            size: Math.floor(Math.random() * 10000) + 1000, // Tamanho simulado
+            description: desc,
+            ownerId: ownerId,
+            isEncrypted: true
+        });
 
-        // 3. Criação do Metadado (A Ficha Técnica)
-        const newFile = new FileMetadata(
-            Date.now().toString(),
-            fileName,
-            fileName, // originalName
-            1024, // size simulado
-            description,
-            ownerId
-        );
+        // 2. Simular a distribuição dos pedaços (Salvar na tabela 'file_shards')
+        // Como newFile é uma instância da classe, podemos chamar seus métodos
+        await newFile.addShardLocation('NODE-01', `/mnt/storage/node1/${newFile.id}_part1.enc`, 0);
+        await newFile.addShardLocation('NODE-02', `/mnt/storage/node2/${newFile.id}_part2.enc`, 1);
 
-        // Simulando que foi criptografado e salvo
-        newFile.setEncrypted(true);
-        newFile.addShardLocation('NODE-01', '/var/data/shard_1.enc');
-        newFile.addShardLocation('NODE-02', '/var/data/shard_2.enc');
-
-        // 4. Resposta
+        // 3. Responder ao Frontend
         res.status(201).json({
-            message: "Arquivo enviado, criptografado e distribuído com sucesso.",
+            message: "Arquivo salvo e distribuído com sucesso!",
             file: newFile
         });
 
     } catch (error) {
         console.error("Erro no upload:", error);
-        res.status(500).json({ error: "Falha no processamento do arquivo." });
+        res.status(500).json({ error: "Falha ao salvar arquivo no banco de dados." });
     }
 };
 
 exports.listFiles = async (req, res) => {
     try {
-        const { userId } = req.params; // ou req.query
-        
-        // Simulação de busca no banco
-        const mockFiles = [
-            new FileMetadata('1', 'Relatorio.pdf', 'Relatorio.pdf', 5000, 'Mensal', userId),
-            new FileMetadata('2', 'Backup.zip', 'Backup.zip', 20000, 'DB Backup', userId)
-        ];
+        const ownerId = 1; // Temporário
 
-        res.status(200).json(mockFiles);
+        // Busca no Postgres usando o método estático que criamos
+        const files = await FileMetadata.findByOwnerId(ownerId);
+
+        // Formata a data e os campos para o Frontend
+        const responseData = files.map(file => ({
+            id: file.id,
+            name: file.fileName,
+            desc: file.description,
+            // Formata a data do banco para DD/MM/AAAA
+            date: new Date(file.uploadDate).toLocaleDateString('pt-BR')
+        }));
+
+        res.status(200).json(responseData);
+
     } catch (error) {
-        res.status(500).json({ error: "Erro ao listar arquivos." });
+        console.error("Erro ao listar:", error);
+        res.status(500).json({ error: "Erro ao buscar arquivos." });
     }
 };
 
 exports.downloadFile = async (req, res) => {
     try {
         const { fileId } = req.params;
-        console.log(`Solicitação de download para o arquivo ID: ${fileId}`);
+        
+        // 1. Busca metadados e shards no banco
+        const file = await FileMetadata.findById(fileId);
 
-        // Fluxo reverso:
-        // 1. Buscar metadados no DB
-        // 2. Buscar fragmentos nos Nodes (StorageService)
-        // 3. Reconstruir e Descriptografar (EncryptionService)
-        // 4. Enviar para o cliente
+        if (!file) {
+            return res.status(404).json({ error: "Arquivo não encontrado." });
+        }
 
-        res.status(200).send("Simulação: Arquivo binário retornado.");
+        console.log(`Download solicitado: ${file.fileName}. Shards localizados: ${file.shards.length}`);
+
+        // Aqui entraria a lógica real de buscar os bytes nos servidores e descriptografar
+        // Por enquanto, retornamos o sucesso da operação lógica
+        res.status(200).json({ 
+            message: "Metadados recuperados com sucesso. Download iniciado (Simulado).",
+            fileData: file
+        });
+
     } catch (error) {
+        console.error("Erro no download:", error);
         res.status(500).json({ error: "Erro ao recuperar arquivo." });
     }
 };

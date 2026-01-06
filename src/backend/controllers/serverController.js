@@ -5,15 +5,11 @@ const ServerNode = require('../models/ServerNode');
  */
 exports.getAllNodes = async (req, res) => {
     try {
-        // Aqui leríamos do db.json ou consultariamos o status real via ping
-        const nodes = [
-            new ServerNode('1', 'NODE-01-Storage', '10.0.10.10', 30120, 'VMware', { cpu: 4, ram: 8, disk: '100 GB' }),
-            new ServerNode('2', 'NODE-02-Distribution', '10.0.10.11', 30210, 'VMware', { cpu: 2, ram: 4, disk: '50 GB' }),
-            new ServerNode('3', 'NODE-03-Test', '10.0.10.12', 30120, 'VirtualBox', { cpu: 1, ram: 2, disk: '80 GB' })
-        ];
-
+        // Busca todos os nós diretamente do PostgreSQL
+        const nodes = await ServerNode.findAll();
         res.status(200).json(nodes);
     } catch (error) {
+        console.error("Erro ao buscar nós:", error);
         res.status(500).json({ error: "Erro ao buscar status dos servidores." });
     }
 };
@@ -23,16 +19,35 @@ exports.updateNodeSpecs = async (req, res) => {
         const { nodeId } = req.params;
         const { cpu, ram, disk } = req.body;
 
-        console.log(`Atualizando especificações do Nó ${nodeId}: CPU=${cpu}, RAM=${ram}`);
+        // 1. Verifica se o nó existe
+        const node = await ServerNode.findById(nodeId);
+        
+        if (!node) {
+            return res.status(404).json({ error: "Nó de armazenamento não encontrado." });
+        }
 
-        // Lógica de atualização no DB iria aqui
+        // 2. Atualiza as especificações no banco
+        await node.updateSpecs(cpu, ram, disk);
+
+        console.log(`Especificações do Nó ${nodeId} atualizadas: CPU=${cpu}, RAM=${ram}, Disk=${disk}`);
         
         res.status(200).json({
-            message: `Especificações do nó ${nodeId} atualizadas com sucesso.`,
-            updatedSpecs: { cpu, ram, disk }
+            message: `Especificações do nó ${node.name} atualizadas com sucesso.`,
+            updatedSpecs: node.specs
         });
 
     } catch (error) {
-        res.status(500).json({ error: "Erro ao atualizar nó." });
+        console.error("Erro ao atualizar nó:", error);
+        res.status(500).json({ error: "Erro interno ao atualizar especificações." });
+    }
+};
+
+// Adicionar um nó (Opcional, mas útil para popular o banco inicialmente)
+exports.createNode = async (req, res) => {
+    try {
+        const newNode = await ServerNode.create(req.body);
+        res.status(201).json(newNode);
+    } catch (error) {
+        res.status(500).json({ error: "Erro ao criar nó." });
     }
 };
