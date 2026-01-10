@@ -1,4 +1,4 @@
-const db = require('../config/dbconfig');
+const db = require('../config/db');
 
 /**
  * Classe que representa um Nó de Armazenamento (VM) e interage com o PostgreSQL.

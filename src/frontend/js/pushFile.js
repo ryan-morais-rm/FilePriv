@@ -1,5 +1,5 @@
 export function pushFile() {
-    const API_URL = 'http://localhost:3000/files';
+    const API_URL = 'http://localhost:3000/api/files/upload'';
     const form = document.getElementById('uploadForm');
     const statusDiv = document.getElementById('uploadStatus');
     const btn = document.getElementById('submitBtn');

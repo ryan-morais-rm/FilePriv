@@ -1,5 +1,5 @@
 export function pullFile() {
-    const API_URL = 'http://localhost:3000/files';
+    const API_URL = 'http://localhost:3000/api/files/list/1';
     let allFiles = [];
     
     // Inicializa a contagem de downloads lendo do localStorage
