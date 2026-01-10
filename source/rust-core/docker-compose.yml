@@ -1,0 +1,24 @@
+services:
+ 
+  mysql:
+    image: mysql:8.3
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    networks:
+      - app-tier
+    ports:
+      - 3306:3306
+    volumes:
+      - mysql_data:/var/lib/mysql
+ 
+networks:
+  app-tier:
+    driver: bridge
+ 
+volumes:
+  mysql_data:

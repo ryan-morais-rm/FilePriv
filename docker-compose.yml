@@ -1,7 +1,4 @@
-version: '3.8'
-
 services:
-  # Serviço do Banco de Dados
   db:
     image: postgres:15-alpine
     container_name: filepriv_postgres
@@ -14,6 +11,6 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
-      - ./src/backend/database.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./source/rust-core/database.sql/docker-entrypoint-initdb.d/init.sql
 volumes:
   pgdata:
