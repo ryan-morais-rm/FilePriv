@@ -1,0 +1,42 @@
+    body {
+      background-color: #e0e0e0;
+      color: #000;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    .content-wrapper {
+        flex: 1;
+    }
+    
+    .login-card {
+      background-color: #ffffff;
+      border-radius: 12px;
+      padding: 40px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    }
+    
+    .navbar-custom-bg {
+        background-color: #1a1a2e !important;
+    }
+    
+    .navbar-brand {
+      font-weight: bold;
+      color: #ffffff !important; 
+    }
+    
+    .logo {
+      max-width: 120px;
+      margin-bottom: 20px;
+    }
+    
+    footer {
+      background-color: #1a1a2e;
+      color: #fff;
+      padding: 15px 0;
+    }
+    
+    .btn-primary {
+      background-color: #0d6efd;
+      border-color: #0d6efd;
+    }

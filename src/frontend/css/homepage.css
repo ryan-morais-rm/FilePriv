@@ -1,0 +1,233 @@
+    body {
+      background-color: #f1f3f5; /* Cinza Claro */
+      color: #212529; /* Preto/Cinza Escuro */
+      font-family: 'Poppins', sans-serif;
+    }
+
+    .navbar-light {
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    }
+    
+    .navbar-logo-img {
+      height: 40px; 
+      width: auto;
+      margin-right: 10px; 
+      border-radius: 4px; 
+    }
+
+    .content-section {
+      background: #ffffff; /* Branco */
+      padding: 2rem;
+      margin-top: 2rem;
+      padding-bottom: 6rem;
+      border-radius: 12px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+    }
+
+    .info-card {
+      background: #f8f9fa; /* Cinza Claro (muito próximo ao branco) */
+      border: 1px solid #e9ecef;
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      height: 100%;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+
+    .info-card p {
+        margin-bottom: 0.5rem;
+        font-size: 0.95rem;
+    }
+    
+    .server-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 5px 0;
+        border-bottom: 1px dashed #ced4da; /* Cinza */
+    }
+    
+    .server-item:last-child {
+        border-bottom: none;
+    }
+
+    h4 {
+      color: #0d6efd; /* Azul Primário */
+      font-weight: 600;
+    }
+    
+    /* Footer Fixo */
+    .fixed-bottom {
+      z-index: 1030;
+    }
+
+    .topology-container {
+      /* Estilo que substitui .topology-image */
+      padding: 2rem 0;
+      overflow-x: auto;
+    }
+
+    .topology-map {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 3rem 1rem;
+      background-color: #f8f9fa; /* Fundo levemente cinza para o mapa */
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      position: relative;
+      perspective: 1000px; 
+      width: 100%;
+      min-width: 500px; /* Garante que não fique muito pequeno em mobile */
+      margin: 0 auto; /* Centraliza o mapa dentro do container */
+    }
+
+    /* Estilo base para todos os nós (User, App, Server) */
+    .node {
+      background-color: #adb5bd; 
+      color: #fff;
+      padding: 1rem 1.5rem;
+      margin: 1rem 0;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      text-align: center;
+      transition: all 0.3s ease; 
+      cursor: pointer;
+      position: relative;
+      transform-style: preserve-3d; 
+      transform: rotateX(10deg) translateZ(0); /* Inclinação 3D centralizada */
+    }
+
+    .node i {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    .node span {
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+
+    .node.user {
+      background-color: #0d6efd; /* Azul Primário */
+      padding: 1.5rem 2rem;
+      z-index: 3; 
+    }
+
+    .node.application {
+      background-color: #1a1a2e; /* Preto/Roxo escuro */
+      color: #fff;
+      padding: 1.5rem 2.5rem;
+      z-index: 2;
+    }
+
+    .server-nodes {
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem; 
+      margin-top: 1rem;
+      width: 100%;
+      flex-wrap: wrap; 
+      z-index: 1;
+    }
+
+    .node.server {
+      background-color: #6c757d; /* Cinza escuro */
+      width: 150px;
+      padding: 1rem;
+    }
+
+    /* Animação de Hover */
+    .node:hover {
+      transform: rotateX(10deg) translateZ(20px); 
+      box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+      filter: brightness(1.1); 
+    }
+
+    /* Animação de Click para Servidores */
+    .node.server.clicked {
+      animation: serverClick 0.4s ease-out;
+      border: 3px solid #0d6efd; 
+    }
+
+    @keyframes serverClick {
+      0% { transform: rotateX(10deg) translateZ(20px); }
+      50% { transform: rotateX(10deg) translateZ(35px) scale(1.05); }
+      100% { transform: rotateX(10deg) translateZ(20px); }
+    }
+
+    /* Linhas de Conexão */
+    .connection-line {
+      position: absolute;
+      background-color: #495057; 
+      height: 3px;
+      transform-origin: 0 0;
+      z-index: 0;
+    }
+
+    .line-user-app {
+      width: 4px;
+      height: 60px; 
+      background-color: #0d6efd;
+      top: 130px; /* Posição entre usuário e app - Ajustado */
+      left: 50%;
+      transform: translateX(-50%) rotateX(10deg) translateZ(0);
+      animation: pulseBlue 1.5s infinite alternate ease-in-out;
+    }
+    .line-app-servers {
+        width: 4px;
+        height: 60px; 
+        background-color: #1a1a2e;
+        top: 290px; /* Posição entre app e servidores - Ajustado */
+        left: 50%;
+        transform: translateX(-50%) rotateX(10deg) translateZ(0);
+        animation: pulseDark 1.5s infinite alternate ease-in-out;
+    }
+
+    @keyframes pulseBlue {
+        from { box-shadow: 0 0 10px #0d6efd; }
+        to { box-shadow: 0 0 20px #0d6efd, 0 0 30px #0d6efd; }
+    }
+    @keyframes pulseDark {
+        from { box-shadow: 0 0 10px #1a1a2e; }
+        to { box-shadow: 0 0 20px #1a1a2e, 0 0 30px #1a1a2e; }
+    }
+
+    /* Detalhes do Servidor */
+    .server-details {
+      position: absolute;
+      background-color: #fff;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      padding: 1rem;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+      z-index: 10;
+      min-width: 200px;
+      display: none; 
+      opacity: 0;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      animation: fadeInFromTop 0.3s ease-out forwards;
+    }
+
+    .server-details.active {
+        display: block;
+        opacity: 1;
+    }
+
+    @keyframes fadeInFromTop {
+        0% { transform: translate(-50%, -60%) translateZ(40px); opacity: 0; }
+        100% { transform: translate(-50%, -50%) translateZ(50px); opacity: 1; }
+    }
+
+    .server-details h6 {
+        color: #0d6efd;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .server-details p {
+        margin-bottom: 0.3rem;
+        font-size: 0.9rem;
+        color: #495057;
+    }

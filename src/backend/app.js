@@ -2,74 +2,68 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 
-// Importação das Rotas (O "Cardápio")
+// Importação das Rotas
 const authRoutes = require('./routes/authRoutes');
 const fileRoutes = require('./routes/fileRoutes');
 const serverRoutes = require('./routes/serverRoutes');
 
-// Inicialização do App Express
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // ==============================================
-// MIDDLEWARES (Configurações Globais)
+// MIDDLEWARES DE SEGURANÇA E LOG
 // ==============================================
 
-// Habilita CORS para permitir que o Frontend (que pode estar em outra porta) acesse a API
-app.use(cors());
+// 1. CORS: Permite qualquer origem (Para desenvolvimento)
+// Garante que o navegador não bloqueie o Frontend
+app.use(cors({
+    origin: '*', 
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
-// Habilita o parse de JSON no corpo das requisições (req.body)
+// 2. Logger de Requisições (Para você ver o que está chegando)
+app.use((req, res, next) => {
+    console.log(`[REQUEST] ${req.method} ${req.url}`);
+    next();
+});
+
+// 3. Parsers de JSON
 app.use(express.json());
-
-// Habilita o parse de dados de formulário (urlencoded)
 app.use(express.urlencoded({ extended: true }));
 
-// Servir arquivos estáticos (opcional, caso queira servir o frontend pelo mesmo servidor)
-// app.use(express.static(path.join(__dirname, '../frontend')));
-
 // ==============================================
-// ROTAS DA API
+// ROTAS
 // ==============================================
 
-// Rota de Teste (Health Check)
 app.get('/api/status', (req, res) => {
-    res.json({ 
-        status: 'Online', 
-        message: 'FilePriv Backend está rodando! 🚀',
-        timestamp: new Date()
-    });
+    res.json({ status: 'Online', message: 'Backend FilePriv OK!' });
 });
 
-// Definição dos Endpoints Principais
-app.use('/api/auth', authRoutes);      // Rotas de Login/Cadastro
-app.use('/api/files', fileRoutes);     // Rotas de Upload/Download
-app.use('/api/servers', serverRoutes); // Rotas de Monitoramento de Servidores
+// Montagem das rotas
+app.use('/api/auth', authRoutes);
+app.use('/api/files', fileRoutes);
+app.use('/api/servers', serverRoutes);
 
 // ==============================================
-// TRATAMENTO DE ERROS (404 e 500)
+// TRATAMENTO DE ERROS
 // ==============================================
 
-// Rota não encontrada (404)
-app.use((req, res, next) => {
-    res.status(404).json({ error: 'Endpoint não encontrado.' });
+// 404 - Rota não encontrada (Isso ajuda a saber se errou o caminho)
+app.use((req, res) => {
+    console.log(`[404] Rota não encontrada: ${req.method} ${req.url}`);
+    res.status(404).json({ error: `Rota ${req.method} ${req.url} não encontrada.` });
 });
 
-// Tratamento global de erros (500)
+// 500 - Erro interno
 app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).json({ error: 'Ocorreu um erro interno no servidor.' });
+    console.error('[500] Erro interno:', err.stack);
+    res.status(500).json({ error: 'Erro interno no servidor' });
 });
-
-// ==============================================
-// INICIALIZAÇÃO DO SERVIDOR
-// ==============================================
 
 app.listen(PORT, () => {
-    console.log(`\n==================================================`);
-    console.log(`✅ Servidor FilePriv rodando na porta ${PORT}`);
-    console.log(`🔗 Acesso local: http://localhost:${PORT}`);
-    console.log(`📂 API Status:   http://localhost:${PORT}/api/status`);
-    console.log(`==================================================\n`);
+    console.log(`\n✅ Servidor rodando em http://localhost:${PORT}`);
+    console.log(`📡 Pronto para receber requisições...\n`);
 });
 
-module.exports = app; // Exporta para testes se necessário
+module.exports = app;

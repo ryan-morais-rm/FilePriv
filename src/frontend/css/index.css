@@ -1,0 +1,114 @@
+    :root {
+        --dark-bg: #1a1a2e; /* Navbar/Footer */
+        --light-bg: #e0e0e0; /* Fundo do Corpo */
+        --card-bg: #ffffff;
+        --primary-color: #0d6efd; /* Azul Padrão */
+    }
+
+    body {
+      background-color: var(--light-bg);
+      color: #212529;
+      font-family: 'Poppins', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    /* Navbar Styles */
+    .navbar-custom-bg {
+        background-color: var(--dark-bg) !important;
+    }
+    
+    .navbar-brand {
+      font-weight: 700;
+      color: #ffffff !important; 
+    }
+
+    .nav-link {
+        color: rgba(255, 255, 255, 0.8) !important;
+        font-weight: 400;
+    }
+
+    .nav-link:hover {
+        color: #ffffff !important;
+    }
+
+    /* Hero Section - Central e em destaque */
+    .hero-section {
+      background: var(--card-bg);
+      padding: 60px 20px;
+      text-align: center;
+      border-radius: 12px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+      margin-bottom: 50px;
+    }
+    
+    .hero-section h1 {
+      color: var(--primary-color);
+      font-size: 2.8rem;
+      font-weight: 700;
+      margin-bottom: 15px;
+    }
+
+    .hero-section p {
+      font-size: 1.1rem;
+      color: #6c757d;
+      margin-bottom: 30px;
+    }
+    
+    /* Feature Cards - Mais alinhados e limpos */
+    .feature-card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 30px;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+      border: 1px solid #dee2e6;
+      height: 100%; /* Garante que todos os cards tenham a mesma altura */
+    }
+
+    .feature-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    
+    .feature-card h4 {
+        font-weight: 600;
+    }
+
+    /* Botões */
+    .btn-primary {
+      background-color: var(--primary-color);
+      border-color: var(--primary-color);
+      font-weight: 600;
+      border-radius: 8px;
+    }
+
+    .btn-outline-primary {
+        font-weight: 600;
+        border-radius: 8px;
+    }
+
+    /* Logo */
+    .logo {
+      max-width: 150px;
+      border-radius: 8px;
+    }
+
+    /* Footer */
+    footer {
+      background-color: var(--dark-bg);
+      color: #fff;
+      padding: 20px 0;
+      margin-top: auto;
+    }
+    
+    /* Ajustes para Responsividade */
+    @media (max-width: 768px) {
+        .hero-section h1 {
+            font-size: 2rem;
+        }
+        .hero-section {
+            padding: 40px 15px;
+        }
+    }

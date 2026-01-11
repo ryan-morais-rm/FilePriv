@@ -1,0 +1,47 @@
+        :root {
+            --dark-bg: #1a1a2e; 
+            --light-bg: #e0e0e0; 
+            --card-bg: #ffffff;
+            --primary-color: #0d6efd; 
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--light-bg);
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Classes utilitárias para Tailwind usar as variáveis CSS nativas */
+        .bg-dark-custom { background-color: var(--dark-bg); }
+        .bg-card-custom { background-color: var(--card-bg); }
+        .text-primary-custom { color: var(--primary-color); }
+        .border-primary-custom { border-color: var(--primary-color); }
+        
+        /* Botões customizados */
+        .btn-primary-custom {
+            background-color: var(--primary-color);
+            color: white;
+            transition: background-color 0.2s;
+        }
+        .btn-primary-custom:hover {
+            background-color: #0a58ca; 
+        }
+
+        .card-shadow {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 400px;
+            width: 100%;
+        }
+
+        /* Ajuste para a Navbar */
+        .navbar-brand {
+            font-weight: bold;
+            color: #ffffff; 
+        }

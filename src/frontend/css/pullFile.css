@@ -1,0 +1,58 @@
+    :root {
+        --dark-bg: #1a1a2e; 
+        --light-bg: #e0e0e0; 
+        --card-bg: #ffffff;
+        --primary-color: #0d6efd; 
+    }
+
+    body {
+      background-color: var(--light-bg);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      color: #333;
+    }
+    .content {
+      flex: 1;
+    }
+    
+    footer {
+      background-color: var(--dark-bg);
+      color: #fff;
+      padding: 20px 0;
+      margin-top: auto;
+    }
+
+    .navbar-custom-bg {
+        background-color: var(--dark-bg) !important;
+    }
+    
+    .navbar-brand {
+      font-weight: bold;
+      color: #ffffff !important; 
+    }
+    .table-container, .search-box {
+      background-color: var(--card-bg);
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    .btn-primary {
+      background-color: var(--primary-color);
+      border-color: var(--primary-color);
+    }
+
+    .btn-outline-primary {
+        --bs-btn-color: var(--primary-color);
+        --bs-btn-border-color: var(--primary-color);
+    }
+
+    .btn-outline-primary:hover {
+        background-color: var(--primary-color);
+        color: #fff;
+    }
+
+    .table-primary {
+        --bs-table-bg: var(--primary-color);
+        --bs-table-color: #fff;
+    }

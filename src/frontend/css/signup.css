@@ -1,0 +1,67 @@
+    :root {
+        --dark-bg: #1a1a2e; /* Fundo da Navbar/Footer */
+        --light-bg: #e0e0e0; /* Fundo do Corpo */
+        --card-bg: #ffffff;
+        --primary-color: #0d6efd; /* Azul Padrão */
+    }
+
+    body {
+      background-color: var(--light-bg);
+      color: #000;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      font-family: sans-serif; /* Usando a fonte padrão para consistência */
+    }
+    
+    .content-wrapper {
+        flex: 1; /* Garante que o conteúdo ocupe o espaço restante */
+        display: flex;
+        align-items: center; /* Centraliza o card verticalmente */
+    }
+
+    /* Estilo da Navbar e Footer (Fundo Escuro) */
+    .navbar-custom-bg {
+        background-color: var(--dark-bg) !important;
+    }
+    
+    .navbar-brand {
+      font-weight: bold;
+      color: #ffffff !important; 
+    }
+
+    footer {
+      background-color: var(--dark-bg);
+      color: #fff;
+      padding: 15px 0;
+    }
+
+    .register-card {
+      background-color: var(--card-bg);
+      border-radius: 12px;
+      padding: 40px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+      width: 100%;
+    }
+    
+    .logo {
+      max-width: 120px;
+      margin-bottom: 20px;
+    }
+    
+    .btn-primary {
+      background-color: var(--primary-color);
+      border-color: var(--primary-color);
+      font-weight: bold;
+    }
+
+    .form-control:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 5px rgba(13,110,253,.5);
+    }
+    
+    .description {
+      font-size: 0.85rem;
+      color: #6c757d;
+      margin-top: 5px;
+    }

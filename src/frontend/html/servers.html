@@ -4,61 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Documentação de Nós de Armazenamento Virtualizados - FilePriv</title>
-    <!-- Inclui Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Inclui Chart.js para o gráfico de desempenho -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-    <style>
-        /* Configuração de Cores Exata do Pedido */
-        :root {
-            --dark-bg: #1a1a2e; 
-            --light-bg: #e0e0e0; 
-            --card-bg: #ffffff;
-            --primary-color: #0d6efd; 
-        }
-
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: var(--light-bg);
-            color: #333;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
-
-        /* Classes utilitárias para Tailwind usar as variáveis CSS nativas */
-        .bg-dark-custom { background-color: var(--dark-bg); }
-        .bg-card-custom { background-color: var(--card-bg); }
-        .text-primary-custom { color: var(--primary-color); }
-        .border-primary-custom { border-color: var(--primary-color); }
-        
-        /* Botões customizados */
-        .btn-primary-custom {
-            background-color: var(--primary-color);
-            color: white;
-            transition: background-color 0.2s;
-        }
-        .btn-primary-custom:hover {
-            background-color: #0a58ca; 
-        }
-
-        .card-shadow {
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        }
-        
-        .chart-container {
-            position: relative;
-            height: 400px;
-            width: 100%;
-        }
-
-        /* Ajuste para a Navbar */
-        .navbar-brand {
-            font-weight: bold;
-            color: #ffffff; 
-        }
-    </style>
+    <link rel="stylesheet" href="../css/servers.css">
 </head>
 <body class="flex flex-col min-h-screen">
 

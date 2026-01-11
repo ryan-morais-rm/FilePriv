@@ -5,50 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login - FilePriv</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <style>
-    body {
-      background-color: #e0e0e0;
-      color: #000;
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-    }
-    .content-wrapper {
-        flex: 1;
-    }
-    
-    .login-card {
-      background-color: #ffffff;
-      border-radius: 12px;
-      padding: 40px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.1);
-    }
-    
-    .navbar-custom-bg {
-        background-color: #1a1a2e !important;
-    }
-    
-    .navbar-brand {
-      font-weight: bold;
-      color: #ffffff !important; 
-    }
-    
-    .logo {
-      max-width: 120px;
-      margin-bottom: 20px;
-    }
-    
-    footer {
-      background-color: #1a1a2e;
-      color: #fff;
-      padding: 15px 0;
-    }
-    
-    .btn-primary {
-      background-color: #0d6efd;
-      border-color: #0d6efd;
-    }
-  </style>
+  <link rel="stylesheet" href="../css/login.css">
 </head>
 <body>
 
@@ -73,7 +30,7 @@
         <div class="login-card text-center">
           <img src="../../../assets/FilePriv Logo.jpg" alt="FilePriv Logo" class="logo">
           <h2 class="mb-4 text-black"><strong>LOGIN</strong></h2>
-          <form action="homepage.html" method="POST">
+          <form id="loginForm">
             <div class="mb-3 text-start">
               <label for="email" class="form-label">Email </label>
               <input type="email" class="form-control" id="email" placeholder="Digite seu e-mail" required>
@@ -101,5 +58,9 @@
     </div>
   </footer>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module">
+    import { lohin } from '../js/login.js'; 
+    login(); 
+  </script>
 </body>
 </html>
