@@ -1,23 +1,25 @@
 export function login() {
-    const API_URL = 'http://localhost:3000/api/auth/login';
+    const API_URL = 'http://localhost:3000/usuarios/login';
     const form = document.getElementById('loginForm');
-    const msgArea = document.getElementById('messageArea'); // Área para erros
+    const msgArea = document.getElementById('messageArea'); 
     const btn = document.querySelector('button[type="submit"]');
 
-    if (!form) return;
+    if (!form || !msgArea) {
+        console.warn("Faltando elementos no HTML (form ou messageArea)");
+        return;
+    }
 
     form.addEventListener('submit', async function (e) {
-        e.preventDefault(); // IMPEDE o envio padrão do formulário (que causava o erro 405)
+        e.preventDefault(); 
 
         const email = document.getElementById('email').value.trim();
-        const password = document.getElementById('password').value.trim();
+        const senha = document.getElementById('senha').value.trim();
 
-        if (!email || !password) {
+        if (!email || !senha) {
             msgArea.innerHTML = `<div class="alert alert-danger mt-3">Preencha todos os campos!</div>`;
             return;
         }
 
-        // Feedback visual
         const originalBtnText = btn.innerHTML;
         btn.disabled = true;
         btn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Entrando...`;
@@ -25,23 +27,23 @@ export function login() {
 
         try {
             const response = await fetch(API_URL, {
-                method: 'POST', // Aqui garantimos que é POST
+                method: 'POST', 
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
+                body: JSON.stringify({ 
+                    email, 
+                    senha  
+                })
             });
 
             const data = await response.json();
 
             if (!response.ok) {
-                throw new Error(data.error || 'Falha no login');
+                throw new Error(data.message || data.error || 'Falha no login');
             }
 
-            // SUCESSO
             msgArea.innerHTML = `<div class="alert alert-success mt-3">Login realizado! Redirecionando...</div>`;
             
-            // Salva dados no LocalStorage para usar nas outras páginas (Nome na Navbar, etc)
-            localStorage.setItem('userToken', data.token);
-            localStorage.setItem('userData', JSON.stringify(data.user));
+            localStorage.setItem('userData', JSON.stringify(data));
 
             setTimeout(() => {
                 window.location.href = "homepage.html";
@@ -50,7 +52,7 @@ export function login() {
         } catch (error) {
             console.error("Erro:", error);
             msgArea.innerHTML = `<div class="alert alert-danger mt-3">${error.message}</div>`;
-            btn.disabled = false;
+            btn.disabled = false; 
             btn.innerHTML = originalBtnText;
         }
     });
