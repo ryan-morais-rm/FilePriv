@@ -7,12 +7,11 @@ CREATE TABLE usuarios (
     senha VARCHAR(255) NOT NULL
 );
 
-CREATE TABLE files (
+CREATE TABLE arquivos (
     id SERIAL PRIMARY KEY,
-    nome VARCHAR(255) NOT NULL,         
-    nome_original VARCHAR(255),          
-    descricao TEXT,
-    tamanho BIGINT,                         
-    is_encrypted BOOLEAN DEFAULT FALSE,  
-    upload_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    nome_arquivo VARCHAR(255) NOT NULL,
+    descricao VARCHAR(255) NOT NULL,
+    caminho VARCHAR(255) NOT NULL,
+    usuario_id INTEGER REFERENCES usuarios(id) ON DELETE CASCADE, 
+    data_upload TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
