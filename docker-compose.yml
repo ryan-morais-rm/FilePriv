@@ -1,9 +1,6 @@
-version: '3.8'
-
 services:
-  # Serviço do Banco de Dados
   db:
-    image: postgres:15-alpine
+    image: postgres:16.2
     container_name: filepriv_postgres
     restart: always
     environment:
