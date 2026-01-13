@@ -1,95 +1,90 @@
 export function pushFile() {
-    const API_URL = 'http://localhost:3000/api/files/upload';
+    const API_URL = 'http://localhost:3000/arquivos/upload'; 
+    
     const form = document.getElementById('uploadForm');
     const statusDiv = document.getElementById('uploadStatus');
     const btn = document.getElementById('submitBtn');
 
-    // --- FUNÇÃO PARA ATUALIZAR OS CONTADORES NA NAVBAR ---
     async function updateCounters() {
-        // 1. Arquivos Consultados (Lê do LocalStorage)
         const consultedCount = localStorage.getItem('consultedCount') || 0;
         const consultedEl = document.getElementById('consultedFilesCount');
-        if (consultedEl) {
-            consultedEl.innerHTML = `<strong>${consultedCount}</strong> arquivos consultados`;
-        }
+        if (consultedEl) consultedEl.innerHTML = `<strong>${consultedCount}</strong> arquivos consultados`;
 
-        // 2. Arquivos Armazenados (Busca do JSON Server)
         try {
-            const response = await fetch(API_URL);
+            // É preciso de uma rota GET aqui
+            const response = await fetch('http://localhost:3000/arquivos'); 
             if (response.ok) {
                 const files = await response.json();
                 const storedEl = document.getElementById('storedFilesCount');
-                if (storedEl) {
-                    storedEl.innerHTML = `<strong>${files.length}</strong> arquivos armazenados`;
-                }
+                if (storedEl) storedEl.innerHTML = `<strong>${files.length}</strong> arquivos armazenados`;
             }
         } catch (e) {
-            console.error("Erro ao atualizar contadores:", e);
+            console.error("Erro ao atualizar contadores (Backend offline?)", e);
         }
     }
 
-    // Inicializa os contadores ao carregar a página
     updateCounters();
 
-    // Verificação de segurança para o formulário
     if (!form) return;
 
     form.addEventListener('submit', async function(event) {
         event.preventDefault(); 
 
-        const fileName = document.getElementById('fileName').value.trim();
-        const fileDesc = document.getElementById('fileDesc').value.trim();
+        const fileName = document.getElementById('fileName').value.trim(); 
+        const fileInput = document.getElementById('fileInput');
+        const file = fileInput.files[0];
+        const fileDesc = document.getElementById('fileDesc') ? document.getElementById('fileDesc').value : "";
 
-        if (!fileName) {
-            statusDiv.innerHTML = `<div class="alert alert-danger mt-3">Por favor, insira um nome para o arquivo.</div>`;
+        if (!file) {
+            statusDiv.innerHTML = `<div class="alert alert-danger mt-3">Selecione um arquivo!</div>`;
             return;
         }
 
+        const userData = localStorage.getItem('userData');
+        if (!userData) {
+            statusDiv.innerHTML = `<div class="alert alert-danger mt-3">Você precisa estar logado!</div>`;
+            return;
+        }
+        const user = JSON.parse(userData);
+
         const originalBtnText = btn.innerHTML;
         btn.disabled = true;
-        btn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Enviando...`;
+        btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Enviando...`;
         statusDiv.innerHTML = '';
 
         try {
-            const today = new Date();
-            const dateString = today.toLocaleDateString('pt-BR');
-
-            const newFile = {
-                name: fileName,
-                desc: fileDesc || "Sem descrição",
-                date: dateString
-            };
+            const formData = new FormData();
+            formData.append('arquivo', file);
+            formData.append('usuario_id', user.id);
+            formData.append('descricao', fileDesc);
+            formData.append('nome_customizado', fileName);
 
             const response = await fetch(API_URL, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(newFile)
+                body: formData
             });
 
-            if (!response.ok) throw new Error('Falha na conexão com o servidor local');
+            const data = await response.json();
 
-            // Atualiza o contador de arquivos armazenados imediatamente após o sucesso
-            updateCounters();
+            if (!response.ok) throw new Error(data.error || 'Falha no envio');
 
-            // SUCESSO
             statusDiv.innerHTML = `<div class="alert alert-success mt-3">
-                Arquivo <strong>${fileName}</strong> registrado com sucesso!<br>
-                Aguarde, redirecionando em 5 segundos...
+                Arquivo enviado com sucesso!<br>
+                Redirecionando...
             </div>`;
             
             form.reset();
+            updateCounters();
 
-            // AUMENTADO PARA 5 SEGUNDOS (5000ms)
             setTimeout(() => {
                 window.location.href = 'pullFile.html';
-            }, 5000);
+            }, 3000);
 
         } catch (error) {
             console.error("Erro:", error);
             statusDiv.innerHTML = `
                 <div class="alert alert-danger mt-3">
-                    <strong>Erro de Conexão!</strong><br>
-                    Não foi possível salvar no <code>db.json</code>.
+                    <strong>Erro!</strong> ${error.message}
                 </div>`;
             btn.disabled = false;
             btn.innerHTML = originalBtnText;
