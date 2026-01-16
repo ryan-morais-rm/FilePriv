@@ -1,5 +1,7 @@
 node_modules/
 
+bin/automation/.vagrant
+
 src/backend/uploads
 
 .env

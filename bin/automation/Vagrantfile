@@ -1,0 +1,70 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# All Vagrant configuration is done below. The "2" in Vagrant.configure
+# configures the configuration version (we support older styles for
+# backwards compatibility). Please don't change it unless you know what
+# you're doing.
+
+Vagrant.configure("2") do |config|
+  # Escolha da Box (comum para ambas as VMs)
+  config.vm.box = "roboxes/ubuntu2204"
+
+  # Configuração global do provider VirtualBox (aplicada a todas as VMs)
+  config.vm.provider "virtualbox" do |vb|
+    vb.gui = false
+    vb.memory = 1024
+    vb.cpus = 2
+  end
+
+  # Primeira VM: node-FilePriv
+  config.vm.define "node-FilePriv" do |node|
+    node.vm.hostname = "FilePriv"
+    # Configuração de rede
+    node.vm.network "private_network", ip: "192.168.60.10"
+    node.vm.network "public_network", bridge: "enp2s0"
+
+    node.vm.provider "virtualbox" do |vb|
+      vb.name = "node-FilePriv"
+    end
+
+    # Configuração de discos da primeira VM
+    (0..1).each do |i|
+      node.vm.disk :disk, size: "10GB", name: "node-FilePriv-disk-#{i}"
+    end
+  end
+
+  # Segunda VM: node-FilePriv2
+  config.vm.define "node-FilePriv2" do |node|
+    node.vm.hostname = "FilePriv2"
+    # Configuração de rede - usando IP diferente
+    node.vm.network "private_network", ip: "192.168.60.11"
+    node.vm.network "public_network", bridge: "enp2s0"
+
+    node.vm.provider "virtualbox" do |vb|
+      vb.name = "node-FilePriv2"
+    end
+
+    # Configuração de discos da segunda VM
+    (0..1).each do |i|
+      node.vm.disk :disk, size: "10GB", name: "node-FilePriv2-disk-#{i}"
+    end
+  end  # <--- ESTE END ESTAVA FALTANDO
+
+  # Terceira VM: node-FilePriv3
+  config.vm.define "node-FilePriv3" do |node|
+    node.vm.hostname = "FilePriv3"
+    # Configuração de rede - usando IP diferente
+    node.vm.network "private_network", ip: "192.168.60.12"
+    node.vm.network "public_network", bridge: "enp2s0"
+
+    node.vm.provider "virtualbox" do |vb|
+      vb.name = "node-FilePriv3"
+    end
+
+    # Configuração de discos da terceira VM
+    (0..1).each do |i|
+      node.vm.disk :disk, size: "10GB", name: "node-FilePriv3-disk-#{i}"
+    end
+  end
+end
