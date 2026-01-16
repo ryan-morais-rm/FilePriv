@@ -55,7 +55,7 @@ export function signUP() {
                     </div>`;
 
                 setTimeout(() => {
-                    window.location.href = "../html/homepage.html";
+                    window.location.href = "../html/login.html";
                 }, 1500);
             } else {
                 const errorMsg = data.error || 'Erro ao realizar cadastro.';
