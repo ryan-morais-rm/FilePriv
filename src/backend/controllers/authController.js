@@ -40,29 +40,6 @@ const userController = {
             return res.status(500).json({ error: 'Erro ao logar usuário'}); 
         }
     },
-
-    async consultUser(req, res) {
-        try {
-            const { nome, email } = req.query; 
-
-            if (!nome || !email) {
-                return res.status(400).json({ error: 'Favor informar nome e email na busca' });
-            }
-            const query = 'SELECT * FROM usuarios WHERE nome = $1 AND email = $2';
-            const values = [nome, email];
-
-            const resultado = await db.query(query, values);
-
-            if (resultado.rows.length === 0) {
-                return res.status(404).json({ message: 'Usuário não encontrado' });
-            }
-
-            return res.status(200).json(resultado.rows);
-        } catch (error) {
-            console.error(error); 
-            return res.status(500).json({ error: 'Erro ao buscar usuário' });
-        }
-    },
     
     async createUser(req, res) {
         try {
@@ -83,6 +60,34 @@ const userController = {
         } catch (error) {
             console.error(error);
             return res.status(500).json({ error: 'Erro ao cadastrar usuário' });
+        }
+    },
+
+    async consultUser(req, res) {
+        try {
+            // Agora pegamos o ID que vem na URL (ex: /usuarios/15)
+            const { id } = req.params; 
+
+            if (!id) {
+                return res.status(400).json({ error: 'ID do usuário é obrigatório' });
+            }
+
+            // Buscamos apenas os dados públicos (sem a senha!)
+            const query = 'SELECT id, nome, email FROM usuarios WHERE id = $1';
+            const values = [id];
+
+            const resultado = await db.query(query, values);
+
+            if (resultado.rows.length === 0) {
+                return res.status(404).json({ message: 'Usuário não encontrado' });
+            }
+
+            // Retorna o primeiro (e único) usuário encontrado
+            return res.status(200).json(resultado.rows[0]);
+
+        } catch (error) {
+            console.error("Erro ao buscar perfil:", error); 
+            return res.status(500).json({ error: 'Erro interno no servidor' });
         }
     }
 };
