@@ -5,6 +5,31 @@ export function pushFile() {
     const statusDiv = document.getElementById('uploadStatus');
     const btn = document.getElementById('submitBtn');
 
+    async function renderUserProfile() {
+        const nameEl = document.getElementById('display-name'); 
+
+        const userDataJSON = localStorage.getItem('userData');
+        
+        const userLocal = JSON.parse(userDataJSON); 
+
+        try {
+            const response = await fetch(`http://localhost:3000/usuarios/perfil/${userLocal.id}`);
+
+            if (!response.ok) throw new Error('Erro ao buscar dados no servidor'); 
+
+            const userAtualizado = await response.json(); 
+
+            if(nameEl) nameEl.textContent = userAtualizado.nome;
+
+            console.log("Perfil carregado do Banco de Dados.");
+            
+        } catch (error) {
+            console.error("Erro no backend, usando cache local: ", error); 
+
+            if (nameEl) nameEl.textContent = userLocal.nome;  
+        }
+    }
+
     async function updateCounters() {
         const consultedCount = localStorage.getItem('consultedCount') || 0;
         const consultedEl = document.getElementById('consultedFilesCount');
@@ -23,6 +48,7 @@ export function pushFile() {
         }
     }
 
+    renderUserProfile();
     updateCounters();
 
     if (!form) return;
