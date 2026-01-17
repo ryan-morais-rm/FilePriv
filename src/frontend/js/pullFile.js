@@ -1,5 +1,4 @@
 export function pullFile() {
-    // URLs da API do Backend (Node.js)
     const LIST_URL = 'http://localhost:3000/api/files/list/1'; // ID 1 fixo para teste
     const DOWNLOAD_URL = 'http://localhost:3000/download';
 
@@ -7,6 +6,31 @@ export function pullFile() {
     
     // Inicializa a contagem de downloads lendo do localStorage
     let consultedCount = parseInt(localStorage.getItem('consultedCount')) || 0;
+
+    async function renderUserProfile() {
+        const nameEl = document.getElementById('display-name'); 
+
+        const userDataJSON = localStorage.getItem('userData');
+        
+        const userLocal = JSON.parse(userDataJSON); 
+
+        try {
+            const response = await fetch(`http://localhost:3000/usuarios/perfil/${userLocal.id}`);
+
+            if (!response.ok) throw new Error('Erro ao buscar dados no servidor'); 
+
+            const userAtualizado = await response.json(); 
+
+            if(nameEl) nameEl.textContent = userAtualizado.nome;
+
+            console.log("Perfil carregado do Banco de Dados.");
+            
+        } catch (error) {
+            console.error("Erro no backend, usando cache local: ", error); 
+
+            if (nameEl) nameEl.textContent = userLocal.nome;  
+        }
+    }
 
     async function fetchFiles() {
         const tbody = document.getElementById('filesTableBody');
@@ -128,5 +152,6 @@ export function pullFile() {
     window.downloadFile = downloadFile;
 
     // Inicialização
+    renderUserProfile();
     fetchFiles();
 }
