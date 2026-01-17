@@ -1,11 +1,10 @@
 export function servers() {
     let chartInstance;
 
-    // Dados iniciais
     const nodesData = {
-        1: { name: 'NODE-01', ip: '10.0.10.10', port: '30120', cpu: 4, ram: 8, disk: '100 GB SSD', color: '#0d6efd', cssClass: 'text-primary-custom' },
-        2: { name: 'NODE-02', ip: '10.0.10.11', port: '30210', cpu: 2, ram: 4, disk: '50 GB SSD', color: 'rgb(234, 179, 8)', cssClass: 'text-yellow-600' },
-        3: { name: 'NODE-03', ip: '10.0.10.12', port: '30120', cpu: 1, ram: 2, disk: '80 GB HDD', color: 'rgb(22, 163, 74)', cssClass: 'text-green-600' }
+        1: { name: 'NODE-01', ip: '10.0.10.10', port: '30120', cpu: 1, ram: 2, disk: '10 GB SSD', color: '#0d6efd', cssClass: 'text-primary-custom' },
+        2: { name: 'NODE-02', ip: '10.0.10.11', port: '30210', cpu: 1, ram: 2, disk: '10 GB SSD', color: 'rgb(234, 179, 8)', cssClass: 'text-yellow-600' },
+        3: { name: 'NODE-03', ip: '10.0.10.12', port: '30120', cpu: 1, ram: 2, disk: '10 GB SSD', color: 'rgb(22, 163, 74)', cssClass: 'text-green-600' }
     };
 
     // Função para renderizar a tabela (Necessária pois o HTML está limpo)

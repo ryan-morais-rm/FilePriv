@@ -1,9 +1,39 @@
-export function homepage() {
-    // Variáveis de Estado (Simulação de Backend)
-    let userProfile = {
-        name: 'Ryan',
-        email: 'ryan.morais@academico.ifpb.edu.br',
-    };
+export async function homepage() {
+
+    async function renderUserProfile() {
+        const nameEl = document.getElementById('display-name'); 
+        const emailEl = document.getElementById('display-email'); 
+        
+        const userDataJSON = localStorage.getItem('userData'); 
+
+        if (!userDataJSON) {
+            console.warn("Usuário não logado. Redirecionando..."); 
+            window.location.href = 'login.html';
+            return; 
+        }
+
+        const userLocal = JSON.parse(userDataJSON); 
+
+        try {
+            const response = await fetch(`http://localhost:3000/usuarios/perfil/${userLocal.id}`);
+
+            if (!response.ok) throw new Error('Erro ao buscar dados no servidor'); 
+
+            const userAtualizado = await response.json(); 
+
+            if(nameEl) nameEl.textContent = userAtualizado.nome;
+
+            if(emailEl) emailEl.textContent = userAtualizado.email;
+
+            console.log("Perfil carregado do Banco de Dados.");
+            
+        } catch (error) {
+            console.error("Erro no backend, usando cache local: ", error); 
+
+            if (nameEl) nameEl.textContent = userLocal.nome; 
+            if (emailEl) emailEl.textContent = userLocal.email; 
+        }
+    }
     
     // DADOS UNIFICADOS
     let currentServersData = [
@@ -24,14 +54,6 @@ export function homepage() {
     const serverDetailsCard = document.getElementById('serverDetailsCard');
     let activeServerNode = null; 
     
-
-    function renderUserProfile() {
-        const nameEl = document.getElementById('display-name');
-        if(nameEl) nameEl.textContent = userProfile.name;
-        
-        const emailEl = document.getElementById('display-email');
-        if(emailEl) emailEl.textContent = userProfile.email;
-    }
 
     function updateAttributes() {
         const nameInput = document.getElementById('update-name').value.trim();
