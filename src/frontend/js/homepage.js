@@ -3,16 +3,13 @@ export function homepage() {
     let userProfile = {
         name: 'Ryan',
         email: 'ryan.morais@academico.ifpb.edu.br',
-        state: 'Paraíba',
-        phone: '8391234-5678',
-        institution: 'IFPB'
     };
     
     // DADOS UNIFICADOS
     let currentServersData = [
-        { id: 'server1', name: 'Servidor 1', ip: '10.0.10.10', port: '30120', status: 'Online', load: '25%' },
-        { id: 'server2', name: 'Servidor 2', ip: '10.0.10.11', port: '30210', status: 'Online', load: '38%' },
-        { id: 'server3', name: 'Servidor 3', ip: '10.0.10.12', port: '30120', status: 'Online', load: '19%' },
+        { id: 'node-FilePriv1', name: 'Servidor 1', ip: '192.168.60.10', port: '22', status: 'Online', load: '25%' },
+        { id: 'node-FilePriv2', name: 'Servidor 2', ip: '192.168.60.11', port: '22', status: 'Online', load: '38%' },
+        { id: 'node-FilePriv3', name: 'Servidor 3', ip: '192.168.60.12', port: '22', status: 'Online', load: '19%' },
     ];
 
     // Elementos DOM
@@ -27,9 +24,6 @@ export function homepage() {
     const serverDetailsCard = document.getElementById('serverDetailsCard');
     let activeServerNode = null; 
     
-    // ===================================
-    // FUNÇÕES DE PERFIL
-    // ===================================
 
     function renderUserProfile() {
         const nameEl = document.getElementById('display-name');
@@ -37,23 +31,11 @@ export function homepage() {
         
         const emailEl = document.getElementById('display-email');
         if(emailEl) emailEl.textContent = userProfile.email;
-        
-        const stateEl = document.getElementById('display-state');
-        if(stateEl) stateEl.textContent = userProfile.state;
-        
-        const phoneEl = document.getElementById('display-phone');
-        if(phoneEl) phoneEl.textContent = userProfile.phone;
-        
-        const instEl = document.getElementById('display-institution');
-        if(instEl) instEl.textContent = userProfile.institution;
     }
 
     function updateAttributes() {
         const nameInput = document.getElementById('update-name').value.trim();
         const emailInput = document.getElementById('update-email').value.trim();
-        const stateInput = document.getElementById('update-state').value.trim();
-        const phoneInput = document.getElementById('update-phone').value.trim();
-        const institutionInput = document.getElementById('update-institution').value.trim();
         
         const newPass = document.getElementById('update-newPassword').value;
         const confirmPass = document.getElementById('update-confirmPassword').value;
@@ -80,9 +62,6 @@ export function homepage() {
 
         if (nameInput) { userProfile.name = nameInput; changesMade = true; }
         if (emailInput) { userProfile.email = emailInput; changesMade = true; }
-        if (stateInput) { userProfile.state = stateInput; changesMade = true; }
-        if (phoneInput) { userProfile.phone = phoneInput; changesMade = true; }
-        if (institutionInput) { userProfile.institution = institutionInput; changesMade = true; }
 
         if (changesMade) {
             renderUserProfile();

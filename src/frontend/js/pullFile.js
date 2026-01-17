@@ -1,7 +1,7 @@
 export function pullFile() {
     // URLs da API do Backend (Node.js)
     const LIST_URL = 'http://localhost:3000/api/files/list/1'; // ID 1 fixo para teste
-    const DOWNLOAD_URL = 'http://localhost:3000/api/files/download';
+    const DOWNLOAD_URL = 'http://localhost:3000/download';
 
     let allFiles = [];
     
