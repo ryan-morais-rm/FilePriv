@@ -65,14 +65,12 @@ const userController = {
 
     async consultUser(req, res) {
         try {
-            // Agora pegamos o ID que vem na URL (ex: /usuarios/15)
             const { id } = req.params; 
 
             if (!id) {
                 return res.status(400).json({ error: 'ID do usuário é obrigatório' });
             }
 
-            // Buscamos apenas os dados públicos (sem a senha!)
             const query = 'SELECT id, nome, email FROM usuarios WHERE id = $1';
             const values = [id];
 
@@ -82,9 +80,8 @@ const userController = {
                 return res.status(404).json({ message: 'Usuário não encontrado' });
             }
 
-            // Retorna o primeiro (e único) usuário encontrado
             return res.status(200).json(resultado.rows[0]);
-
+            
         } catch (error) {
             console.error("Erro ao buscar perfil:", error); 
             return res.status(500).json({ error: 'Erro interno no servidor' });
