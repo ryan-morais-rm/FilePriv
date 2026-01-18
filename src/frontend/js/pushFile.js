@@ -29,7 +29,7 @@ export function pushFile() {
         const user = JSON.parse(userData);
         
         try {
-            const response = await fetch(`http://localhost:3000/arquivos/armazenados/${user.id}`); 
+            const response = await fetch(`http://localhost:3000/arquivos/armazenados/quantidade/${user.id}`); 
             if (response.ok) {
                 const data = await response.json(); 
                 const storedEl = document.getElementById('storedFilesCount'); 

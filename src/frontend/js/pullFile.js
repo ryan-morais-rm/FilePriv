@@ -28,7 +28,7 @@ export function pullFile() {
         const tbody = document.getElementById('filesTableBody');
         const errorMsg = document.getElementById('errorMessage');
         try {
-            const response = await fetch(`${API_BASE}/arquivos/armazenados/${user.id}`);            
+            const response = await fetch(`${API_BASE}/arquivos/armazenados/lista/${user.id}`);            
             if (!response.ok) throw new Error('Falha ao buscar lista.');
             allFiles = await response.json();
             if (!Array.isArray(allFiles)) allFiles = [];
@@ -73,7 +73,7 @@ export function pullFile() {
 
     async function updateCounters(userId) {
         try {
-            const response = await fetch(`${API_BASE}/arquivos/armazenados/${userId}`); 
+            const response = await fetch(`${API_BASE}/arquivos/armazenados/quantidade/${userId}`); 
             if (response.ok) {
                 const data = await response.json(); 
                 const storedEl = document.getElementById('storedFilesCount'); 
@@ -99,23 +99,26 @@ export function pullFile() {
         renderTable(filtered);
     }
 
-    // 6. Função de Download REAL (Blob)
-    window.downloadFile = async function(id, originalName) {
+    window.downloadFile = async function(id, nomeOrigional) {
         try {
+            console.log(`Iniciando download do ID: ${id}`);
+            
             const response = await fetch(`${API_BASE}/arquivos/download/${id}`);
-            if (!response.ok) throw new Error("Erro no download");
-            // Transforma a resposta em um "blob" (arquivo binário)
-            const blob = await response.blob();
-            // Cria um link invisível para forçar o navegador a baixar
-            const url = window.URL.createObjectURL(blob);
+            if (!response.ok) {
+                const erro = await response.json(); 
+                alert(`Erro: ${erro.error || 'Falha no download'}`);
+                return; 
+            }
+            const blob = await response.blob(); 
+            const url = window.URL.createObjectURL(blob); 
             const a = document.createElement('a');
-            a.href = url;
-            a.download = originalName; // Nome que vai aparecer pro usuário salvar
-            document.body.appendChild(a);
-            a.click();
-            // Limpeza
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
+            a.href = url; 
+            a.download = nomeOrigional; 
+            document.body.appendChild(a); 
+            a.click(); 
+
+            window.URL.revokeObjectURL(url); 
+            document.body.removeChild(a); 
 
         } catch (e) {
             console.error(e);
