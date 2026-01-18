@@ -31,10 +31,6 @@ export function pushFile() {
     }
 
     async function updateCounters() {
-        const consultedCount = localStorage.getItem('consultedCount') || 0;
-        const consultedEl = document.getElementById('consultedFilesCount');
-        if (consultedEl) consultedEl.innerHTML = `<strong>${consultedCount}</strong> arquivos consultados`;
-
         try {
             // É preciso de uma rota GET aqui
             const response = await fetch('http://localhost:3000/arquivos'); 

@@ -101,12 +101,6 @@ export function pullFile() {
         if (counterEl) counterEl.innerHTML = `<strong>${count}</strong> arquivos armazenados`;
     }
 
-    // Atualiza contador de CONSULTADOS (Baseado no LocalStorage)
-    function updateConsultedCounterUI() {
-        const counterEl = document.getElementById('consultedFilesCount');
-        if (counterEl) counterEl.innerHTML = `<strong>${consultedCount}</strong> arquivos consultados`;
-    }
-
     // Função de filtro (Exposta globalmente)
     function filterFiles() {
         const searchInput = document.getElementById('searchInput');
