@@ -1,151 +1,132 @@
 export function pullFile() {
-    const LIST_URL = 'http://localhost:3000/api/files/list/1'; // ID 1 fixo para teste
-    const DOWNLOAD_URL = 'http://localhost:3000/download';
-
     let allFiles = [];
-    
-    // Inicializa a contagem de downloads lendo do localStorage
-    let consultedCount = parseInt(localStorage.getItem('consultedCount')) || 0;
+    const API_BASE = 'http://localhost:3000';
 
     async function renderUserProfile() {
         const nameEl = document.getElementById('display-name'); 
-
         const userDataJSON = localStorage.getItem('userData');
-        
+        if (!userDataJSON) {
+            alert("Faça login novamente.");
+            window.location.href = "login.html";
+            return null;
+        }
         const userLocal = JSON.parse(userDataJSON); 
-
         try {
-            const response = await fetch(`http://localhost:3000/usuarios/perfil/${userLocal.id}`);
-
-            if (!response.ok) throw new Error('Erro ao buscar dados no servidor'); 
-
+            const response = await fetch(`${API_BASE}/usuarios/perfil/${userLocal.id}`);
+            if (!response.ok) throw new Error('Erro user'); 
             const userAtualizado = await response.json(); 
-
             if(nameEl) nameEl.textContent = userAtualizado.nome;
 
-            console.log("Perfil carregado do Banco de Dados.");
-            
         } catch (error) {
-            console.error("Erro no backend, usando cache local: ", error); 
-
+            console.error("Cache local usado:", error); 
             if (nameEl) nameEl.textContent = userLocal.nome;  
         }
+        return userLocal; 
     }
 
-    async function fetchFiles() {
+    async function fetchFiles(user) {
         const tbody = document.getElementById('filesTableBody');
         const errorMsg = document.getElementById('errorMessage');
-
-        // Atualiza visualmente o contador de consultas ao carregar
-        updateConsultedCounterUI();
-
         try {
-            const response = await fetch(LIST_URL);
-            
-            if (!response.ok) throw new Error('Servidor não respondeu.');
-            
+            const response = await fetch(`${API_BASE}/arquivos/armazenados/${user.id}`);            
+            if (!response.ok) throw new Error('Falha ao buscar lista.');
             allFiles = await response.json();
-            
-            // O backend retorna um array. Se vier algo diferente, trata como vazio.
             if (!Array.isArray(allFiles)) allFiles = [];
-
-            updateStoredCounterUI(allFiles.length);
-            renderTable(allFiles);
-            
+            updateCounters(user.id);
+            renderTable(allFiles);            
             if(errorMsg) errorMsg.style.display = 'none';
 
         } catch (error) {
-            console.error("Erro ao buscar arquivos:", error);
-            if(tbody) tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-danger">Falha ao carregar dados.</td></tr>';
-            
-            if(errorMsg) {
-                errorMsg.style.display = 'block';
-                errorMsg.innerHTML = `
-                    <strong>Erro de Conexão:</strong> Não foi possível conectar ao Backend.<br>
-                    Certifique-se de que o comando <code>node app.js</code> está rodando na pasta <code>src/backend</code>.
-                `;
-            }
+            console.error("Erro fetch:", error);
+            if(tbody) tbody.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Falha ao conectar no servidor.</td></tr>';
         }
     }
 
     function renderTable(files) {
         const tbody = document.getElementById('filesTableBody');
         if(!tbody) return;
-        
-        tbody.innerHTML = '';
 
+        tbody.innerHTML = '';
         if (files.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted">Nenhum arquivo encontrado no banco de dados.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted">Nenhum arquivo encontrado.</td></tr>';
             return;
         }
-
         files.forEach(file => {
-            // Nota: O Controller já formata como { id, name, desc, date }
+            // Formata a data (Postgres manda ISO String)
+            const dataFormatada = new Date(file.data_upload).toLocaleDateString('pt-BR');
             const tr = document.createElement('tr');
+            // IMPORTANTE: Aqui usamos os nomes exatos das colunas do Postgres
+            // nome_arquivo, descricao, data_upload, id
             tr.innerHTML = `
-                <td>${file.name}</td>
-                <td>${file.date}</td>
-                <td>${file.desc}</td>
+                <td>${file.nome_arquivo}</td>
+                <td>${dataFormatada}</td>
+                <td>${file.descricao || '-'}</td>
                 <td class="text-center">
-                  <!-- Passamos o ID e o Nome para a função de download -->
-                  <button class="btn btn-sm btn-primary" onclick="downloadFile('${file.id}', '${file.name}')">Download</button>
+                  <button class="btn btn-sm btn-primary" onclick="window.downloadFile('${file.id}', '${file.nome_arquivo}')">
+                    <i class="bi bi-download"></i> Baixar
+                  </button>
                 </td>
             `;
             tbody.appendChild(tr);
         });
     }
 
-    // Atualiza contador de ARMAZENADOS (Baseado na resposta do Banco)
-    function updateStoredCounterUI(count) {
-        const counterEl = document.getElementById('storedFilesCount');
-        if (counterEl) counterEl.innerHTML = `<strong>${count}</strong> arquivos armazenados`;
+    async function updateCounters(userId) {
+        try {
+            const response = await fetch(`${API_BASE}/arquivos/armazenados/${userId}`); 
+            if (response.ok) {
+                const data = await response.json(); 
+                const storedEl = document.getElementById('storedFilesCount'); 
+                if (storedEl) {
+                    storedEl.innerHTML = `<strong>${data.total}</strong> arquivos armazenados`;
+                }
+            }
+        } catch (error) {
+            console.error("Erro contador:", error); 
+        }
     }
 
-    // Função de filtro (Exposta globalmente)
-    function filterFiles() {
+    window.filterFiles = function() {
         const searchInput = document.getElementById('searchInput');
         if(!searchInput) return;
 
         const term = searchInput.value.toLowerCase();
+        
         const filtered = allFiles.filter(file => 
-            (file.name && file.name.toLowerCase().includes(term)) || 
-            (file.desc && file.desc.toLowerCase().includes(term)) ||
-            (file.date && file.date.includes(term))
+            (file.nome_arquivo && file.nome_arquivo.toLowerCase().includes(term)) || 
+            (file.descricao && file.descricao.toLowerCase().includes(term))
         );
         renderTable(filtered);
     }
 
-    // Função de Download (Integração com Backend)
-    async function downloadFile(id, filename) {
+    // 6. Função de Download REAL (Blob)
+    window.downloadFile = async function(id, originalName) {
         try {
-            // Incrementa contador local (Visual)
-            consultedCount++;
-            localStorage.setItem('consultedCount', consultedCount);
-            updateConsultedCounterUI();
+            const response = await fetch(`${API_BASE}/arquivos/download/${id}`);
+            if (!response.ok) throw new Error("Erro no download");
+            // Transforma a resposta em um "blob" (arquivo binário)
+            const blob = await response.blob();
+            // Cria um link invisível para forçar o navegador a baixar
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = originalName; // Nome que vai aparecer pro usuário salvar
+            document.body.appendChild(a);
+            a.click();
+            // Limpeza
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
 
-            // Chama o endpoint de download do Backend
-            const res = await fetch(`${DOWNLOAD_URL}/${id}`);
-            const data = await res.json();
-
-            if (res.ok) {
-                // Em um cenário real com blobs, aqui criaríamos um link <a> para baixar o binário.
-                // Como é um protótipo retornando JSON:
-                alert(`✅ Sucesso do Backend:\n${data.message}\nArquivo ID: ${data.fileData.id}`);
-            } else {
-                alert(`❌ Erro no download: ${data.error}`);
-            }
         } catch (e) {
             console.error(e);
-            alert("Erro de conexão ao tentar baixar o arquivo.");
+            alert("Não foi possível baixar o arquivo.");
         }
-    }
+    };
 
-    // EXPOR FUNÇÕES PARA O HTML
-    // Necessário para que onclick="..." funcione com módulos
-    window.filterFiles = filterFiles;
-    window.downloadFile = downloadFile;
-
-    // Inicialização
-    renderUserProfile();
-    fetchFiles();
+    (async () => {
+        const user = await renderUserProfile();
+        if (user) {
+            fetchFiles(user);
+        }
+    })();
 }

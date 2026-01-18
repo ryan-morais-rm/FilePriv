@@ -7,40 +7,38 @@ export function pushFile() {
 
     async function renderUserProfile() {
         const nameEl = document.getElementById('display-name'); 
-
         const userDataJSON = localStorage.getItem('userData');
-        
         const userLocal = JSON.parse(userDataJSON); 
 
         try {
             const response = await fetch(`http://localhost:3000/usuarios/perfil/${userLocal.id}`);
-
             if (!response.ok) throw new Error('Erro ao buscar dados no servidor'); 
-
             const userAtualizado = await response.json(); 
-
             if(nameEl) nameEl.textContent = userAtualizado.nome;
-
             console.log("Perfil carregado do Banco de Dados.");
             
         } catch (error) {
             console.error("Erro no backend, usando cache local: ", error); 
-
             if (nameEl) nameEl.textContent = userLocal.nome;  
         }
     }
 
     async function updateCounters() {
+        const userData = localStorage.getItem('userData'); 
+        if (!userData) return; 
+        const user = JSON.parse(userData);
+        
         try {
-            // É preciso de uma rota GET aqui
-            const response = await fetch('http://localhost:3000/arquivos'); 
+            const response = await fetch(`http://localhost:3000/arquivos/armazenados/${user.id}`); 
             if (response.ok) {
-                const files = await response.json();
-                const storedEl = document.getElementById('storedFilesCount');
-                if (storedEl) storedEl.innerHTML = `<strong>${files.length}</strong> arquivos armazenados`;
+                const data = await response.json(); 
+                const storedEl = document.getElementById('storedFilesCount'); 
+                if (storedEl) {
+                    storedEl.innerHTML = `<strong>${data.total}</strong> arquivos armazenados`;
+                }
             }
-        } catch (e) {
-            console.error("Erro ao atualizar contadores (Backend offline?)", e);
+        } catch (error) {
+            console.error("Erro ao buscar contagem:", e); 
         }
     }
 
