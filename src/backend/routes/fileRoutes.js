@@ -1,5 +1,4 @@
-// Preciso de rotas GET para fornecer o nome do usuário
-// Preciso de rotas GET que forneçam quantidade de arquivos armazenados e arquivos consultados
+// Preciso de rotas GET que forneçam quantidade de arquivos armazenados
 // Preciso de rotas GET que forneçam nome do arquivo, data de upload e descrição do arquivo 
 
 const express = require('express');
@@ -21,5 +20,6 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 router.post('/upload', upload.single('arquivo'), fileController.uploadFile);
+router.get('/armazenados/:usuario_id', fileController.filesStored); 
 
 module.exports = router;
