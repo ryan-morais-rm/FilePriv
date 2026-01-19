@@ -4,7 +4,7 @@ bin/automation/.vagrant
 
 src/backend/uploads
 
-src/backend/services/src/target
+src/backend/services/target
 
 .env
 src/backend/.env
