@@ -22,5 +22,4 @@ app.get('/', (req, res) => {
 
 app.listen(PORT, () => {
     console.log(`✅ Servidor rodando na porta ${PORT}`);
-    console.log(`Teste com ES Modules (import/export)`);
 });
