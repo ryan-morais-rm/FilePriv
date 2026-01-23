@@ -1,17 +1,25 @@
-const express = require('express');
-const cors = require('cors'); 
-const authRoutes = require('../backend/routes/authRoutes');
-const fileRoutes = require('../backend/routes/fileRoutes');
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import authRouter from './routes/authRoutes.js';
+import fileRouter from './routes/fileRoutes.js';
+
+dotenv.config();
 
 const app = express();
+const PORT = process.env.PORT || 3000;
 
 app.use(cors());
+app.use(express.json()); 
+app.use(express.urlencoded({ extended: true })); 
 
-app.use(express.json());
+app.use('/usuarios', authRouter);
+app.use('/arquivos', fileRouter);
 
-app.use('/usuarios', authRoutes);
-app.use('/arquivos', fileRoutes); 
+app.get('/', (req, res) => {
+    res.send('Servidor ativo');
+});
 
-app.listen(3000, () => {
-    console.log('Servidor rodando na porta 3000 com estrutura organizada');
+app.listen(PORT, () => {
+    console.log(`✅ Servidor rodando na porta ${PORT}`);
 });

@@ -1,10 +1,15 @@
-const express = require('express');
-const router = express.Router();
-const userController = require('../controllers/authController');
+import express from 'express'; 
+import userController from '../controllers/authController.js';
+import verificarToken from '../middlewares/authMiddleware.js';
 
-router.post('/cadastro', userController.createUser);
-router.post('/login', userController.loginUser);
-router.get('/perfil/:id', userController.consultUser);
+const authRouter = express.Router();
+
+// Rotas públicas
+authRouter.post('/cadastro', userController.createUser);
+authRouter.post('/login', userController.loginUser);
+
+// Rota privada
+authRouter.get('/perfil/:id', verificarToken, userController.consultUser);
 
 
-module.exports = router;
+export default authRouter;
