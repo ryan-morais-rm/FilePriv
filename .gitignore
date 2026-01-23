@@ -9,7 +9,7 @@ src/backend/services/target
 .env
 src/backend/.env
 
-src/backend/db.json
+src/backend/generated/prisma
 *.log
 
 .DS_Store
