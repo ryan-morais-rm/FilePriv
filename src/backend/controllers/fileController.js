@@ -14,16 +14,15 @@ const fileController = {
                 return res.status(400).json({ error: 'Nenhum arquivo enviado.' });
             }
 
-            const { usuario_id, descricao, nome_customizado } = req.body;
+            const usuario_id = req.usuarioId; 
+            const { descricao, nome_customizado } = req.body;
 
             if (!usuario_id) {
                 return res.status(400).json({ error: 'ID do usuário não fornecido.' });
             }
 
-            const idConvertido = parseInt(usuario_id);
-
             const novoArquivo = await fileModel.registrarArquivo(
-                idConvertido, 
+                usuario_id, 
                 nome_customizado, 
                 descricao, 
                 req.file.path
@@ -42,7 +41,7 @@ const fileController = {
 
     async filesStored(req, res) {
         try {
-            const { usuario_id } = req.params;
+            const usuario_id  = req.usuarioId;
             if (!usuario_id) return res.status(400).json({error: 'ID necessário'});            
             const total = await fileModel.contarArquivos(Number(usuario_id));
            
@@ -56,7 +55,7 @@ const fileController = {
 
     async listUserFiles(req, res) {
         try {
-            const { usuario_id } = req.params;            
+            const  usuario_id  = req.usuarioId;            
             const lista = await fileModel.listarPorUsuario(Number(usuario_id));
             
             return res.status(200).json(lista); 
@@ -75,11 +74,17 @@ const fileController = {
                 return res.status(404).json({ error: 'Arquivo não encontrado no registro.' });
             }
 
+            if (arquivo.usuario_id != req.usuarioId) {
+                return res.status(403).json({
+                    error: 'Acesso negado!'
+                }); 
+            }
+
             const apenasNome = path.basename(arquivo.caminho);            
             const caminhoAbsoluto = path.resolve(__dirname, '../uploads', apenasNome);
+            
             if (!fs.existsSync(caminhoAbsoluto)) {
                 if (fs.existsSync(arquivo.caminho)) {
-                   // Usa o caminho direto do banco se o construído falhar
                    return res.download(arquivo.caminho, arquivo.nome_arquivo);
                 } else {
                     console.log("Arquivo físico sumiu:", caminhoAbsoluto);
@@ -87,7 +92,6 @@ const fileController = {
                 }
             }
             
-            console.log("Enviando:", caminhoAbsoluto);
             res.setHeader('Content-Disposition', `attachment; filename="${arquivo.nome_arquivo}"`);
             res.setHeader('Content-Type', 'application/octet-stream');
             

@@ -1,5 +1,6 @@
 import authModel from '../models/authModel.js';
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken'; 
 
 const userController = {
     
@@ -16,10 +17,19 @@ const userController = {
                 return res.status(401).json({ message: 'Email ou senha incorretos' });
             }
 
+            const token = jwt.sign(
+                { id: usuario.id, email: usuario.email },
+                process.env.JWT_SECRET,
+                { expiresIn: '8h'}  
+            );
+
             delete usuario.senha;
             console.log("Login autorizado para:", usuario.email);
 
-            return res.status(200).json(usuario);
+            return res.status(200).json({
+                usuario: usuario,
+                token: token 
+            });
 
         } catch (error) {
             console.error("Erro no login:", error);
