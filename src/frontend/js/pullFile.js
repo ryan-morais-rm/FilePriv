@@ -1,18 +1,21 @@
 export function pullFile() {
     let allFiles = [];
     const API_BASE = 'http://localhost:3000';
+    const token = localStorage.getItem('token');
 
     async function renderUserProfile() {
         const nameEl = document.getElementById('display-name'); 
         const userDataJSON = localStorage.getItem('userData');
-        if (!userDataJSON) {
+        if (!userDataJSON || !token) {
             alert("Faça login novamente.");
             window.location.href = "login.html";
             return null;
         }
         const userLocal = JSON.parse(userDataJSON); 
         try {
-            const response = await fetch(`${API_BASE}/usuarios/perfil/${userLocal.id}`);
+            const response = await fetch(`${API_BASE}/usuarios/perfil/${userLocal.id}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
             if (!response.ok) throw new Error('Erro user'); 
             const userAtualizado = await response.json(); 
             if(nameEl) nameEl.textContent = userAtualizado.nome;
@@ -28,11 +31,15 @@ export function pullFile() {
         const tbody = document.getElementById('filesTableBody');
         const errorMsg = document.getElementById('errorMessage');
         try {
-            const response = await fetch(`${API_BASE}/arquivos/armazenados/lista/${user.id}`);            
+            const response = await fetch(`${API_BASE}/arquivos/armazenados/lista`, {
+                headers: { 'Authorization': `Bearer ${token}`}
+            })
+            
             if (!response.ok) throw new Error('Falha ao buscar lista.');
             allFiles = await response.json();
             if (!Array.isArray(allFiles)) allFiles = [];
-            updateCounters(user.id);
+
+            updateCounters();
             renderTable(allFiles);            
             if(errorMsg) errorMsg.style.display = 'none';
 
@@ -52,11 +59,9 @@ export function pullFile() {
             return;
         }
         files.forEach(file => {
-            // Formata a data (Postgres manda ISO String)
             const dataFormatada = new Date(file.data_upload).toLocaleDateString('pt-BR');
             const tr = document.createElement('tr');
-            // IMPORTANTE: Aqui usamos os nomes exatos das colunas do Postgres
-            // nome_arquivo, descricao, data_upload, id
+
             tr.innerHTML = `
                 <td>${file.nome_arquivo}</td>
                 <td>${dataFormatada}</td>
@@ -71,9 +76,11 @@ export function pullFile() {
         });
     }
 
-    async function updateCounters(userId) {
+    async function updateCounters() {
         try {
-            const response = await fetch(`${API_BASE}/arquivos/armazenados/quantidade/${userId}`); 
+            const response = await fetch(`${API_BASE}/arquivos/armazenados/quantidade/`, {
+                headers: { 'Authorization': `Bearer ${token}`}
+            }); 
             if (response.ok) {
                 const data = await response.json(); 
                 const storedEl = document.getElementById('storedFilesCount'); 
@@ -102,8 +109,11 @@ export function pullFile() {
     window.downloadFile = async function(id, nomeOrigional) {
         try {
             console.log(`Iniciando download do ID: ${id}`);
+
+            const response = await fetch(`${API_BASE}/arquivos/download/${id}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });            
             
-            const response = await fetch(`${API_BASE}/arquivos/download/${id}`);
             if (!response.ok) {
                 const erro = await response.json(); 
                 alert(`Erro: ${erro.error || 'Falha no download'}`);

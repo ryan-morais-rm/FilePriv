@@ -1,17 +1,21 @@
 export function pushFile() {
-    const API_URL = 'http://localhost:3000/arquivos/upload'; 
-    
+    const API_URL = 'http://localhost:3000'; 
+
     const form = document.getElementById('uploadForm');
     const statusDiv = document.getElementById('uploadStatus');
     const btn = document.getElementById('submitBtn');
+    const token = localStorage.getItem('token');
 
     async function renderUserProfile() {
         const nameEl = document.getElementById('display-name'); 
         const userDataJSON = localStorage.getItem('userData');
+        if (!userDataJSON || !token) return;
         const userLocal = JSON.parse(userDataJSON); 
 
         try {
-            const response = await fetch(`http://localhost:3000/usuarios/perfil/${userLocal.id}`);
+            const response = await fetch(`${API_URL}/usuarios/perfil/${userLocal.id}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
             if (!response.ok) throw new Error('Erro ao buscar dados no servidor'); 
             const userAtualizado = await response.json(); 
             if(nameEl) nameEl.textContent = userAtualizado.nome;
@@ -24,12 +28,13 @@ export function pushFile() {
     }
 
     async function updateCounters() {
-        const userData = localStorage.getItem('userData'); 
-        if (!userData) return; 
-        const user = JSON.parse(userData);
+        if (!token) return;
         
         try {
-            const response = await fetch(`http://localhost:3000/arquivos/armazenados/quantidade/${user.id}`); 
+            const response = await fetch(`${API_URL}/arquivos/armazenados/quantidade`, {
+                headers: { 'Authorization': `Bearer ${token}`}
+            })
+             
             if (response.ok) {
                 const data = await response.json(); 
                 const storedEl = document.getElementById('storedFilesCount'); 
@@ -75,12 +80,14 @@ export function pushFile() {
         try {
             const formData = new FormData();
             formData.append('arquivo', file);
-            formData.append('usuario_id', user.id);
             formData.append('descricao', fileDesc);
             formData.append('nome_customizado', fileName);
 
-            const response = await fetch(API_URL, {
+            const response = await fetch(`${API_URL}/arquivos/upload`, {
                 method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
                 body: formData
             });
 

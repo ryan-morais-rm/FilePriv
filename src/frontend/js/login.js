@@ -43,7 +43,9 @@ export function login() {
 
             msgArea.innerHTML = `<div class="alert alert-success mt-3">Login realizado! Redirecionando...</div>`;
             
-            localStorage.setItem('userData', JSON.stringify(data));
+            localStorage.setItem('userData', JSON.stringify(data.usuario));
+    
+            localStorage.setItem('token', data.token); 
 
             setTimeout(() => {
                 window.location.href = "homepage.html";

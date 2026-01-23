@@ -2,34 +2,43 @@ export async function homepage() {
 
     async function renderUserProfile() {
         const nameEl = document.getElementById('display-name'); 
-        const emailEl = document.getElementById('display-email'); 
-        
+        const emailEl = document.getElementById('display-email');         
         const userDataJSON = localStorage.getItem('userData'); 
+        const token = localStorage.getItem('token'); 
 
-        if (!userDataJSON) {
-            console.warn("Usuário não logado. Redirecionando..."); 
+        if (!userDataJSON || !token) {
+            console.warn("Usuário não autenticado. Redirecionando..."); 
             window.location.href = 'login.html';
             return; 
         }
-
         const userLocal = JSON.parse(userDataJSON); 
 
         try {
-            const response = await fetch(`http://localhost:3000/usuarios/perfil/${userLocal.id}`);
+            const response = await fetch(`http://localhost:3000/usuarios/perfil/${userLocal.id}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.status === 401 || response.status === 403) {
+                alert("Sua sessão expirou. Por favor, faça login novamente.");
+                localStorage.removeItem('userData');
+                localStorage.removeItem('token');
+                window.location.href = 'login.html';
+                return;
+            }
 
             if (!response.ok) throw new Error('Erro ao buscar dados no servidor'); 
 
             const userAtualizado = await response.json(); 
-
             if(nameEl) nameEl.textContent = userAtualizado.nome;
-
             if(emailEl) emailEl.textContent = userAtualizado.email;
-
-            console.log("Perfil carregado do Banco de Dados.");
+            console.log("Perfil carregado via JWT.");
             
         } catch (error) {
-            console.error("Erro no backend, usando cache local: ", error); 
-
+            console.error("Erro ou Fallback: ", error); 
             if (nameEl) nameEl.textContent = userLocal.nome; 
             if (emailEl) emailEl.textContent = userLocal.email; 
         }
