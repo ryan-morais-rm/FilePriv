@@ -1,4 +1,4 @@
-const db = require('../config/db');
+import db from '../config/db.js';
 
 const fileModel = {
     async registrarArquivo(usuario_id, nome_customizado, descricao, caminhoArquivo) {
@@ -38,4 +38,4 @@ const fileModel = {
     }
 };
 
-module.exports = fileModel;
+export default fileModel;

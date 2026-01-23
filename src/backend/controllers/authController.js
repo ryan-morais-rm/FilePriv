@@ -1,4 +1,4 @@
-const authModel = require('../models/authModel')
+import authModel from '../models/authModel.js';
 
 const userController = {
     async loginUser(req, res) {
@@ -32,4 +32,4 @@ const userController = {
     }
 };
 
-module.exports = userController;
+export default userController;

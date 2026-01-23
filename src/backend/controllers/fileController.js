@@ -1,6 +1,10 @@
-const fileModel = require('../models/fileModel');
-const path = require('path'); 
-const fs = require('fs');
+import fileModel from '../models/fileModel.js';
+import path from 'path';
+import fs from 'fs'; 
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const fileController = {
     
@@ -91,4 +95,4 @@ const fileController = {
     }
 }; 
 
-module.exports = fileController;
+export default fileController;
