@@ -1,0 +1,1 @@
+// Wrapper técnico do SFTP
