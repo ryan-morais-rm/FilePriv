@@ -1,0 +1,1 @@
+// O struct FileFragment vem aqui

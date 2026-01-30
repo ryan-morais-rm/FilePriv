@@ -1,0 +1,1 @@
+// Lê do disco, deleta original
