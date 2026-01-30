@@ -1,29 +1,30 @@
 // O struct que representa a VM e usa o sftp_client
 
-// Tipo genérico de Erro para o exemplo (pode ser ssh2::Error, std::io::Error, etc)
-type MyResult<T> = Result<T, Box<dyn std::error::Error>>;
+use super::ssh_client::SSHClient;
+use std::path::Path;
 
 pub struct StorageNode {
+    pub id: u8,
     pub port: u16,
-    pub ipv4: String, 
+    pub ipv4: String,
     pub user: String,
-    session: Option<Session>, 
+    client: Option<SSHClient>, 
 }
 
 impl StorageNode {
-    pub fn new(ipv4: String, user: String, port: u16) -> Self {
-        Self { ipv4, user, port }
+    pub fn new(id: u8, ipv4: String, port: u16, user: String) -> Self {
+        todo!()
     }
 
-    pub async fn connect(&mut self) -> MyResult<()> {
-        Ok(())
+    pub fn is_online(&self) -> bool {
+        todo!()
     }
 
-    pub async fn disconnect(&mut self) -> MyResult<()> {
-        Ok(())
+    pub fn try_connect(&mut self) -> Result<(), String> {
+        todo!()
     }
 
-    pub async fn upload_shard(&self, local_path: &PathBuf, remote_path: &str) -> MyResult<()> {
-        Ok(())
+    pub fn store_fragment(&mut self, local_path: &Path) -> Result<(), String> {
+        todo!()
     }
 }
