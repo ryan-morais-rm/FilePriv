@@ -1,0 +1,1 @@
+// Para ler IPs, usuários e senhas
