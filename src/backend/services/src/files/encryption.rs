@@ -1,5 +1,8 @@
-// Lógica de criptografia
-// Padrão utilizado: AES-256-GCM
+use aes_gcm::{
+    aead::{Aead, KeyInit, Payload},
+    Aes256Gcm, Nonce
+};
+use rand::Rng; 
 
 pub struct Encryptor {
     key: [u8; 32], 
@@ -7,35 +10,64 @@ pub struct Encryptor {
 
 impl Encryptor {
     pub fn new(key_bytes: &[u8]) -> Result<Self, String> {
-        todo!()
+        if key_bytes.len() != 32 {
+            return Err(format!(
+                "Tamanho de chave inválido. Esperado 32 bytes, recebido {}.",
+                key_bytes.len()
+            ));
+        }
+
+        let mut key = [0u8; 32];
+        key.copy_from_slice(key_bytes);
+
+        Ok(Self { key })
     }
 
-    // Retorna o array de 12 bytes (u8)
     fn generate_nonce() -> [u8; 12] {
-        // Usa uma lib de random (Ex: rand::thread_rng)
-        todo!()
+        let mut nonce = [0u8; 12];
+        let mut rng = rand::thread_rng();
+        rng.fill(&mut nonce);
+        nonce
     }
 
-    // Retorna (Nonce extraído, Ciphertext puro)
     fn separate_nonce_and_ciphertext(encrypted_data: &[u8]) -> Result<(&[u8], &[u8]), String> {
-        // Verifica se o array tem pelo menos 12 bytes
-        // Divide o slice em dois: [0..12] e [12..fim]
-        todo!()
+        if encrypted_data.len() < 12 {
+            return Err("Dados corrompidos ou muito curtos (menor que o tamanho do Nonce).".to_string());
+        }
+
+        let (nonce, ciphertext) = encrypted_data.split_at(12);
+        Ok((nonce, ciphertext))
     }
 
     pub fn encrypt(&self, data: &[u8]) -> Result<Vec<u8>, String> {
-        // 1. let nonce = Self::generate_nonce();
-        // 2. Instancia o Cipher usando self.key
-        // 3. let ciphertext = cipher.encrypt(nonce, data)?;
-        // 4. Retorna [nonce + ciphertext] concatenados
-        todo!()
+        let nonce_bytes = Self::generate_nonce();
+        let nonce = Nonce::from_slice(&nonce_bytes); 
+
+        let cipher = Aes256Gcm::new_from_slice(&self.key)
+            .map_err(|e| format!("Erro ao inicializar Cipher: {}", e))?;
+
+        let ciphertext = cipher.encrypt(nonce, data)
+            .map_err(|e| format!("Falha na encriptação: {}", e))?;
+
+        let mut final_package = Vec::with_capacity(nonce_bytes.len() + ciphertext.len());
+        
+        final_package.extend_from_slice(&nonce_bytes);
+        final_package.extend_from_slice(&ciphertext);
+
+        Ok(final_package)
     }
     
     pub fn decrypt(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, String> {
-        // 1. let (nonce, cipher_text) = Self::separate_nonce_and_ciphertext(encrypted_data)?;
-        // 2. Instancia o Cipher usando self.key
-        // 3. let plaintext = cipher.decrypt(nonce, cipher_text)?;
-        // 4. Retorna plaintext
-        todo!()
+        let (nonce_bytes, ciphertext_bytes) = Self::separate_nonce_and_ciphertext(encrypted_data)?;
+
+        let nonce = Nonce::from_slice(nonce_bytes);
+        
+        let cipher = Aes256Gcm::new_from_slice(&self.key)
+            .map_err(|e| format!("Erro ao inicializar Cipher: {}", e))?;
+
+        let plaintext = cipher.decrypt(nonce, ciphertext_bytes)
+            .map_err(|e| format!("Falha na decriptação (Chave errada ou arquivo corrompido): {}", e))?;
+
+        Ok(plaintext)
     }
 }
