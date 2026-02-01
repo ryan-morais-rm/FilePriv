@@ -9,4 +9,4 @@ systemctl enable ssh
 
 systemctl start ssh
 
-mkdir -p /home/vagrant/arquivos 
+mkdir -p /home/vagrant/uploads 
