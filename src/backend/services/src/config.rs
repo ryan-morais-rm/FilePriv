@@ -1,32 +1,42 @@
-// Para ler IPs, usuários e senhas
+// src/config.rs
 
 use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
 use dotenv::dotenv;
-use rand::RngCore; // Trait necessário para gerar bytes aleatórios
+use rand::RngCore;
 
 pub struct AppConfig {
     pub watch_folder: String,
     pub chunk_size: usize,
-    pub master_key: [u8; 32],      // Chave de criptografia dos arquivos (AES)
+    pub master_key: [u8; 32],      
     pub ssh_user: String,
-    pub ssh_key_path: PathBuf,     // Caminho da chave privada SSH (id_rsa)
-    pub node_ips: Vec<String>,     // Lista de IPs das VMs
+    pub ssh_port: u16,             // Adicionado: Porta explícita
+    pub ssh_key_path: PathBuf,     
+    pub node_ips: Vec<String>,     
 }
 
 impl AppConfig {
     pub fn load() -> Result<Self, String> {
         dotenv().ok();
 
-        let watch_folder = env::var("WATCH_FOLDER").unwrap_or_else(|_| String::from("./uploads"));
+        let watch_folder = env::var("WATCH_FOLDER")
+            .unwrap_or_else(|_| String::from("../uploads"));
+
         let chunk_size_mb = env::var("CHUNK_SIZE_MB")
             .unwrap_or_else(|_| "10".to_string())
             .parse::<usize>()
             .map_err(|_| "CHUNK_SIZE_MB deve ser um número inteiro")?;
         
-        let chunk_size = chunk_size_mb * 1024 * 1024; // Converte MB para Bytes
-        let ssh_user = env::var("SSH_USER").unwrap_or_else(|_| String::from("vagrant"));        
+        let chunk_size = chunk_size_mb * 1024 * 1024;
+
+        let ssh_user = env::var("SSH_USER").unwrap_or_else(|_| String::from("vagrant"));
+        
+        let ssh_port = env::var("SSH_PORT")
+            .unwrap_or_else(|_| "22".to_string())
+            .parse::<u16>()
+            .map_err(|_| "SSH_PORT deve ser um número inteiro (u16)")?;
+
         let ssh_key_str = env::var("SSH_KEY_PATH").unwrap_or_else(|_| {
             dirs::home_dir()
                 .map(|p| p.join(".ssh/id_rsa").to_string_lossy().to_string())
@@ -35,10 +45,12 @@ impl AppConfig {
         let ssh_key_path = PathBuf::from(ssh_key_str);
 
         if !ssh_key_path.exists() {
-            return Err(format!("Chave SSH não encontrada em: {:?}", ssh_key_path));
+            println!(">> AVISO: Chave SSH não encontrada em {:?}", ssh_key_path);
         }
 
-        let nodes_str = env::var("NODES").unwrap_or_else(|_| String::from("127.0.0.1"));
+        let nodes_str = env::var("NODES")
+            .unwrap_or_else(|_| String::from("192.168.60.10,192.168.60.11,192.168.60.12"));
+            
         let node_ips: Vec<String> = nodes_str
             .split(',')
             .map(|s| s.trim().to_string())
@@ -51,6 +63,7 @@ impl AppConfig {
             chunk_size,
             master_key,
             ssh_user,
+            ssh_port, 
             ssh_key_path,
             node_ips,
         })
@@ -75,13 +88,13 @@ impl AppConfig {
             let mut key = [0u8; 32];
             key.copy_from_slice(&bytes);
             Ok(key)
-            
         } else {
             println!(">> Nenhuma chave encontrada. Gerando nova 'master.key'...");
             
             let mut key = [0u8; 32];
             let mut rng = rand::thread_rng();
             rng.fill_bytes(&mut key);
+
             let hex_string = hex::encode(key);
             fs::write(path, hex_string)
                 .map_err(|e| format!("Falha ao salvar nova chave no disco: {}", e))?;
