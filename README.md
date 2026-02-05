@@ -38,6 +38,10 @@ Sirva a aplicação web estática  na raiz do projeto
 
 --- 
 
+## Diagrama
+![Diagrama FilePriv](https://https://github.com/ryan-morais-rm/FilePriv/blob/main/filepriv.png)
+
+---
 ## Contato
 Dúvidas ou sugestões? Entre em contato:
 * Email: ryan.morais.workspace@gmail.com
