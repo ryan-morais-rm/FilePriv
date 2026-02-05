@@ -41,7 +41,7 @@ impl SSHClient {
             .map_err(|e| format!("Não foi possível criar arquivo remoto {:?}: {}", remote_path, e))?;
         
         let mut local_file = File::open(local_path)
-            .map_err(|e| format!("Erro ao ler arquivo local: {}", e))?;]
+            .map_err(|e| format!("Erro ao ler arquivo local: {}", e))?;
         
         std::io::copy(&mut local_file, &mut remote_file)
             .map_err(|e| format!("Erro durante transferência de dados: {}", e))?;

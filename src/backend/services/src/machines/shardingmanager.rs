@@ -1,6 +1,6 @@
 // O struct que gerencia as VMs 
 
-use super::node::StorageNode;
+use super::nodestorage::StorageNode;
 use crate::files::sharding::{FileSplitter, ShardFragment};
 use crate::files::encryption::Encryptor;
 use std::path::{Path, PathBuf};
