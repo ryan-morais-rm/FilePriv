@@ -39,7 +39,7 @@ Sirva a aplicação web estática  na raiz do projeto
 --- 
 
 ## Diagrama
-![Diagrama FilePriv](https://github.com/ryan-morais-rm/FilePriv/blob/main/filepriv.png)
+![Diagrama FilePriv](https://github.com/ryan-morais-rm/FilePriv/blob/main/assets/filepriv.png)
 
 ---
 ## Contato
