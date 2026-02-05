@@ -5,6 +5,8 @@ bin/automation/.vagrant
 src/backend/uploads
 
 src/backend/services/target
+src/backend/services/.env
+src/backend/services/storage_key
 
 .env
 src/backend/.env
