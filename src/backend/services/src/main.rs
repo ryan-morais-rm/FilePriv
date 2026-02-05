@@ -4,8 +4,8 @@ mod machines;
 mod watcher;
 
 use crate::config::AppConfig;
-use crate::machines::shardmanager::ShardManager;
-use crate::machines::node::StorageNode;
+use crate::machines::shardingmanager::ShardManager;
+use crate::machines::nodestorage::StorageNode;
 use std::fs;
 use tokio::sync::mpsc;
 
@@ -30,7 +30,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let mut node = StorageNode::new(
             index as u8,
             ip.clone(),
-            22, 
+            config.ssh_port, 
             config.ssh_user.clone(),
             config.ssh_key_path.clone(),
         );
