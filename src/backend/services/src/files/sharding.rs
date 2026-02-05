@@ -16,9 +16,9 @@ pub struct FileSplitter {
 }
 
 impl FileSplitter {
-    pub fn new(chunk_size_mb: usize) -> Self {
+    pub fn new(chunk_size_bytes: usize) -> Self {
         Self {
-            chunk_size_bytes: chunk_size_mb * 1024 * 1024,
+            chunk_size_bytes, 
         }
     }
 
