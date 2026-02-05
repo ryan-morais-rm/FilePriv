@@ -1,0 +1,16 @@
+#!/bin/bash
+# Rode esse script como ROOT nas VMs que serão criadas no virtualBox
+
+apt update
+
+apt install -y openssh-server openssh-client
+
+systemctl enable ssh
+
+systemctl start ssh
+
+mkdir -p /home/vagrant/uploads
+
+echo "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCzctiGpCbML4tgGuD4EwZK5lq3w/YFYtPr3i67lgWKCeCWTB5bvToj+UfM4wuPcyrCs3crp74j3unsy9Ojs42igSI11S8ytGCzI0souEf4BVJFQSVKYrBQ1wl3glz08y6nD9bTrtl2hGHZXisTXKG7xCIH4LPfkGlizmKk6rb0GtWyl3YX7hlQGafNwhRImbwC7rTrfn7vc/ngoHVVW3VY14NqVtnLQWLcfywAmKhuSFZNgaDmqXLHeFLlvg3rqmz2Q+/UtEXGrw++98/pDeHFxMhYORClKBvtgIpGtxWu51QY+3tz9skDW16b6tG9cwnGHJ1+IJlldgTZYrouULJE6nXs3kQk7/tDcDQIFwk/T7Sv/Hj9LmoRPg85fQQXS93ArZzwrc5q1ZJNlKIrCaRDuMe6RUajd516kbK7heBlUReIJUyqSkeKTOyIDwPrsIA/4OzcwMOBh2KPosqbefx2NCVCseDruBvy2irwMHNoBHDuzUKLKQEr6hf/d2SuYRwm5whjPw9z7OFSNEKH/1K2U6nwic84fl159YMnWdW/Zkor/R/PhmSo9ptg+RQ9qivhlNp7Uwt6N39f8RuAPv4J9cGNMQsCe81ffXwYZWUesA56I5ebdRTBYbCYCi1ymM+jpxMwZrKA3sc2fxC379TkaPprl37IByXrmREcIf4SBQ== ryan-correia@vivobook" >> /home/vagrant/.ssh/authorized_keys 
+
+chmod 600 /home/vagrant/.ssh/authorized_keys  
