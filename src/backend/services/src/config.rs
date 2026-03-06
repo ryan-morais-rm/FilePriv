@@ -11,7 +11,7 @@ pub struct AppConfig {
     pub chunk_size: usize,
     pub master_key: [u8; 32],      
     pub ssh_user: String,
-    pub ssh_port: u16,             // Adicionado: Porta explícita
+    pub ssh_port: u16,             
     pub ssh_key_path: PathBuf,     
     pub node_ips: Vec<String>,     
 }

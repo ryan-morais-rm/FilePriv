@@ -2,7 +2,6 @@ import prisma from '../config/db.js';
 
 const authModel = {
     async criarUsuario(nome, email, senhaHash) {
-        // O Prisma faz o INSERT e o RETURNING automaticamente
         const usuario = await prisma.usuario.create({
             data: {
                 nome: nome,
