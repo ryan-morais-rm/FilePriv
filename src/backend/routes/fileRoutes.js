@@ -21,5 +21,6 @@ fileRouter.post('/upload', verificarToken, upload.single('arquivo'), fileControl
 fileRouter.get('/download/:id', verificarToken, fileController.downloadFile);
 fileRouter.get('/armazenados/quantidade/', verificarToken, fileController.filesStored); 
 fileRouter.get('/armazenados/lista/', verificarToken, fileController.listUserFiles);
+fileRouter.get('/regras', fileController.verifiyFile);
 
 export default fileRouter;
