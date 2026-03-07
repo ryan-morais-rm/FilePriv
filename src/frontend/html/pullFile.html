@@ -20,7 +20,6 @@
             </span>
           </li>
           <li class="nav-item mx-2">
-            <!-- Contador de Armazenados (Dinâmico via DB) -->
             <span class="nav-link text-light" id="storedFilesCount"><strong></strong> arquivos armazenados</span>
           </li>
         </ul>
@@ -39,23 +38,30 @@
       </div>
     </div>
 
-    <!-- CAIXA DE PESQUISA -->
     <div class="row justify-content-center mb-4">
       <div class="col-lg-10">
         <div class="search-box p-3">
-          <form class="d-flex" onsubmit="event.preventDefault(); filterFiles();">
-            <input class="form-control me-2" id="searchInput" type="search" placeholder="Buscar por nome, data ou descrição..." aria-label="Search" onkeyup="filterFiles()">
+          <form class="d-flex gap-2" onsubmit="event.preventDefault(); filterFiles();">
+            <input class="form-control" id="searchInput" type="search" placeholder="Buscar por nome, data ou descrição..." aria-label="Search" onkeyup="filterFiles()">
+            
+            <select id="extFilter" class="form-select w-auto" onchange="filterFiles()">
+              <option value="">Todas as extensões</option>
+              <option value="pdf">PDF</option>
+              <option value="docx">DOCX</option>
+              <option value="jpg">JPG</option>
+              <option value="jpeg">JPEG</option>
+              <option value="png">PNG</option>
+            </select>
+
             <button class="btn btn-primary" type="submit">Procurar</button>
           </form>
         </div>
       </div>
     </div>
 
-    <!-- TABELA DE ARQUIVOS -->
     <div class="row justify-content-center">
       <div class="col-lg-10">
         <div class="table-container">
-          <!-- Mensagem de Erro (Oculta por padrão) -->
           <div id="errorMessage" class="alert alert-warning" style="display: none;"></div>
 
           <table class="table table-hover align-middle">
@@ -88,7 +94,6 @@
   
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-  <!-- Script Lógica Local (Fetch API -> JSON Server) -->
   <script type="module">
     import { pullFile } from '../js/pullFile.js'; 
     pullFile(); 
