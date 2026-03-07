@@ -4,19 +4,16 @@
 ## Problemas
 
 ### Frontend
--> Mecanismo de pesquisa de arquivos, por exemplo pesquisar pdf, docx...
-
--> É preciso definir um tamanho máximo de arquivo. Será consumido uma API no backend.
+-> Função que dê para deletar a exibição dos arquivos. 
 
 -> As alterações de senha e e-mail na homepage.html estão chumbadas no frontend. 
 
 -> Refatoração dos arquivos .js do frontend, está tudo numa função só em seu respectivo arquivo. 
 
 ### Backend
--> É necessário uma rota no homepage.html que altere a senha e o e-mail no homepage.html
+-> Função que delete arquivos armazenados
 
--> Fazer a validação de tamanho do arquivo no backend. Se um arquivo maior que 100MB for recebido,
-   leva block. 
+-> É necessário uma rota no homepage.html que altere a senha e o e-mail no homepage.html
 
 -> É necessário de rotas no servers.html que cadastre o nome dos nodes, ip interno, porta, 
    CPU, memória e quantidade de disco dos nodes. Com isso, o backend faz a comunicação com
