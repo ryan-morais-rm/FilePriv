@@ -14,7 +14,7 @@ export async function homepage() {
         const userLocal = JSON.parse(userDataJSON); 
 
         try {
-            const response = await fetch(`http://localhost:3000/usuarios/perfil/${userLocal.id}`, {
+            const response = await fetch(`usuarios/perfil/${userLocal.id}`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${token}`,

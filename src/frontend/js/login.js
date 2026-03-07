@@ -1,5 +1,5 @@
 export function login() {
-    const API_URL = 'http://localhost:3000/usuarios/login';
+    const API_URL = '/usuarios/login';
     const form = document.getElementById('loginForm');
     const msgArea = document.getElementById('messageArea'); 
     const btn = document.querySelector('button[type="submit"]');

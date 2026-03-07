@@ -33,7 +33,7 @@ export function signUP() {
         try {
             msgArea.innerHTML = `<div class="alert alert-info">Cadastrando...</div>`;
 
-            const response = await fetch('http://localhost:3000/usuarios/cadastro', {
+            const response = await fetch('/usuarios/cadastro', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

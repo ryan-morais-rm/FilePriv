@@ -1,6 +1,4 @@
 export function pushFile() {
-    const API_URL = 'http://localhost:3000'; 
-
     const form = document.getElementById('uploadForm');
     const statusDiv = document.getElementById('uploadStatus');
     const btn = document.getElementById('submitBtn');
@@ -13,7 +11,7 @@ export function pushFile() {
         const userLocal = JSON.parse(userDataJSON); 
 
         try {
-            const response = await fetch(`${API_URL}/usuarios/perfil/${userLocal.id}`, {
+            const response = await fetch(`/usuarios/perfil/${userLocal.id}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (!response.ok) throw new Error('Erro ao buscar dados no servidor'); 
@@ -31,7 +29,7 @@ export function pushFile() {
         if (!token) return;
         
         try {
-            const response = await fetch(`${API_URL}/arquivos/armazenados/quantidade`, {
+            const response = await fetch(`/arquivos/armazenados/quantidade`, {
                 headers: { 'Authorization': `Bearer ${token}`}
             })
              
@@ -83,7 +81,7 @@ export function pushFile() {
             formData.append('descricao', fileDesc);
             formData.append('nome_customizado', fileName);
 
-            const response = await fetch(`${API_URL}/arquivos/upload`, {
+            const response = await fetch(`/arquivos/upload`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`

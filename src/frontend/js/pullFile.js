@@ -1,6 +1,5 @@
 export function pullFile() {
     let allFiles = [];
-    const API_BASE = 'http://localhost:3000';
     const token = localStorage.getItem('token');
 
     async function renderUserProfile() {
@@ -13,7 +12,7 @@ export function pullFile() {
         }
         const userLocal = JSON.parse(userDataJSON); 
         try {
-            const response = await fetch(`${API_BASE}/usuarios/perfil/${userLocal.id}`, {
+            const response = await fetch(`/usuarios/perfil/${userLocal.id}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (!response.ok) throw new Error('Erro user'); 
@@ -31,7 +30,7 @@ export function pullFile() {
         const tbody = document.getElementById('filesTableBody');
         const errorMsg = document.getElementById('errorMessage');
         try {
-            const response = await fetch(`${API_BASE}/arquivos/armazenados/lista`, {
+            const response = await fetch(`$/arquivos/armazenados/lista`, {
                 headers: { 'Authorization': `Bearer ${token}`}
             })
             
@@ -78,7 +77,7 @@ export function pullFile() {
 
     async function updateCounters() {
         try {
-            const response = await fetch(`${API_BASE}/arquivos/armazenados/quantidade/`, {
+            const response = await fetch(`/arquivos/armazenados/quantidade/`, {
                 headers: { 'Authorization': `Bearer ${token}`}
             }); 
             if (response.ok) {
@@ -110,7 +109,7 @@ export function pullFile() {
         try {
             console.log(`Iniciando download do ID: ${id}`);
 
-            const response = await fetch(`${API_BASE}/arquivos/download/${id}`, {
+            const response = await fetch(`/arquivos/download/${id}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });            
             
