@@ -4,7 +4,7 @@
 ## Problemas
 
 ### Frontend
--> Página de enviar e baixar arquivos precisam estar em uma página só. 
+-> Mecanismo de pesquisa de arquivos, por exemplo pesquisar pdf, docx...
 
 -> É preciso definir um tamanho máximo de arquivo. Será consumido uma API no backend.
 
