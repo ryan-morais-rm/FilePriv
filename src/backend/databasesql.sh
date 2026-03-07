@@ -14,6 +14,7 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
         nome_arquivo VARCHAR(255) NOT NULL,
         descricao TEXT NOT NULL,
         caminho VARCHAR(255) NOT NULL,
+        tipo_arquivo VARCHAR(10) NOT NULL,
         usuario_id INTEGER REFERENCES usuarios(id) ON DELETE CASCADE, 
         data_upload TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
