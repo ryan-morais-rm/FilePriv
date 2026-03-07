@@ -58,7 +58,8 @@ const fileController = {
                 usuario_id, 
                 nome_customizado, 
                 descricao, 
-                req.file.path
+                req.file.path,
+                fileType
             );
 
             return res.status(201).json({

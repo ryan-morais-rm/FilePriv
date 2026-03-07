@@ -1,13 +1,18 @@
 import prisma from '../config/db.js';
 
 const fileModel = {
-    async registrarArquivo(usuario_id, nome_customizado, descricao, caminhoArquivo) {
+    async registrarArquivo(usuario_id, nome_customizado, descricao, caminhoArquivo, tipo_arquivo) {
         const arquivo = await prisma.arquivo.create({
             data: {
                 nome_arquivo: nome_customizado,
                 descricao: descricao,
                 caminho: caminhoArquivo,
-                usuario_id: usuario_id 
+                tipo_arquivo: tipo_arquivo,
+                usuario: {
+                    connect: {
+                        id: Number(usuario_id)
+                    }
+                }
             }
         });
         
