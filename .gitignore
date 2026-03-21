@@ -3,17 +3,17 @@ venv/
 
 bin/automation/.vagrant
 
-src/backend/uploads
+src/node/uploads
 
-src/backend/services/target
-src/backend/services/.env
-src/backend/services/storage_key
-src/backend/https_pem/
+src/rust/target
+src/rust/.env
+src/rust/storage_key
+src/node/https_pem/
 
 .env
-src/backend/.env
+node/.env
 
-src/backend/generated/prisma
+node/generated/prisma
 *.log
 
 .DS_Store

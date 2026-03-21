@@ -8,8 +8,6 @@
 
 -> As alterações de senha e e-mail na homepage.html estão chumbadas no frontend. 
 
--> Refatoração dos arquivos .js do frontend, está tudo numa função só em seu respectivo arquivo. 
-
 ### Backend
 -> Função que delete arquivos armazenados
 

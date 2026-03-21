@@ -34,7 +34,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/usuarios', authRouter);
 app.use('/arquivos', fileRouter);
 
-app.use(express.static(path.join(__dirname, '../frontend')));
+app.use(express.static(path.join(__dirname, '../../public/')));
 
 httpsServer.listen(PORT, () => {
     console.log(`API Node.js rodando em https://localhost:${PORT}`);
