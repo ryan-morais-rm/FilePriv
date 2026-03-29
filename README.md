@@ -23,18 +23,30 @@ Para executar este projeto, recomenda-se o uso de um ambiente **Linux** (prefere
 * [Rust](https://www.rust-lang.org/)
 
 ---
+## 1. Clone o repositório
+* git clone https://github.com/SEU_USUARIO/FilePriv.git
+* cd FilePriv
 
-### 1. Infraestrutura (VMs e Banco de Dados)
-Inicie as Máquinas Virtuais e o banco de dados PostgreSQL.
+## 2. Instale as dependências do Manager (Node.js) na pasta raiz
+* npm install
 
-### 2. Backend (Node.js)
-Instale as dependências e inicie a API principal dentro da pasta src/backend/
+## 3. Crie um arquivo .env dentro de src/node/ 
+* Consulte o .env.example
 
-### 3. Services (Rust)
-Inicie o serviço de criptografia e gerenciamento de shards dentro da pasta src/backend/services
+## 4. Crie um arquivo .env dentro de src/rust/
+* Consulte o .env.example
 
-### 4. Frontend
-Sirva a aplicação web estática  na raiz do projeto 
+## 5. Gere os certificados autoassinados
+* mkdir -p src/node/https_pem/
+* openssl req -nodes -new -x509 -keyout src/node/https_pem/key.pem -out src/node/https_pem/cert.pem -days 365 -subj "/CN=localhost"
+
+## 6. Subir o banco de dados e o prisma
+* docker compose up -d
+* npx prisma generate
+* npx prisma db push
+
+## 7. Inicie o serviço
+* sudo node src/node/app.js
 
 --- 
 
