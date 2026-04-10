@@ -3,16 +3,7 @@
 
 ## Problemas
 
-### Frontend
--> Função que dê para deletar a exibição dos arquivos. 
-
--> As alterações de senha e e-mail na homepage.html estão chumbadas no frontend. 
-
 ### Backend
--> Função que delete arquivos armazenados
-
--> É necessário uma rota no homepage.html que altere a senha e o e-mail no homepage.html
-
 -> É necessário de rotas no servers.html que cadastre o nome dos nodes, ip interno, porta, 
    CPU, memória e quantidade de disco dos nodes. Com isso, o backend faz a comunicação com
    essas máquinas e verifica se estão ativas ou prontas, se não estiverem, gera log. 

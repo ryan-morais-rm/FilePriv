@@ -79,6 +79,47 @@ const userController = {
             console.error("Erro na consulta:", error); 
             return res.status(500).json({ error: 'Erro ao consultar usuário' }); 
         }
+    },
+    async updateProfile(req, res) {
+        try {
+            const userId = req.usuarioId; 
+            const { nome, email, senhaAtual, novaSenha } = req.body;
+
+            const usuarioExistente = await authModel.buscarPorIdComSenha(userId);
+            if (!usuarioExistente) {
+                return res.status(404).json({ error: 'Usuário não encontrado.' });
+            }
+
+            const dadosParaAtualizar = { nome, email };
+
+            if (novaSenha) {
+                if (!senhaAtual) {
+                    return res.status(400).json({ error: 'Para alterar a senha, você deve fornecer a senha atual.' });
+                }
+
+                const senhaValida = await bcrypt.compare(senhaAtual, usuarioExistente.senha);
+                if (!senhaValida) {
+                    return res.status(401).json({ error: 'A senha atual está incorreta.' });
+                }
+
+                const salt = await bcrypt.genSalt(10);
+                dadosParaAtualizar.senha = await bcrypt.hash(novaSenha, salt);
+            }
+
+            const usuarioAtualizado = authModel.atualizarUsuario(userId, dadosParaAtualizar);
+
+            return res.status(200).json({ 
+                message: 'Perfil atualizado com sucesso!',
+                usuario: usuarioAtualizado
+            });
+
+        } catch (error) {
+            if (error.code === 'P2002') { 
+                return res.status(409).json({ error: 'Este e-mail já está em uso por outra conta.' });
+            }
+            console.error("Erro ao atualizar perfil:", error);
+            return res.status(500).json({ error: 'Erro interno ao atualizar perfil.' });
+        }
     }
 };
 

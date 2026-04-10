@@ -53,18 +53,18 @@ async function renderUserProfile() {
     }
 }
 
-function updateAttributes() {
+async function updateAttributes() {
     const nameInput = document.getElementById('update-name').value.trim();
     const emailInput = document.getElementById('update-email').value.trim();
+    const currentPass = document.getElementById('update-currentPassword').value;
     const newPass = document.getElementById('update-newPassword').value;
     const confirmPass = document.getElementById('update-confirmPassword').value;
-    const updateMessage = document.getElementById('updateMessage');
     
-    let changesMade = false;
+    const updateMessage = document.getElementById('updateMessage');
     
     updateMessage.style.display = 'block';
     updateMessage.className = 'mt-3 text-center fw-bold text-primary';
-    updateMessage.textContent = 'Verificando alterações...';
+    updateMessage.textContent = 'Salvando no servidor...';
 
     if (newPass || confirmPass) {
         if (newPass.length < 8) {
@@ -77,34 +77,60 @@ function updateAttributes() {
             updateMessage.textContent = 'Erro: As novas senhas não coincidem!';
             return;
         }
-        changesMade = true;
+        if (!currentPass) {
+            updateMessage.className = 'mt-3 text-center fw-bold text-warning';
+            updateMessage.textContent = 'Aviso: Para trocar a senha, digite sua senha atual.';
+            return;
+        }
     }
 
-    let userLocal = JSON.parse(localStorage.getItem('userData') || '{}');
+    const token = localStorage.getItem('token');
 
-    if (nameInput) { userLocal.nome = nameInput; changesMade = true; }
-    if (emailInput) { userLocal.email = emailInput; changesMade = true; }
+    try {
+        const response = await fetch('/usuarios/perfil', {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ 
+                nome: nameInput, 
+                email: emailInput, 
+                senhaAtual: currentPass, 
+                novaSenha: newPass 
+            })
+        });
 
-    if (changesMade) {
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || 'Erro ao atualizar perfil.');
+        }
+
+        let userLocal = JSON.parse(localStorage.getItem('userData') || '{}');
+        userLocal.nome = data.usuario.nome;
+        userLocal.email = data.usuario.email;
         localStorage.setItem('userData', JSON.stringify(userLocal));
+
         renderUserProfile();
         
         document.getElementById('updateAttributesForm').reset();
         updateMessage.className = 'mt-3 text-center fw-bold text-success';
-        updateMessage.textContent = 'Perfil atualizado com sucesso! (Simulação)';
+        updateMessage.textContent = 'Perfil atualizado com sucesso no Banco de Dados!';
 
         setTimeout(() => {
             const modalElement = document.getElementById('updateAttributesModal');
-            if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-                const modal = bootstrap.Modal.getInstance(modalElement);
-                if (modal) modal.hide();
+            if (typeof window.bootstrap !== 'undefined' && window.bootstrap.Modal) {
+                let modal = window.bootstrap.Modal.getInstance(modalElement);
+                if (!modal) modal = new window.bootstrap.Modal(modalElement);
+                modal.hide();
             }
             updateMessage.style.display = 'none';
         }, 2000);
         
-    } else {
-        updateMessage.className = 'mt-3 text-center fw-bold text-warning';
-        updateMessage.textContent = 'Nenhum campo foi preenchido para alteração.';
+    } catch (error) {
+        updateMessage.className = 'mt-3 text-center fw-bold text-danger';
+        updateMessage.textContent = error.message;
     }
 }
 

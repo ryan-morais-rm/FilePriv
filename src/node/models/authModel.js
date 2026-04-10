@@ -10,6 +10,18 @@ const authModel = {
             }
         });
         return usuario;
+    },
+
+    async atualizarUsuario(id, dadosAtualizados) {
+        return await prisma.usuario.update({
+            where: { id: parseInt(id) },
+            data: dadosAtualizados,
+            select: {
+                id: true,
+                nome: true,
+                email: true
+            }
+        });
     }, 
 
     async buscarPorId(id) {
@@ -33,7 +45,13 @@ const authModel = {
             }
         });
         return usuario;
-    }
+    },
+
+    async buscarPorIdComSenha(id) {
+        return await prisma.usuario.findUnique({
+            where: { id: parseInt(id) }
+        });
+    },
 }; 
 
 export default authModel;

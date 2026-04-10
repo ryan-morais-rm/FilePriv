@@ -10,6 +10,6 @@ authRouter.post('/login', userController.loginUser);
 
 // Rota privada
 authRouter.get('/perfil/:id', verificarToken, userController.consultUser);
-
+authRouter.put('/perfil', verificarToken, userController.updateProfile);
 
 export default authRouter;
