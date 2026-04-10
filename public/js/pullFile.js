@@ -81,14 +81,19 @@ function renderTable(files) {
     files.forEach(file => {
         const dataFormatada = new Date(file.data_upload).toLocaleDateString('pt-BR');
         const tr = document.createElement('tr');
+        
+        tr.id = `file-row-${file.id}`;
 
         tr.innerHTML = `
             <td>${file.nome_arquivo}</td>
             <td>${dataFormatada}</td>
             <td>${file.descricao || '-'}</td>
             <td class="text-center">
-              <button class="btn btn-sm btn-primary" onclick="window.downloadFile('${file.id}', '${file.nome_arquivo}')">
+              <button class="btn btn-sm btn-primary me-1" onclick="window.downloadFile('${file.id}', '${file.nome_arquivo}')" title="Baixar Arquivo">
                 <i class="bi bi-download"></i> Baixar
+              </button>
+              <button class="btn btn-sm btn-danger" onclick="window.deleteFile('${file.id}')" title="Excluir Arquivo">
+                <i class="bi bi-trash"></i> Excluir
               </button>
             </td>
         `;
@@ -148,6 +153,53 @@ window.downloadFile = async function(id, nomeOrigional) {
         alert("Não foi possível baixar o arquivo.");
     }
 };
+
+window.deleteFile = async function(id) {
+    const confirmDelete = confirm("Tem certeza que deseja excluir este arquivo permanentemente? Esta ação não pode ser desfeita.");
+    if (!confirmDelete) return;
+
+    try {
+        const response = await fetch(`/arquivos/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (response.status === 401 || response.status === 403) {
+            alert("Sua sessão expirou. Por favor, faça login novamente.");
+            window.location.href = 'login.html';
+            return;
+        }
+
+        if (!response.ok) {
+            const contentType = response.headers.get("content-type");
+            if (contentType && contentType.indexOf("application/json") !== -1) {
+                const erroData = await response.json();
+                throw new Error(erroData.error || 'Falha ao deletar o arquivo.');
+            } else {
+                const textoErro = await response.text();
+                console.error("Resposta não-JSON do servidor:", textoErro);
+                throw new Error(`Erro no servidor (${response.status}): Rota não encontrada ou erro interno.`);
+            }
+        }
+
+        const rowElement = document.getElementById(`file-row-${id}`);
+        if (rowElement) {
+            rowElement.style.transition = "opacity 0.3s ease";
+            rowElement.style.opacity = "0";
+            setTimeout(() => rowElement.remove(), 300);
+        }
+
+        allFiles = allFiles.filter(file => String(file.id) !== String(id));
+
+        updateCounters();
+
+        console.log(`Arquivo ID ${id} deletado com sucesso.`);
+
+    } catch (error) {
+        console.error("Erro ao deletar arquivo:", error);
+        alert(`Não foi possível deletar o arquivo: ${error.message}`);
+    }
+}
 
 export async function pullFile() {
     token = localStorage.getItem('token');

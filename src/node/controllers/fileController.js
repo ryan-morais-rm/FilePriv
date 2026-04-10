@@ -76,6 +76,44 @@ const fileController = {
         }
     },
 
+    async deleteFile(req, res) {
+        try {
+            const fileId = req.params.id;
+            const userId = req.usuarioId; 
+
+            const arquivo = await fileModel.findFileByIdAndUser(fileId, userId);
+
+            if (!arquivo) {
+                return res.status(404).json({ 
+                    error: "Arquivo não encontrado ou você não tem permissão para excluí-lo." 
+                });
+            }
+
+            const filePath = path.resolve(__dirname, '../uploads', path.basename(arquivo.caminho));
+
+            try {
+                await fs.promises.access(filePath);
+                await fs.promises.unlink(filePath);
+                console.log(`[FilePriv] Arquivo físico deletado: ${filePath}`);
+            } catch (fsError) {
+                if (fsError.code === 'ENOENT') {
+                    console.warn(`[FilePriv] O arquivo físico não estava no disco, limpando apenas o DB: ${filePath}`);
+                } else {
+                    console.error(`[FilePriv] Erro de permissão ao deletar arquivo físico:`, fsError);
+                    return res.status(500).json({ error: "Erro interno ao apagar o arquivo do servidor." });
+                }
+            }
+
+            await fileModel.deleteFileRecord(fileId);
+
+            return res.status(200).json({ message: "Arquivo deletado com sucesso." });
+
+        } catch (error) {
+            console.error("Erro no deleteFileController:", error);
+            return res.status(500).json({ error: "Erro interno no servidor ao tentar deletar o arquivo." });
+        }
+    },
+
     async filesStored(req, res) {
         try {
             const usuario_id  = req.usuarioId;

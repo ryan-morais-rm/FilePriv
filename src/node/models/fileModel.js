@@ -18,6 +18,22 @@ const fileModel = {
         
         return arquivo;
     },
+    async findFileByIdAndUser(fileId, userId) {
+        return await prisma.arquivo.findFirst({
+            where: {
+                id: parseInt(fileId),
+                usuario_id: parseInt(userId) 
+            }
+        });
+    },
+
+    async deleteFileRecord(fileId) {
+        return await prisma.arquivo.delete({
+            where: {
+                id: parseInt(fileId)
+            }
+        });
+    },
 
     async buscarPorId(id) {
         const arquivo = await prisma.arquivo.findUnique({
