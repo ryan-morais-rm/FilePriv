@@ -4,9 +4,7 @@
 ## Problemas
 
 ### Backend
--> É necessário de rotas no servers.html que cadastre o nome dos nodes, ip interno, porta, 
-   CPU, memória e quantidade de disco dos nodes. Com isso, o backend faz a comunicação com
-   essas máquinas e verifica se estão ativas ou prontas, se não estiverem, gera log. 
+-> Refatoração do código inteiro do Rust...
 
 -> É preciso de uma API para "node.js <-> Rust", porque o Rust está monitorando uma pasta
    "/uploads" e isso não é interessante. 
