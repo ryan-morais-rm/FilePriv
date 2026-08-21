@@ -1,17 +1,19 @@
-node_modules/
+app/node_modules/
 venv/
 
-bin/automation/.vagrant
+app/bin/automation/.vagrant
 
-src/node/uploads
+app/src/node/uploads
 
-src/rust/target
-src/rust/.env
-src/rust/storage_key
-src/node/https_pem/
+BACKLOG.md
+
+app/rust/src/rust/target
+app/rust/src/rust/.env
+app/rust/src/rust/storage_key
+app/rust/src/node/https_pem/
 
 .env
-node/.env
+app/src/node/.env
 
 node/generated/prisma
 *.log
@@ -20,3 +22,5 @@ node/generated/prisma
 Thumbs.db
 
 .vscode/
+app/src/node/https_pem/cert.pem
+app/src/node/https_pem/key.pem
