@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Consultar Arquivos - FilePriv</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="../css/theme.css">
+  <link rel="stylesheet" href="../css/pullFile.css">
+</head>
+<body>
+
+  <nav class="navbar navbar-expand-lg navbar-dark navbar-custom-bg shadow-sm">
+    <div class="container">
+      <a class="navbar-brand navbar-brand-fp" href="index.html">
+        <img src="../assets/logo.jpg" alt="FilePriv">
+        FilePriv
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavPull">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse justify-content-end" id="navbarNavPull">
+        <ul class="navbar-nav align-items-lg-center">
+          <li class="nav-item mx-2">
+            <span id="userInfoDisplay" class="nav-link">
+              <i class="fas fa-circle-user me-1"></i>
+              <strong>Usuário:</strong> <span id="display-name"></span>
+            </span>
+          </li>
+          <li class="nav-item mx-2">
+            <span class="nav-link mono" id="storedFilesCount"><strong></strong> arquivos armazenados</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container my-5 content">
+
+    <div class="row justify-content-center mb-2">
+      <div class="col-lg-10">
+        <span class="section-eyebrow">Cofre distribuído</span>
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-2">
+          <h3 class="m-0">Recupere seus arquivos aqui</h3>
+          <a href="pushFile.html" class="btn btn-outline-primary">
+            <i class="fas fa-upload me-1"></i> Ir para Enviar Arquivos
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="row justify-content-center mb-4">
+      <div class="col-lg-10">
+        <div class="search-box fp-card p-3">
+          <form class="d-flex gap-2 flex-wrap" onsubmit="event.preventDefault(); filterFiles();">
+            <input class="form-control" id="searchInput" type="search" placeholder="Buscar por nome, data ou descrição..." aria-label="Search" onkeyup="filterFiles()" style="flex:1; min-width:200px;">
+
+            <select id="extFilter" class="form-select w-auto" onchange="filterFiles()">
+              <option value="">Todas as extensões</option>
+              <option value="pdf">PDF</option>
+              <option value="docx">DOCX</option>
+              <option value="jpg">JPG</option>
+              <option value="jpeg">JPEG</option>
+              <option value="png">PNG</option>
+            </select>
+
+            <button class="btn btn-primary" type="submit"><i class="fas fa-magnifying-glass me-1"></i>Procurar</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="row justify-content-center">
+      <div class="col-lg-10">
+        <div class="table-container fp-card p-3 p-md-4">
+          <div id="errorMessage" class="alert alert-warning" style="display: none;"></div>
+
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-primary">
+                <tr>
+                  <th scope="col">Nome do arquivo</th>
+                  <th scope="col">Data de upload</th>
+                  <th scope="col">Descrição</th>
+                  <th scope="col" class="text-center">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="filesTableBody">
+                <tr>
+                    <td colspan="4" class="text-center py-4">Conectando ao banco de dados local...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="text-center fp-footer">
+    <div class="container">
+      <p class="mb-1">&copy; 2026 Projeto FilePriv</p>
+      <a href="support.html" class="mx-2">Suporte</a> |
+      <a href="homepage.html" class="mx-2">Home</a>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script type="module">
+    import { pullFile } from '../js/pullFile.js';
+    pullFile();
+  </script>
+</body>
+</html>

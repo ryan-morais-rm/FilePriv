@@ -1,0 +1,42 @@
+/* pullFile.html — consulta de arquivos */
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+.content {
+  flex: 1;
+}
+
+.table thead.table-primary th {
+  border-color: var(--navy-800);
+}
+
+.table tbody tr {
+  transition: background-color .15s ease;
+}
+
+/* Badge de extensão de arquivo (ver pullFile.js) */
+.file-ext-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-sm);
+  margin-right: .55rem;
+  font-size: .85rem;
+  background: var(--signal-100);
+  color: var(--signal-600);
+}
+.file-ext-badge.file-ext-pdf { background: #fde3e3; color: #c0392b; }
+.file-ext-badge.file-ext-docx { background: #e3ecfd; color: #1d4ed8; }
+.file-ext-badge.file-ext-jpg,
+.file-ext-badge.file-ext-jpeg,
+.file-ext-badge.file-ext-png { background: #e3f8ef; color: #1a8f5e; }
+
+.file-name-cell {
+  display: inline-flex;
+  align-items: center;
+}

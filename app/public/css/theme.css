@@ -1,0 +1,419 @@
+/* ==========================================================================
+   FilePriv — Design System
+   Paleta: azul-sinal + azul-marinho quase-preto + branco-gelo, com um
+   acento ciano/verde-água reservado para estados "ativo/seguro".
+   Tipografia: Space Grotesk (display), Inter (texto), JetBrains Mono
+   (dados literais: IPs, portas, nomes de nó, datas, extensões).
+   Assinatura visual: o "divisor de fragmentos" (.shard-divider), que
+   representa o particionamento/criptografia de arquivos em blocos —
+   o mecanismo real do projeto — usado sob títulos importantes.
+   ========================================================================== */
+
+:root {
+  /* Azul-marinho quase-preto (não #000, tem "ramo" azul) */
+  --navy-950: #070b18;
+  --navy-900: #0b1330;
+  --navy-800: #101c47;
+  --navy-700: #17265e;
+
+  /* Azul-sinal (acento primário, vem do cubo da logo) */
+  --signal-600: #2354d6;
+  --signal-500: #2f6fed;
+  --signal-400: #5b8ff6;
+  --signal-100: #e4ecfd;
+
+  /* Acento secundário — ciano/verde-água, usado com moderação */
+  --teal-400: #3fd1c2;
+  --teal-500: #26b7a9;
+
+  /* Claros (nunca branco puro/cinza puro — leve viés azul) */
+  --mist-100: #eef2fa;
+  --mist-50: #f7f9fd;
+  --paper: #ffffff;
+
+  /* Texto e bordas */
+  --ink-800: #0d1424;
+  --ink-700: #1b2436;
+  --slate-500: #5c6b84;
+  --slate-300: #d9e1ee;
+
+  /* Semânticos (mantidos próximos do padrão p/ reconhecimento imediato) */
+  --success: #198754;
+  --danger: #dc3545;
+  --warning: #c98a06;
+
+  --radius-lg: 16px;
+  --radius-md: 12px;
+  --radius-sm: 8px;
+
+  --shadow-soft: 0 6px 20px rgba(11, 19, 48, 0.08);
+  --shadow-card: 0 10px 30px rgba(11, 19, 48, 0.10);
+  --shadow-deep: 0 18px 40px rgba(7, 11, 24, 0.35);
+
+  /* Texturas reutilizáveis */
+  --tex-dots-dark: radial-gradient(rgba(255, 255, 255, 0.10) 1px, transparent 1.5px);
+  --tex-dots-light: radial-gradient(rgba(16, 28, 71, 0.08) 1px, transparent 1.5px);
+}
+
+/* ---------- Base ---------- */
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  color: var(--ink-700);
+  background-color: var(--mist-100);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, .navbar-brand,
+.display-5, .display-6 {
+  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  letter-spacing: -0.01em;
+  color: var(--ink-800);
+}
+
+.mono, code, .file-ext-badge, .node span, .server-details p span,
+#storedFilesCount strong, #detail-server-ip, #detail-server-port {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+a { color: var(--signal-500); }
+a:hover { color: var(--signal-600); }
+
+::selection { background: var(--signal-400); color: #fff; }
+
+/* Foco visível consistente (acessibilidade) */
+a:focus-visible, button:focus-visible, .btn:focus-visible,
+.form-control:focus-visible, input:focus-visible {
+  outline: 2px solid var(--teal-400);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Scrollbar discreta (WebKit) */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--mist-100); }
+::-webkit-scrollbar-thumb { background: var(--slate-300); border-radius: 20px; }
+::-webkit-scrollbar-thumb:hover { background: var(--signal-400); }
+
+/* ---------- Textura em grade de pontos ---------- */
+
+.bg-grid-dark {
+  background-image: var(--tex-dots-dark);
+  background-size: 24px 24px;
+}
+.bg-grid-light {
+  background-image: var(--tex-dots-light);
+  background-size: 26px 26px;
+}
+
+/* ---------- Assinatura: divisor de fragmentos ---------- */
+/* Representa o particionamento de arquivos em blocos criptografados. */
+
+.shard-divider {
+  height: 6px;
+  width: 92px;
+  margin: 14px 0 24px;
+  border-radius: 3px;
+  background: repeating-linear-gradient(
+    100deg,
+    var(--signal-500) 0 15px,
+    transparent 15px 19px,
+    var(--teal-400) 19px 28px,
+    transparent 28px 32px
+  );
+}
+.shard-divider.center { margin-left: auto; margin-right: auto; }
+.shard-divider.sm { width: 60px; height: 5px; margin: 8px 0 16px; }
+
+.section-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: .74rem;
+  font-weight: 600;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--signal-600);
+}
+.section-eyebrow::before {
+  content: '';
+  width: 18px;
+  height: 2px;
+  background: var(--teal-400);
+  display: inline-block;
+}
+
+/* ---------- Navbar ---------- */
+
+.navbar-custom-bg {
+  background: linear-gradient(135deg, var(--navy-950), var(--navy-800) 75%);
+  position: relative;
+  border-bottom: 1px solid rgba(91, 143, 246, 0.18);
+}
+.navbar-custom-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--tex-dots-dark);
+  background-size: 22px 22px;
+  pointer-events: none;
+  opacity: .5;
+}
+.navbar-custom-bg .container,
+.navbar-custom-bg .container-fluid { position: relative; z-index: 1; }
+
+.navbar-brand-fp {
+  display: inline-flex;
+  align-items: center;
+  gap: .6rem;
+  font-weight: 700;
+  color: #fff !important;
+  font-size: 1.2rem;
+}
+.navbar-brand-fp img {
+  height: 32px;
+  width: auto;
+  border-radius: 6px;
+}
+
+.navbar-custom-bg .nav-link {
+  color: rgba(255, 255, 255, 0.78) !important;
+  font-weight: 500;
+  position: relative;
+  padding-bottom: 4px !important;
+}
+.navbar-custom-bg .nav-link::after {
+  content: '';
+  position: absolute;
+  left: 0; bottom: 0;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--signal-400), var(--teal-400));
+  transition: width .25s ease;
+}
+.navbar-custom-bg .nav-link:hover,
+.navbar-custom-bg .nav-link.active {
+  color: #fff !important;
+}
+.navbar-custom-bg .nav-link:hover::after,
+.navbar-custom-bg .nav-link.active::after { width: 100%; }
+
+.navbar-custom-bg .navbar-toggler {
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+/* Navegação inferior (dashboard, estilo app) */
+.navbar-bottom-fp {
+  background: var(--paper);
+  border-top: 1px solid var(--slate-300);
+  box-shadow: 0 -8px 20px rgba(11, 19, 48, 0.08);
+}
+.navbar-bottom-fp .nav-link {
+  color: var(--slate-500) !important;
+  font-size: .8rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-weight: 600;
+}
+.navbar-bottom-fp .nav-link i { font-size: 1.05rem; }
+.navbar-bottom-fp .nav-link:hover,
+.navbar-bottom-fp .nav-link.active { color: var(--signal-500) !important; }
+
+/* ---------- Botões ---------- */
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--signal-500), var(--signal-600));
+  border: none;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  padding: .55rem 1.3rem;
+  box-shadow: 0 8px 18px rgba(47, 111, 237, 0.28);
+  transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
+}
+.btn-primary:hover, .btn-primary:focus {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(47, 111, 237, 0.36);
+  filter: brightness(1.04);
+}
+.btn-primary:active { transform: translateY(0); }
+.btn-primary:disabled { opacity: .7; transform: none; box-shadow: none; }
+
+.btn-outline-primary {
+  --bs-btn-color: var(--signal-600);
+  --bs-btn-border-color: var(--signal-500);
+  --bs-btn-hover-bg: var(--signal-500);
+  --bs-btn-hover-border-color: var(--signal-500);
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  border-width: 1.5px;
+  transition: transform .18s ease;
+}
+.btn-outline-primary:hover { transform: translateY(-2px); }
+
+.btn-danger { border-radius: var(--radius-sm); font-weight: 600; }
+.btn-secondary { border-radius: var(--radius-sm); font-weight: 600; }
+
+/* ---------- Cartões ---------- */
+
+.fp-card {
+  background: var(--paper);
+  border: 1px solid var(--slate-300);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  position: relative;
+  overflow: hidden;
+}
+.fp-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--signal-500), var(--teal-400));
+}
+
+/* ---------- Emblemas de integração (AWS / Google Drive) ---------- */
+
+.badge-integration {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  background: var(--mist-50);
+  border: 1px solid var(--slate-300);
+  border-radius: 999px;
+  padding: .45rem .9rem;
+  font-size: .85rem;
+  font-weight: 600;
+  color: var(--ink-700);
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+.badge-integration:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-soft);
+  border-color: var(--signal-400);
+}
+.badge-integration i { font-size: 1.05rem; }
+.badge-integration.i-aws i { color: #e8891d; }
+.badge-integration.i-drive i { color: #2b9366; }
+.badge-integration .tag-soon {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: .62rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--slate-500);
+  background: var(--mist-100);
+  border-radius: 999px;
+  padding: .15rem .5rem;
+  margin-left: .15rem;
+}
+
+/* ---------- Formulários ---------- */
+
+.form-label { font-weight: 600; color: var(--ink-700); font-size: .92rem; }
+.form-control, .form-select {
+  border-radius: var(--radius-sm);
+  border-color: var(--slate-300);
+  padding: .55rem .85rem;
+}
+.form-control:focus, .form-select:focus {
+  border-color: var(--signal-400);
+  box-shadow: 0 0 0 .2rem rgba(47, 111, 237, 0.18);
+}
+
+/* ---------- Tabelas ---------- */
+
+.table-primary, table thead.table-primary, .table thead.bg-primary {
+  --bs-table-bg: var(--navy-800);
+  --bs-table-color: #fff;
+}
+.table thead th {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  letter-spacing: .02em;
+}
+
+/* ---------- Acordeão ---------- */
+
+.accordion-button:not(.collapsed) {
+  background-color: var(--signal-100);
+  color: var(--signal-600);
+  box-shadow: inset 0 -1px 0 var(--slate-300);
+}
+.accordion-button:focus { box-shadow: 0 0 0 .2rem rgba(47, 111, 237, 0.18); }
+.accordion-button::after { filter: hue-rotate(0deg); }
+
+/* ---------- Rodapé ---------- */
+
+footer.fp-footer {
+  background: linear-gradient(135deg, var(--navy-950), var(--navy-900));
+  color: rgba(255, 255, 255, 0.85);
+  padding: 28px 0 22px;
+  margin-top: auto;
+  position: relative;
+  border-top: 3px solid transparent;
+  border-image: linear-gradient(90deg, var(--signal-500), var(--teal-400)) 1;
+}
+footer.fp-footer a {
+  color: rgba(255, 255, 255, 0.75);
+  text-decoration: none;
+}
+footer.fp-footer a:hover { color: #fff; }
+footer.fp-footer .fp-footer-tagline {
+  font-size: .82rem;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 6px;
+}
+
+/* ---------- Painel hero escuro reutilizável ---------- */
+
+.fp-hero-panel {
+  background: linear-gradient(150deg, var(--navy-950), var(--navy-700) 120%);
+  border-radius: var(--radius-lg);
+  position: relative;
+  overflow: hidden;
+  color: #fff;
+}
+.fp-hero-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--tex-dots-dark);
+  background-size: 26px 26px;
+  opacity: .6;
+}
+.fp-hero-panel > * { position: relative; z-index: 1; }
+
+/* Moldura hexagonal (glow) por trás da logo — a logo em si não é alterada */
+.fp-logo-badge { position: relative; display: inline-block; }
+.fp-logo-badge::before {
+  content: '';
+  position: absolute;
+  inset: -20px;
+  background: radial-gradient(circle, rgba(47, 111, 237, .38), rgba(63, 209, 194, .14) 60%, transparent 76%);
+  clip-path: polygon(25% 4%, 75% 4%, 100% 50%, 75% 96%, 25% 96%, 0% 50%);
+  z-index: 0;
+  filter: blur(1px);
+}
+.fp-logo-badge > img { position: relative; z-index: 1; display: block; }
+
+/* Animação de entrada, sutil e única (respeita reduced-motion acima) */
+@keyframes fpFadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fp-animate-in { animation: fpFadeUp .55s ease both; }
+.fp-animate-in.d1 { animation-delay: .05s; }
+.fp-animate-in.d2 { animation-delay: .12s; }
+.fp-animate-in.d3 { animation-delay: .19s; }

@@ -1,0 +1,47 @@
+/* pushFile.html — upload de arquivos */
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+.content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.upload-card {
+  width: 100%;
+}
+
+/* "Dropzone" visual em torno do input de arquivo nativo */
+.dropzone-fp {
+  border: 1.5px dashed var(--slate-300);
+  border-radius: var(--radius-md);
+  padding: 1.1rem 1rem .9rem;
+  text-align: center;
+  background: var(--mist-50);
+  transition: border-color .2s ease, background .2s ease;
+}
+.dropzone-fp:focus-within,
+.dropzone-fp:hover {
+  border-color: var(--signal-400);
+  background: var(--signal-100);
+}
+.dropzone-fp i {
+  display: block;
+  font-size: 1.6rem;
+  color: var(--signal-500);
+}
+.dropzone-fp .form-control {
+  border: none;
+  background: transparent;
+  padding-left: 0;
+}
+.dropzone-hint {
+  display: block;
+  font-size: .75rem;
+  color: var(--slate-500);
+  margin-top: .3rem;
+}

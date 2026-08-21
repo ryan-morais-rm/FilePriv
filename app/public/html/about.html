@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sobre - FilePriv</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="../css/theme.css">
+  <link rel="stylesheet" href="../css/about.css">
+</head>
+<body>
+
+  <nav class="navbar navbar-expand-lg navbar-dark navbar-custom-bg sticky-top shadow-lg">
+    <div class="container">
+      <a class="navbar-brand navbar-brand-fp" href="index.html">
+        <img src="../assets/logo.jpg" alt="FilePriv">
+        FilePriv
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="index.html">Índice</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <header class="logo-header">
+    <div class="container text-center">
+      <span class="section-eyebrow">Sobre o projeto</span>
+      <p class="lead mt-2 mb-0"><strong>Conheça nossa história, motivação e tecnologia.</strong></p>
+    </div>
+  </header>
+  
+  <div class="container">
+    <div class="row">
+      
+      <div class="col-lg-8 mb-4">
+        <div class="main-content-block fp-card p-4 p-md-5">
+            <section class="mb-5">
+              <h2>Descrição do Projeto</h2>
+              <div class="shard-divider sm"></div>
+              <p class="fs-5">
+                FilePriv é um protótipo funcional de um servidor de armazenamento seguro distribuído.
+                Os usuários podem fazer upload e download de arquivos com criptografia forte e particionamento.
+              </p>
+              <p class="mb-0">
+                Os arquivos são criptografados em nível de bit e divididos em partes independentes,
+                cada uma protegida com uma chave privada exclusiva para garantir a segurança máxima.
+              </p>
+            </section>
+
+            <section>
+              <h2>Funcionalidades e Tecnologias</h2>
+              <div class="shard-divider sm"></div>
+              <div class="accordion" id="featuresAccordion">
+                
+                <div class="accordion-item shadow-sm mb-3">
+                  <h2 class="accordion-header" id="headingFeatures">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFeatures">
+                      <i class="fas fa-list-check me-2"></i> Principais Funcionalidades
+                    </button>
+                  </h2>
+                  <div id="collapseFeatures" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
+                    <div class="accordion-body">
+                      <ul class="list-group list-group-flush">
+                        <li class="list-group-item">Upload &amp; Download: Envie e recupere arquivos criptografados via interface web.</li>
+                        <li class="list-group-item">Criptografia: Criptografia AES-GCM segura por arquivo.</li>
+                        <li class="list-group-item">Chaves Aleatórias: Geração de chave exclusiva para cada upload de arquivo.</li>
+                        <li class="list-group-item">Proteção de Partição: Cada partição protegida individualmente.</li>
+                        <li class="list-group-item">Reconstrução: Recupere arquivos completos usando reconstrução baseada em senha.</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="accordion-item shadow-sm mb-3">
+                  <h2 class="accordion-header" id="headingTech">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTech">
+                      <i class="fas fa-microchip me-2"></i> Tecnologias Utilizadas
+                    </button>
+                  </h2>
+                  <div id="collapseTech" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
+                    <div class="accordion-body">
+                      <ul class="list-group list-group-flush">
+                        <li class="list-group-item">Bootstrap 5</li>
+                        <li class="list-group-item">AES-GCM Encryption</li>
+                        <li class="list-group-item">HTML / CSS</li>
+                        <li class="list-group-item">JavaScript</li>
+                        <li class="list-group-item">Python (como backend simulado)</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="accordion-item shadow-sm">
+                  <h2 class="accordion-header" id="headingRoadmap">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseRoadmap">
+                      <i class="fas fa-road me-2"></i> Integrações Futuras
+                    </button>
+                  </h2>
+                  <div id="collapseRoadmap" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
+                    <div class="accordion-body">
+                      <p class="mb-3 text-muted">O FilePriv está em evolução para se integrar a provedores de nuvem consolidados, somando-se ao armazenamento distribuído local:</p>
+                      <div class="d-flex flex-wrap gap-2">
+                        <span class="badge-integration i-aws"><i class="fab fa-aws"></i> Amazon S3 <span class="tag-soon">em breve</span></span>
+                        <span class="badge-integration i-drive"><i class="fab fa-google-drive"></i> Google Drive <span class="tag-soon">em breve</span></span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+        </div>
+      </div>
+
+      <div class="col-lg-4 mb-4">
+        <div class="sidebar d-grid gap-3">
+          
+          <div class="card info-card fp-card">
+            <div class="card-body">
+              <h5 class="card-title">Criador</h5>
+              <p class="card-text mb-1 fw-bold">Ryan de Morais Correia</p>
+              <p class="small text-muted mb-0">Estudante</p>
+            </div>
+          </div>
+
+          <div class="card info-card fp-card">
+            <div class="card-body">
+              <h5 class="card-title">Motivação</h5>
+              <p class="card-text mb-0">Desenvolver uma ferramenta local que funcione de maneira simples e efetiva, focada em segurança e privacidade.</p>
+            </div>
+          </div>
+
+          <div class="card info-card fp-card">
+            <div class="card-body">
+              <h5 class="card-title">Tipo de projeto</h5>
+              <p class="card-text mb-0">Projeto acadêmico para gerenciamento seguro de arquivos distribuídos.</p>
+            </div>
+          </div>
+
+          <div class="card info-card fp-card">
+            <div class="card-body">
+              <h5 class="card-title">Status</h5>
+              <p class="card-text fw-bold text-success mb-0"><i class="fas fa-circle-check me-1"></i>Estágio de protótipo funcional.</p>
+            </div>
+          </div>
+
+          <div class="card info-card fp-card">
+            <div class="card-body">
+              <h5 class="card-title">Integrações planejadas</h5>
+              <div class="d-flex flex-column gap-2 mt-2">
+                <span class="badge-integration i-aws justify-content-start"><i class="fab fa-aws"></i> Amazon S3 <span class="tag-soon ms-auto">em breve</span></span>
+                <span class="badge-integration i-drive justify-content-start"><i class="fab fa-google-drive"></i> Google Drive <span class="tag-soon ms-auto">em breve</span></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <footer class="text-center fp-footer">
+    <div class="container">
+      &copy; 2026 Projeto FilePriv
+    </div>
+  </footer>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

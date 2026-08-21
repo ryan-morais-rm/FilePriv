@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Upload de Arquivos - FilePriv</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="../css/theme.css">
+  <link rel="stylesheet" href="../css/pushFile.css">
+</head>
+<body>
+
+  <nav class="navbar navbar-expand-lg navbar-dark navbar-custom-bg shadow-sm">
+    <div class="container">
+      <a class="navbar-brand navbar-brand-fp" href="index.html">
+        <img src="../assets/logo.jpg" alt="FilePriv">
+        FilePriv
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavPush">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse justify-content-end" id="navbarNavPush">
+        <ul class="navbar-nav align-items-lg-center">
+          <li class="nav-item mx-2">
+            <span id="userInfoDisplay" class="nav-link">
+              <i class="fas fa-circle-user me-1"></i>
+              <strong>Usuário:</strong> <span id="display-name"></span>
+            </span>
+          </li>
+          <li class="nav-item mx-2">
+            <span class="nav-link mono" id="storedFilesCount">
+              <strong></strong> arquivos armazenados
+            </span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container my-5 content">
+    <div class="row justify-content-center">
+      <div class="col-lg-7">
+        <div class="upload-card fp-card p-4 p-md-5">
+
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+              <h2 class="m-0"><i class="fas fa-cloud-arrow-up me-2" style="color:var(--signal-500);"></i>Upload de Arquivos</h2>
+              <a href="pullFile.html" class="btn btn-outline-primary btn-sm">
+                  Ir para Consultar Arquivos
+              </a>
+          </div>
+          <p class="text-muted mb-3">Cada envio é cifrado (AES-GCM) e particionado antes de ser distribuído entre os nós.</p>
+          <div class="shard-divider sm"></div>
+
+          <form id="uploadForm">
+            <div class="mb-3">
+              <label for="fileName" class="form-label">Nome do arquivo</label>
+              <input type="text" class="form-control" id="fileName" placeholder="Digitar nome" required>
+            </div>
+            <div class="mb-3">
+              <label for="fileInput" class="form-label">Escolher Arquivo</label>
+              <div class="dropzone-fp">
+                <i class="fas fa-file-shield mb-2"></i>
+                <input class="form-control" type="file" id="fileInput" accept=".pdf, .docx, .jpg, .jpeg, .png">
+                <span class="dropzone-hint mono">.pdf · .docx · .jpg · .jpeg · .png</span>
+              </div>
+            </div>
+            <div class="mb-4">
+              <label for="fileDesc" class="form-label">Descrição</label>
+              <textarea class="form-control" id="fileDesc" rows="3" placeholder="Adicionar uma descrição..."></textarea>
+            </div>
+            <button type="submit" id="submitBtn" class="btn btn-primary w-100">
+              <i class="fas fa-upload me-2"></i>Enviar
+            </button>
+          </form>
+          <div id="uploadStatus"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="text-center fp-footer">
+    <div class="container"><p class="mb-0">&copy; 2026 Projeto FilePriv </p></div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script type="module">
+    import { pushFile } from '../js/pushFile.js';
+    pushFile();
+  </script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+/* about.html — sobre o projeto */
+
+body {
+  line-height: 1.65;
+}
+
+.logo-header {
+  padding: 34px 0;
+  background: var(--mist-50);
+  border-bottom: 1px solid var(--slate-300);
+  margin-bottom: 3rem;
+}
+.logo-header .lead { color: var(--ink-700); }
+
+.info-card .card-title { color: var(--signal-600); }
+
+.info-card {
+  border-left: 4px solid var(--signal-500) !important;
+}
+.info-card::before { display: none; } /* evita dupla barra de destaque com .fp-card */
+
+.sidebar {
+  position: sticky;
+  top: 90px;
+  align-self: flex-start;
+}
+
+.accordion-button i { color: var(--signal-500); }
+.accordion-button:not(.collapsed) i { color: var(--signal-600); }

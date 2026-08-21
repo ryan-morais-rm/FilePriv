@@ -1,0 +1,70 @@
+/* login.html — acesso (layout dividido: marca + formulário) */
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.content-wrapper {
+  flex: 1;
+  display: flex;
+}
+
+.auth-shell {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  min-height: 100%;
+}
+
+.auth-brand-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 4rem 3.5rem;
+  border-radius: 0;
+}
+
+.auth-trust-list li {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: .92rem;
+  margin-bottom: .6rem;
+}
+.auth-trust-list i {
+  color: var(--teal-400);
+  width: 18px;
+  text-align: center;
+}
+
+.auth-form-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+  background: var(--mist-100);
+}
+
+.login-card {
+  background-color: var(--paper);
+  border: 1px solid var(--slate-300);
+  border-radius: var(--radius-lg);
+  padding: 40px;
+  box-shadow: var(--shadow-card);
+  width: 100%;
+  max-width: 380px;
+}
+
+.logo {
+  max-width: 110px;
+  margin-bottom: 18px;
+}
+
+@media (max-width: 991.98px) {
+  .auth-shell { grid-template-columns: 1fr; }
+  .auth-brand-panel { padding: 3rem 2rem; text-align: center; }
+  .auth-trust-list { display: inline-block; text-align: left; }
+}
