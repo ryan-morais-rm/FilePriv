@@ -1,0 +1,108 @@
+/* file.html — Meus Arquivos (upload à esquerda, download à direita) */
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+.content { flex: 1; }
+
+/* ---------- Grade proporcional: upload (mais estreito) | download (mais largo) ---------- */
+
+.file-split-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.75rem;
+  align-items: stretch;
+}
+
+@media (min-width: 992px) {
+  .file-split-grid {
+    grid-template-columns: 0.72fr auto 1fr; /* upload : divisor : download */
+    gap: 0 1.75rem;
+  }
+}
+
+.upload-col, .download-col { min-width: 0; }
+
+/* Divisor vertical decorativo — variante vertical da assinatura "shard-divider" */
+.split-gutter {
+  align-items: stretch;
+  justify-content: center;
+}
+.split-gutter span {
+  width: 5px;
+  border-radius: 3px;
+  background: repeating-linear-gradient(
+    180deg,
+    var(--signal-500) 0 15px,
+    transparent 15px 19px,
+    var(--teal-400) 19px 28px,
+    transparent 28px 32px
+  );
+}
+
+/* ---------- Coluna de upload ---------- */
+
+.upload-card, .download-card { width: 100%; }
+
+.dropzone-fp {
+  border: 1.5px dashed var(--slate-300);
+  border-radius: var(--radius-md);
+  padding: 1.1rem 1rem .9rem;
+  text-align: center;
+  background: var(--mist-50);
+  transition: border-color .2s ease, background .2s ease;
+}
+.dropzone-fp:focus-within,
+.dropzone-fp:hover {
+  border-color: var(--signal-400);
+  background: var(--signal-100);
+}
+.dropzone-fp i {
+  display: block;
+  font-size: 1.6rem;
+  color: var(--signal-500);
+}
+.dropzone-fp .form-control {
+  border: none;
+  background: transparent;
+  padding-left: 0;
+}
+.dropzone-hint {
+  display: block;
+  font-size: .75rem;
+  color: var(--slate-500);
+  margin-top: .3rem;
+}
+
+/* ---------- Coluna de download ---------- */
+
+.table thead.table-primary th { border-color: var(--navy-800); }
+.table tbody tr { transition: background-color .15s ease; }
+
+.file-ext-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-sm);
+  margin-right: .55rem;
+  font-size: .85rem;
+  background: var(--signal-100);
+  color: var(--signal-600);
+}
+.file-ext-badge.file-ext-pdf { background: #fde3e3; color: #c0392b; }
+.file-ext-badge.file-ext-docx { background: #e3ecfd; color: #1d4ed8; }
+.file-ext-badge.file-ext-jpg,
+.file-ext-badge.file-ext-jpeg,
+.file-ext-badge.file-ext-png { background: #e3f8ef; color: #1a8f5e; }
+
+.file-name-cell { display: inline-flex; align-items: center; }
+
+/* Rolagem própria na tabela quando a lista crescer, mantendo as colunas alinhadas */
+.download-card .table-responsive {
+  max-height: 520px;
+  overflow-y: auto;
+}

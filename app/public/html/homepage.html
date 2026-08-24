@@ -30,8 +30,8 @@
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">Opções</a>
             <div class="dropdown-menu">
-              <a class="dropdown-item" href="pushFile.html"><i class="fas fa-upload me-2 text-muted"></i>Enviar Arquivo</a>
-              <a class="dropdown-item" href="pullFile.html"><i class="fas fa-download me-2 text-muted"></i>Baixar Arquivo</a>
+              <a class="dropdown-item" href="file.html#upload-section"><i class="fas fa-upload me-2 text-muted"></i>Enviar Arquivo</a>
+              <a class="dropdown-item" href="file.html#download-section"><i class="fas fa-download me-2 text-muted"></i>Baixar Arquivo</a>
               <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#manageServersModal"><i class="fas fa-server me-2 text-muted"></i>Gerenciar servidores</a>
             </div>
           </li>
@@ -43,8 +43,8 @@
   <!-- Conteúdo Principal -->
   <div class="container content-section">
     <div class="text-center mb-4">
-      <span class="section-eyebrow">PAINEL</span>
-      <h2 class="mt-2"><strong>PRINCIPAL</strong></h2>
+      <span class="section-eyebrow">Painel</span>
+      <h2 class="mt-2"><strong>PAINEL PRINCIPAL</strong></h2>
       <div class="shard-divider center"></div>
     </div>
 
@@ -69,11 +69,20 @@
           <h4 class="mb-3"><i class="fas fa-cloud me-2"></i>Provedores de Armazenamento</h4>
           <div id="serverListContainer"></div>
           <div class="d-flex flex-wrap gap-2 mt-3 mb-3">
-            <span class="badge-integration i-aws"><i class="fab fa-aws"></i> Amazon S3</span>
-            <span class="badge-integration i-drive"><i class="fab fa-google-drive"></i> Google Drive</span>
+            <span class="badge-integration i-aws"><i class="fab fa-aws"></i> Amazon S3 <span class="tag-soon">em breve</span></span>
+            <span class="badge-integration i-drive"><i class="fab fa-google-drive"></i> Google Drive <span class="tag-soon">em breve</span></span>
           </div>
+          <button class="btn btn-outline-primary w-100 fw-bold" data-bs-toggle="modal" data-bs-target="#manageServersModal">
+            <i class="fas fa-server me-1"></i> Gerenciar Servidores
+          </button>
         </div>
       </div>
+    </div>
+
+    <div class="text-center mb-3">
+      <span class="section-eyebrow">Infraestrutura</span>
+      <h4 class="mt-2 mb-0">Topologia da Rede Distribuída</h4>
+      <p class="text-muted small mt-1">Clique em um nó para ver detalhes.</p>
     </div>
 
     <div class="topology-container">
@@ -89,6 +98,18 @@
         <div class="node application" onclick="window.showApplicationDetails()" title="Aplicação FilePriv">
           <i class="fas fa-diagram-project"></i>
           <span>Aplicação FilePriv</span>
+        </div>
+
+        <div class="connection-line line-app-servers"></div>
+
+        <div class="server-nodes" id="serverNodesContainer"></div>
+
+        <div class="server-details" id="serverDetailsCard">
+          <h6><i class="fas fa-server me-1"></i><span id="detail-server-name"></span></h6>
+          <p>IP: <span id="detail-server-ip"></span></p>
+          <p>Porta: <span id="detail-server-port"></span></p>
+          <p>Carga: <span id="detail-server-load"></span></p>
+          <p class="mb-0">Status: <span id="detail-server-status"></span></p>
         </div>
       </div>
     </div>
@@ -144,6 +165,46 @@
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
           <button type="button" class="btn btn-primary" onclick="updateAttributes()">Salvar Alterações</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Gerenciar Servidores -->
+  <div class="modal fade" id="manageServersModal" tabindex="-1" aria-labelledby="manageServersModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="manageServersModalLabel">
+            <i class="fas fa-server me-2"></i>Gerenciar Servidores
+            <span class="badge rounded-pill text-bg-primary ms-1" id="serverCount">0</span>
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="list-group mb-4" id="modalServerList"></div>
+
+          <hr>
+          <p class="text-muted small mb-2"><i class="fas fa-plus me-1"></i>Adicionar novo nó de armazenamento:</p>
+          <form class="row g-2 align-items-start" onsubmit="window.addServer(event)">
+            <div class="col-6">
+              <label class="form-label small mb-1">IP</label>
+              <input type="text" class="form-control" id="newServerIp" placeholder="192.168.60.13">
+            </div>
+            <div class="col-3">
+              <label class="form-label small mb-1">Porta</label>
+              <input type="text" class="form-control" id="newServerPort" placeholder="22">
+            </div>
+            <div class="col-3 d-flex align-items-end">
+              <button type="submit" class="btn btn-primary w-100">Adicionar</button>
+            </div>
+            <div class="col-12">
+              <div id="addServerMessage" style="display:none;"></div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
         </div>
       </div>
     </div>
