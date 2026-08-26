@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FilePriv — Armazenamento distribuído e criptografado</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="../css/theme.css">
+  <link rel="stylesheet" href="../css/index.css">
+</head>
+<body>
+
+  <nav class="navbar navbar-expand-lg navbar-dark navbar-custom-bg shadow-sm">
+    <div class="container">
+      <a class="navbar-brand navbar-brand-fp" href="index.html">
+        <img src="../assets/logo.jpg" alt="FilePriv">
+        FilePriv
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item mx-2">
+            <a href="homepage.html" class="nav-link">Home</a>
+          </li>
+          <li class="nav-item mx-2">
+            <a href="file.html#upload-section" class="nav-link">Enviar</a>
+          </li>
+          <li class="nav-item mx-2">
+            <a href="file.html#download-section" class="nav-link">Recuperar</a>
+          </li>
+          <li class="nav-item mx-2">
+            <a href="signup.html" class="nav-link">Cadastrar</a>
+          </li>
+          <li class="nav-item mx-2">
+            <a href="login.html" class="nav-link">Login</a>
+          </li>
+          <li class="nav-item mx-2">
+            <a href="about.html" class="nav-link">Sobre</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container my-5">
+
+    <div class="hero-section fp-hero-panel px-4 px-md-5 py-5 fp-animate-in">
+      <div class="row align-items-center g-4">
+        <div class="col-lg-7 text-center text-lg-start">
+          <span class="section-eyebrow" style="color:#8fb4ff;">Projeto acadêmico · IFPB</span>
+          <h1 class="mt-3"><strong>Seus arquivos, fragmentados&nbsp;e cifrados.</strong></h1>
+          <div class="shard-divider"></div>
+          <p class="hero-lead">
+            O FilePriv divide cada arquivo em partições, cifra cada uma com uma chave própria
+            (AES-GCM) e distribui os blocos entre múltiplos nós — uma solução acadêmica para
+            armazenamento distribuído e seguro de dados sensíveis.
+          </p>
+          <div class="mt-4 d-flex flex-wrap justify-content-center justify-content-lg-start gap-2">
+            <a href="file.html#upload-section" class="btn btn-primary btn-lg">
+                <i class="fas fa-upload me-2"></i> Enviar Arquivo
+            </a>
+            <a href="file.html#download-section" class="btn btn-outline-light btn-lg hero-btn-outline">
+                <i class="fas fa-download me-2"></i> Consultar Arquivo
+            </a>
+          </div>
+        </div>
+        <div class="col-lg-5 text-center">
+          <span class="fp-logo-badge">
+            <img src="../assets/logo.jpg" alt="FilePriv Logo" class="logo">
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="text-center mt-5 mb-4">
+      <span class="section-eyebrow">Como funciona</span>
+      <h2 class="mt-2">Do arquivo original ao fragmento distribuído</h2>
+      <div class="shard-divider center"></div>
+    </div>
+
+    <div class="row text-center g-4">
+      <div class="col-md-6 col-lg-4 mb-4">
+        <div class="fp-card feature-card p-4">
+          <i class="fas fa-lock fa-3x mb-3" style="color:var(--signal-500);"></i>
+          <h4 class="mb-2">Criptografia Avançada</h4>
+          <span class="d-block mono text-muted small mb-2">AES-GCM · chave por arquivo</span>
+          <p class="mb-0">
+            Segurança com proteção AES-GCM e chaves exclusivas, blindando seus dados contra acessos não autorizados.
+          </p>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 mb-4">
+        <div class="fp-card feature-card p-4">
+          <i class="fas fa-cubes fa-3x mb-3" style="color:var(--signal-500);"></i>
+          <h4 class="mb-2">Armazenamento Distribuído</h4>
+          <span class="d-block mono text-muted small mb-2">node-FilePriv1 · 2 · 3</span>
+          <p class="mb-0">
+            Seus arquivos são divididos e armazenados em múltiplos servidores, garantindo resiliência e alta disponibilidade.
+          </p>
+        </div>
+      </div>
+
+      <div class="col-md-12 col-lg-4 mb-4">
+        <div class="fp-card feature-card p-4">
+          <i class="fas fa-user-shield fa-3x mb-3" style="color:var(--signal-500);"></i>
+          <h4 class="mb-2">Foco Acadêmico</h4>
+          <span class="d-block mono text-muted small mb-2">IFPB · protótipo</span>
+          <p class="mb-0">
+            Uma plataforma desenvolvida sob rigor acadêmico, ideal para projetos e dados de pesquisa que exigem sigilo.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="text-center mt-3 mb-5">
+      <span class="section-eyebrow">Roadmap</span>
+      <h5 class="mt-2 mb-3">Integrações</h5>
+      <div class="d-flex flex-wrap justify-content-center gap-2">
+        <span class="badge-integration i-aws">
+          <i class="fab fa-aws"></i> Amazon S3 <span class="tag-soon"></span>
+        </span>
+        <span class="badge-integration i-drive">
+          <i class="fab fa-google-drive"></i> Google Drive <span class="tag-soon"></span>
+        </span>
+      </div>
+    </div>
+
+    <div class="text-center mt-5 p-4 p-md-5 fp-card">
+      <h3 class="mb-3">Pronto para começar?</h3>
+      <p class="mb-4 text-muted">Proteja seus dados e projetos de pesquisa com a segurança do FilePriv.</p>
+      <a href="signup.html" class="btn btn-primary btn-lg px-5">Cadastre agora!</a>
+      <a href="login.html" class="btn btn-outline-primary btn-lg px-5 ms-3">Fazer Login</a>
+    </div>
+  </div>
+
+  <footer class="text-center fp-footer">
+    <div class="container">
+      <div class="fw-bold mb-1">FilePriv</div>
+      &copy; 2026 FilePriv |
+      <a href="support.html" class="mx-2">Suporte</a> |
+      <a href="index.html" class="mx-2">Início</a>
+      <div class="fp-footer-tagline">Armazenamento distribuído e criptografado — projeto acadêmico IFPB.</div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
