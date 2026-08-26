@@ -169,49 +169,6 @@ async function pushFile() {
 let allFiles = [];
 let token = '';
 
-async function renderUserProfile(userDataJSON) {
-    const nameEl = document.getElementById('display-name'); 
-    
-    if (!userDataJSON || !token) {
-        alert("Faça login novamente.");
-        window.location.href = "login.html";
-        return null;
-    }
-
-    const userLocal = JSON.parse(userDataJSON); 
-    try {
-        const response = await fetch(`/usuarios/perfil/${userLocal.id}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (!response.ok) throw new Error('Erro user'); 
-        
-        const userAtualizado = await response.json(); 
-        if(nameEl) nameEl.textContent = userAtualizado.nome;
-
-    } catch (error) {
-        console.error("Cache local usado:", error); 
-        if (nameEl) nameEl.textContent = userLocal.nome;  
-    }
-    return userLocal; 
-}
-
-async function updateCounters() {
-    try {
-        const response = await fetch(`/arquivos/armazenados/quantidade/`, {
-            headers: { 'Authorization': `Bearer ${token}`}
-        }); 
-        if (response.ok) {
-            const data = await response.json(); 
-            const storedEl = document.getElementById('storedFilesCount'); 
-            if (storedEl) {
-                storedEl.innerHTML = `<strong>${data.total}</strong> arquivos armazenados`;
-            }
-        }
-    } catch (error) {
-        console.error("Erro contador:", error); 
-    }
-}
-
 async function fetchFiles() {
     const tbody = document.getElementById('filesTableBody');
     const errorMsg = document.getElementById('errorMessage');

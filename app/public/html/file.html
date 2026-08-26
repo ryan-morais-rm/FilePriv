@@ -56,15 +56,12 @@
       <p class="text-muted mb-0">Envie novos arquivos ou recupere os que já estão fragmentados na rede.</p>
     </div>
 
-    <!-- Atalhos rápidos (úteis principalmente quando as colunas empilham no mobile) -->
     <div class="d-flex d-lg-none justify-content-center gap-2 mb-4">
       <a href="#upload-section" class="btn btn-outline-primary btn-sm"><i class="fas fa-upload me-1"></i>Enviar</a>
       <a href="#download-section" class="btn btn-outline-primary btn-sm"><i class="fas fa-download me-1"></i>Baixar</a>
     </div>
 
     <div class="file-split-grid">
-
-      <!-- ================= COLUNA ESQUERDA: UPLOAD ================= -->
       <div class="upload-col" id="upload-section">
         <div class="fp-card p-4 p-md-5 upload-card h-100">
 
@@ -97,10 +94,8 @@
         </div>
       </div>
 
-      <!-- Divisor vertical decorativo (aparece só em telas grandes) -->
       <div class="split-gutter d-none d-lg-flex" aria-hidden="true"><span></span></div>
 
-      <!-- ================= COLUNA DIREITA: DOWNLOAD ================= -->
       <div class="download-col" id="download-section">
         <div class="fp-card p-3 p-md-4 download-card h-100">
 
@@ -113,7 +108,7 @@
               <input class="form-control" id="searchInput" type="search" placeholder="Buscar por nome, data ou descrição..." aria-label="Search" onkeyup="filterFiles()" style="flex:1; min-width:160px;">
 
               <select id="extFilter" class="form-select w-auto" onchange="filterFiles()">
-                <option value="">Todas as extensões</option>
+                <option value="">extensões</option>
                 <option value="pdf">PDF</option>
                 <option value="docx">DOCX</option>
                 <option value="jpg">JPG</option>
@@ -139,14 +134,13 @@
               </thead>
               <tbody id="filesTableBody">
                 <tr>
-                    <td colspan="4" class="text-center py-4">Conectando ao banco de dados local...</td>
+                    <td colspan="4" class="text-center py-4">Listagem de arquivos.</td>
                 </tr>
               </tbody>
             </table>
           </div>
         </div>
       </div>
-
     </div>
   </div>
 

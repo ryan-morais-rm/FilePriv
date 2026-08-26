@@ -18,8 +18,8 @@ const upload = multer({ storage: storage });
 
 fileRouter.post('/upload', verificarToken, upload.single('arquivo'), fileController.uploadFile);
 fileRouter.get('/download/:id', verificarToken, fileController.downloadFile);
-fileRouter.get('/armazenados/quantidade/', verificarToken, fileController.filesStored); 
-fileRouter.get('/armazenados/lista/', verificarToken, fileController.listUserFiles);
+fileRouter.get('/armazenados/quantidade', verificarToken, fileController.filesStored); 
+fileRouter.get('/armazenados/lista', verificarToken, fileController.listUserFiles);
 fileRouter.get('/regras', fileController.verifiyFile);
 fileRouter.delete('/:id', verificarToken, fileController.deleteFile);
 

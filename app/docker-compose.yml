@@ -17,18 +17,18 @@ services:
       timeout: 5s
       retries: 5
 
-  rust-grpc:
-    build:
-      context: ./src/rust/
-      dockerfile: Dockerfile
-    container_name: filepriv_rust_node
-    restart: always
-    ports:
-      - "8080:8080"
-    env_file:
-      - ./src/rust/.env
-    depends_on:
-      - postgres
+  #rust-grpc:
+  #  build:
+  #    context: ./src/rust/
+  #    dockerfile: Dockerfile
+  #  container_name: filepriv_rust_node
+  #  restart: always
+  #  ports:
+  #    - "8080:8080"
+    #env_file:
+    #  - ./src/rust/.env
+  #  depends_on:
+  #    - postgres
 
   node-api:
     build:
@@ -43,8 +43,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      rust-grpc:
-        condition: service_started
+      #rust-grpc:
+      #  condition: service_started
     command: sh -c "npx prisma db push && node src/app.js"
 
 volumes:
