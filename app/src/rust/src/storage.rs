@@ -47,7 +47,7 @@ fn enviar_sftp_bloqueante(
     sessao
         .userauth_pubkey_file(
             &servidor.usuario_ssh,
-            None,
+            Some(Path::new(&servidor.caminho_chave_publica)),
             Path::new(&servidor.caminho_chave_privada),
             None,
         )

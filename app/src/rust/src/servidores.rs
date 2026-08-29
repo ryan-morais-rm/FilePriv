@@ -11,6 +11,7 @@ pub struct ServidorConfig {
     pub porta_ssh: u16,
     pub usuario_ssh: String,
     pub caminho_chave_privada: String,
+    pub caminho_chave_publica: String,
     pub diretorio_remoto: String,
 }
 
@@ -24,7 +25,8 @@ pub fn servidores_configurados() -> Vec<ServidorConfig> {
             porta_ssh: 22,
             usuario_ssh: "ec2-user".into(),
             caminho_chave_privada: "/etc/filepriv/chaves_ssh/id_rsa".into(),
-            diretorio_remoto: "/var/filepriv/armazenamento".into(),
+            caminho_chave_publica: "/etc/filepriv/chaves_ssh/id_rsa.pub".into(),
+            diretorio_remoto: "/home/ec2-user/armazenamento".into(),
         },
     ]
 }
