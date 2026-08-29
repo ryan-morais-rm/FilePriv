@@ -8,6 +8,7 @@ import fs from 'fs';
 
 import authRouter from './routes/authRoutes.js';
 import fileRouter from './routes/fileRoutes.js';
+import adminRouter from './routes/adminRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -33,6 +34,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use('/usuarios', authRouter);
 app.use('/arquivos', fileRouter);
+app.use('/admin', adminRouter);
 
 app.use(express.static(path.join(__dirname, '../public/')));
 
