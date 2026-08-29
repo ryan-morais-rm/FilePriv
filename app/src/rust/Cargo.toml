@@ -1,34 +1,17 @@
 [package]
-name = "rust"
+name = "filepriv-rust"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-# Assincronismo e utilitários
-tokio = { version = "1.0", features = ["full"] }
-tokio-stream = "0.1"
-futures = "0.3"
-dotenv = "0.15"
-
-# gRPC (Tonic e Prost)
 tonic = "0.11"
 prost = "0.12"
-
-# AWS SDK
-aws-config = "1.1"
-aws-sdk-ec2 = "1.1"
-
-# Criptografia, Hashing e SSH
-aes-gcm = "0.10"
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 sha2 = "0.10"
-ssh2 = "0.9"
-rand = "0.8"
 hex = "0.4"
-dirs = "5.0"
-
-# Serialização
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
+uuid = { version = "1", features = ["v4"] }
+aes-gcm = "0.10"
+ssh2 = "0.9"
 
 [build-dependencies]
 tonic-build = "0.11"
