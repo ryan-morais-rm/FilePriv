@@ -5,7 +5,7 @@ message ServidorCandidato {
   int32 id = 1;
   string host = 2;
   int32 porta = 3;
-  int32 arquivos_armazenados = 4; // usado pelo Rust pra decidir o melhor servidor
+  int32 arquivos_armazenados = 4;
 }
 
 message MetadadosUpload {
@@ -17,23 +17,18 @@ message MetadadosUpload {
 
 message ArquivoChunkUpload {
   oneof conteudo {
-    MetadadosUpload metadados = 1; // sempre a primeira mensagem do stream
-    bytes pedaco = 2;              // pedaços subsequentes do arquivo
+    MetadadosUpload metadados = 1;
+    bytes pedaco = 2;
   }
-}
-
-message ParteGravada {
-  int32 servidor_id = 1;
-  int32 ordem = 2;
-  int32 tamanho = 3;
-  string hash = 4;
 }
 
 message RespostaUpload {
   bool sucesso = 1;
   string mensagem_erro = 2;
-  string chave_referencia = 3;   // caminho/chave da chave no bucket S3
-  repeated ParteGravada partes = 4;
+  string chave_referencia = 3;
+  int32 servidor_id = 4;
+  int32 tamanho = 5;
+  string hash = 6;
 }
 
 service ProcessadorArquivo {

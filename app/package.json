@@ -1,6 +1,8 @@
 {
   "type": "module",
   "dependencies": {
+    "@grpc/grpc-js": "^1.14.4",
+    "@grpc/proto-loader": "^0.8.1",
     "@prisma/client": "^6.19.2",
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.3",

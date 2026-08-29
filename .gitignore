@@ -3,14 +3,11 @@ venv/
 
 app/bin/automation/.vagrant
 
-app/src/node/uploads
+app/chaves_ssh
 
 BACKLOG.md
 
-app/rust/src/rust/target
-app/rust/src/rust/.env
-app/rust/src/rust/storage_key
-app/rust/src/node/https_pem/
+app/src/rust/target
 
 .env
 app/src/node/.env

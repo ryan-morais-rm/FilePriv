@@ -11,6 +11,7 @@ RUN npx prisma generate
 
 COPY public ./public/
 COPY src/node ./src/
+COPY src/proto ./proto/
 COPY .env ./
 
 EXPOSE 443

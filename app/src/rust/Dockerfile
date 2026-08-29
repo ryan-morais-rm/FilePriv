@@ -1,35 +1,32 @@
 FROM rust:1.93-bookworm AS builder
 
-RUN apt-get update && apt-get install -y \
-    pkg-config \
-    libssl-dev \
+WORKDIR /usr/src/app/rust
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    protobuf-compiler \
     libssh2-1-dev \
+    libssl-dev \
+    pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /usr/src/rust-app
+COPY src/proto /usr/src/app/proto
 
-COPY Cargo.toml Cargo.lock ./
-
-RUN mkdir src && echo "fn main() {}" > src/main.rs
-RUN cargo build --release
-
-COPY src ./src/
+COPY src/rust/Cargo.toml src/rust/Cargo.lock* ./
+COPY src/rust/build.rs ./
+COPY src/rust/src ./src
 
 RUN cargo build --release
 
 FROM debian:bookworm-slim
 
-RUN apt-get update && apt-get install -y \
-    libssl3 \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     libssh2-1 \
+    libssl3 \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /usr/local/bin
+COPY --from=builder /usr/src/app/rust/target/release/filepriv-rust /usr/local/bin/filepriv-rust
 
-COPY --from=builder /usr/src/rust-app/target/release/rust .
+EXPOSE 50051
 
-# Porta para o gRPC
-EXPOSE 8080
-
-CMD ["./rust"]
+CMD ["/usr/local/bin/filepriv-rust"]
