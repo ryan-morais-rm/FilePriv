@@ -97,14 +97,19 @@ async function carregarServidores() {
             tbody.innerHTML = '<tr><td colspan="3" class="text-center py-3 text-muted">Nenhum servidor cadastrado ainda.</td></tr>';
             return;
         }
+        tbody.innerHTML = servidores.map((s) => {
+        const badge = s.status === 'ATIVO' ? 'text-bg-success'
+            : s.status === 'ERRO' ? 'text-bg-danger'
+            : 'text-bg-secondary';
 
-        tbody.innerHTML = servidores.map((s) => `
-            <tr>
-                <td class="mono">${s.host}</td>
-                <td class="mono">${s.porta}</td>
-                <td><span class="badge ${s.status === 'ATIVO' ? 'text-bg-success' : 'text-bg-secondary'}">${s.status}</span></td>
-            </tr>
-        `).join('');
+        return `
+                <tr>
+                    <td class="mono">${s.host}</td>
+                    <td class="mono">${s.porta}</td>
+                    <td><span class="badge ${badge}">${s.status}</span></td>
+                </tr>
+            `;
+        }).join('');
     } catch (e) {
         tbody.innerHTML = '<tr><td colspan="3" class="text-center text-danger py-3">Falha ao carregar servidores.</td></tr>';
     }

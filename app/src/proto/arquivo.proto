@@ -13,6 +13,9 @@ message MetadadosUpload {
   string nome_arquivo = 2;
   string tipo_arquivo = 3;
   repeated ServidorCandidato servidores_disponiveis = 4;
+  string usuario_ssh = 5;
+  string chave_privada = 6;
+  string diretorio_remoto = 7;
 }
 
 message ArquivoChunkUpload {
@@ -31,6 +34,36 @@ message RespostaUpload {
   string hash = 6;
 }
 
+message ServidorParaVerificar {
+  string host = 1;
+  int32 porta = 2;
+}
+
+enum StatusVerificacao {
+  ATIVO = 0;
+  ERRO = 1;
+  SEM_RESPOSTA = 2;
+}
+
+message ResultadoVerificacao {
+  string host = 1;
+  int32 porta = 2;
+  StatusVerificacao status = 3;
+  string detalhe = 4;
+}
+
+message VerificarServidoresRequest {
+  repeated ServidorParaVerificar servidores = 1;
+  string usuario_ssh = 2;
+  string chave_privada = 3;
+  string diretorio_remoto = 4;
+}
+
+message VerificarServidoresResponse {
+  repeated ResultadoVerificacao resultados = 1;
+}
+
 service ProcessadorArquivo {
   rpc EnviarArquivo(stream ArquivoChunkUpload) returns (RespostaUpload);
+  rpc VerificarServidores(VerificarServidoresRequest) returns (VerificarServidoresResponse);
 }

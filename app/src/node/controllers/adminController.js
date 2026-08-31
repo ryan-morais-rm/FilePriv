@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import adminModel from '../models/adminModel.js';
+import { verificarServidores } from '../services/rustClient.js';
 
 const adminController = {
     async login(req, res) {
@@ -16,11 +17,9 @@ const adminController = {
         return res.status(200).json({ token });
     },
 
-    // TODO (próximo passo): depois que isso estiver validado, o Rust ainda
-    // não sabe nada sobre essa configuração — ele continua lendo
-    // servidores.rs hardcoded. Falta estender o .proto (ServidorCandidato)
-    // e o rustClient.js pra levar usuario_ssh/chave_privada/diretorio_remoto
-    // junto de cada upload.
+    /// Varre a sub-rede via o Rust ANTES de gravar qualquer linha — só
+    /// entra no banco quem foi detectado (ATIVO ou ERRO); quem não
+    /// respondeu nunca vira registro.
     async popularSubnet(req, res) {
         try {
             const { subnet, porta, usuario_ssh, chave_privada, diretorio_remoto } = req.body;
@@ -40,10 +39,23 @@ const adminController = {
                 usuario_ssh, chave_privada, diretorio_remoto, porta_ssh: Number(porta)
             });
 
-            const resultado = await adminModel.popularServidores(enderecos, porta);
+            const respostaVerificacao = await verificarServidores({
+                servidores: enderecos.map((host) => ({ host, porta: Number(porta) })),
+                usuarioSsh: usuario_ssh,
+                chavePrivada: chave_privada,
+                diretorioRemoto: diretorio_remoto
+            });
+
+            const resultado = await adminModel.popularServidoresDetectados(
+                respostaVerificacao.resultados, porta
+            );
+
+            const ativos = respostaVerificacao.resultados.filter((r) => r.status === 'ATIVO').length;
+            const comErro = respostaVerificacao.resultados.filter((r) => r.status === 'ERRO').length;
+            const semResposta = respostaVerificacao.resultados.length - ativos - comErro;
 
             return res.status(201).json({
-                message: `${resultado.count} servidores novos cadastrados a partir de ${subnet} (${enderecos.length - resultado.count} já existiam e foram ignorados).`,
+                message: `Varredura de ${subnet} concluída: ${ativos} ativo(s), ${comErro} com erro, ${semResposta} sem resposta (não cadastrados). ${resultado.count} servidor(es) novo(s) gravado(s).`,
                 total: resultado.count
             });
         } catch (error) {

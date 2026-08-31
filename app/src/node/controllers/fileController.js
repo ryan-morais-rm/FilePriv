@@ -1,4 +1,5 @@
 import fileModel from '../models/fileModel.js';
+import adminModel from '../models/adminModel.js';
 import { processarArquivo } from '../services/rustClient.js';
 
 const MAX_SIZE = 100 * 1024 * 1024; // 100MB
@@ -47,8 +48,6 @@ const fileController = {
                 return res.status(400).json({ error: 'ID do usuário não fornecido.' });
             }
 
-            // Registrado já como PENDENTE — se o processo cair no meio,
-            // fica visível no banco em vez de sumir sem rastro.
             arquivoPendente = await fileModel.criarArquivoPendente(
                 usuario_id, nome_customizado, descricao, fileType
             );
@@ -60,6 +59,13 @@ const fileController = {
                 return res.status(503).json({ error: 'Nenhum servidor de armazenamento disponível no momento.' });
             }
 
+            const configuracaoRede = await adminModel.buscarConfiguracaoRede();
+
+            if (!configuracaoRede) {
+                await fileModel.marcarArquivoComoErro(arquivoPendente.id);
+                return res.status(503).json({ error: 'Configuração de rede ainda não cadastrada pelo administrador.' });
+            }
+
             let respostaRust;
             try {
                 respostaRust = await processarArquivo({
@@ -67,7 +73,10 @@ const fileController = {
                     nomeArquivo: nome_customizado,
                     tipoArquivo: fileType,
                     buffer: req.file.buffer,
-                    servidoresDisponiveis
+                    servidoresDisponiveis,
+                    usuarioSsh: configuracaoRede.usuario_ssh,
+                    chavePrivada: configuracaoRede.chave_privada,
+                    diretorioRemoto: configuracaoRede.diretorio_remoto
                 });
             } catch (grpcError) {
                 console.error('Rust indisponível ou falhou na chamada gRPC:', grpcError);
@@ -79,7 +88,7 @@ const fileController = {
                 await fileModel.marcarArquivoComoErro(arquivoPendente.id);
                 return res.status(422).json({ error: respostaRust.mensagem_erro || 'Falha ao processar o arquivo.' });
             }
-            
+
             const arquivoFinal = await fileModel.confirmarArquivo(arquivoPendente.id, {
                 chave_referencia: respostaRust.chave_referencia,
                 servidor_id: respostaRust.servidor_id,
@@ -101,15 +110,10 @@ const fileController = {
         }
     },
 
-    // TODO (próxima etapa): pedir ao Rust os bytes reconstruídos/descriptografados
-    // e repassar via stream ao cliente. Por ora, resposta explícita em vez de
-    // quebrar com erro (o campo "caminho" não existe mais no schema).
     async downloadFile(req, res) {
         return res.status(501).json({ error: 'Download ainda não adaptado ao novo pipeline (Rust).' });
     },
 
-    // TODO (próxima etapa): pedir ao Rust que limpe as partes nas VMs + a chave
-    // no S3, esperar confirmação, e só então apagar do Prisma.
     async deleteFile(req, res) {
         return res.status(501).json({ error: 'Exclusão ainda não adaptada ao novo pipeline (Rust).' });
     },

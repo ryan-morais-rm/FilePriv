@@ -3,12 +3,14 @@ use tonic::{Request, Response, Status, Streaming};
 use uuid::Uuid;
 
 use crate::crypto::cifrar_arquivo;
+use crate::healthcheck::verificar_todos;
 use crate::proto::filepriv::{
     arquivo_chunk_upload::Conteudo, processador_arquivo_server::ProcessadorArquivo,
-    ArquivoChunkUpload, MetadadosUpload, RespostaUpload,
+    ArquivoChunkUpload, MetadadosUpload, RespostaUpload, VerificarServidoresRequest,
+    VerificarServidoresResponse,
 };
-use crate::servidores::{buscar_config_por_id, escolher_servidor_menos_carregado};
-use crate::storage::enviar_para_servidor;
+use crate::servidores::escolher_servidor_menos_carregado;
+use crate::storage::{enviar_para_servidor, ConexaoServidor};
 
 #[derive(Default)]
 pub struct ProcessadorArquivoService;
@@ -57,13 +59,21 @@ impl ProcessadorArquivo for ProcessadorArquivoService {
             )));
         };
 
-        // Conexão SFTP ainda é chumbada localmente no Rust, por id — ver
-        // TODO em servidores.rs.
-        let Some(config_servidor) = buscar_config_por_id(servidor_escolhido.id) else {
-            return Ok(Response::new(resposta_erro(format!(
-                "Servidor id {} escolhido pelo Node não tem configuração SFTP conhecida.",
-                servidor_escolhido.id
-            ))));
+        if metadados.usuario_ssh.is_empty()
+            || metadados.chave_privada.is_empty()
+            || metadados.diretorio_remoto.is_empty()
+        {
+            return Ok(Response::new(resposta_erro(
+                "Credenciais de conexão (usuario_ssh/chave_privada/diretorio_remoto) não foram informadas pelo Node.",
+            )));
+        }
+
+        let conexao = ConexaoServidor {
+            host: servidor_escolhido.host.clone(),
+            porta: servidor_escolhido.porta as u16,
+            usuario_ssh: metadados.usuario_ssh.clone(),
+            chave_privada: metadados.chave_privada.clone(),
+            diretorio_remoto: metadados.diretorio_remoto.clone(),
         };
 
         let (blob_cifrado, chave) = match cifrar_arquivo(&conteudo) {
@@ -75,20 +85,15 @@ impl ProcessadorArquivo for ProcessadorArquivoService {
             }
         };
 
-        // Só uma "impressão digital" truncada, nunca a chave inteira, e só
-        // em log local — a custódia real da chave (bucket S3) ainda não
-        // está implementada.
         let fingerprint_chave = &hex::encode(chave)[..8];
         let hash = hex::encode(Sha256::digest(&blob_cifrado));
         let tamanho = blob_cifrado.len() as i32;
         let nome_remoto = format!("{}.bin", Uuid::new_v4());
 
-        let host_exibicao = config_servidor.host.clone();
-        let porta_exibicao = config_servidor.porta_ssh;
+        let host_exibicao = conexao.host.clone();
+        let porta_exibicao = conexao.porta;
 
-        if let Err(e) =
-            enviar_para_servidor(config_servidor, nome_remoto.clone(), blob_cifrado).await
-        {
+        if let Err(e) = enviar_para_servidor(conexao, nome_remoto.clone(), blob_cifrado).await {
             return Ok(Response::new(resposta_erro(format!(
                 "Falha ao enviar arquivo via SFTP para {host_exibicao}: {e}"
             ))));
@@ -103,12 +108,18 @@ impl ProcessadorArquivo for ProcessadorArquivoService {
         Ok(Response::new(RespostaUpload {
             sucesso: true,
             mensagem_erro: String::new(),
-            // Placeholder explícito — a chave existe só na memória deste
-            // processo agora; ainda não foi enviada a nenhum bucket S3.
             chave_referencia: format!("PENDENTE-CHAVE-NAO-PERSISTIDA-{}", Uuid::new_v4()),
             servidor_id: servidor_escolhido.id,
             tamanho,
             hash,
         }))
+    }
+
+    async fn verificar_servidores(
+        &self,
+        request: Request<VerificarServidoresRequest>,
+    ) -> Result<Response<VerificarServidoresResponse>, Status> {
+        let resposta = verificar_todos(request.into_inner()).await;
+        Ok(Response::new(resposta))
     }
 }

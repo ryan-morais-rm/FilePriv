@@ -26,12 +26,19 @@ const adminModel = {
         });
     },
 
-    async popularServidores(enderecos, porta) {
+    /// Só grava no banco os hosts que o Rust confirmou (ATIVO ou ERRO) —
+    /// quem não respondeu (SEM_RESPOSTA) nunca vira registro.
+    async popularServidoresDetectados(resultados, porta) {
+        const detectados = resultados.filter((r) => r.status !== 'SEM_RESPOSTA');
+        if (detectados.length === 0) {
+            return { count: 0 };
+        }
+
         return await prisma.servidor.createMany({
-            data: enderecos.map((host) => ({
-                host,
+            data: detectados.map((r) => ({
+                host: r.host,
                 porta: Number(porta),
-                status: 'ATIVO' // sem health check ainda — ver TODO no controller
+                status: r.status // 'ATIVO' ou 'ERRO', já vindo do Rust
             })),
             skipDuplicates: true
         });
@@ -42,6 +49,48 @@ const adminModel = {
             select: { id: true, host: true, porta: true, status: true },
             orderBy: { host: 'asc' }
         });
+    },
+
+    async listarTodosParaVerificacao() {
+        return await prisma.servidor.findMany({
+            select: { host: true, porta: true }
+        });
+    },
+
+    async buscarConfiguracaoRede() {
+        return await prisma.configuracaoRede.findUnique({ where: { id: 1 } });
+    },
+
+    /// Aplica o veredito do Rust, correlacionando por host (é @unique no
+    /// schema) — não por id, porque na varredura inicial os hosts ainda
+    /// não existem no banco quando são verificados.
+    async aplicarResultadosVerificacao(resultados) {
+        const operacoes = [];
+
+        for (const r of resultados) {
+            if (r.status === 'SEM_RESPOSTA') {
+                const servidor = await prisma.servidor.findUnique({ where: { host: r.host } });
+                if (!servidor) continue; // nunca foi cadastrado — nada a fazer
+
+                const temArquivos = await prisma.arquivo.count({ where: { servidor_id: servidor.id } });
+                if (temArquivos === 0) {
+                    operacoes.push(prisma.servidor.delete({ where: { host: r.host } }));
+                } else {
+                    operacoes.push(
+                        prisma.servidor.update({ where: { host: r.host }, data: { status: 'ERRO' } })
+                    );
+                }
+                continue;
+            }
+
+            operacoes.push(
+                prisma.servidor.update({ where: { host: r.host }, data: { status: r.status } })
+            );
+        }
+
+        if (operacoes.length > 0) {
+            await prisma.$transaction(operacoes);
+        }
     }
 };
 
