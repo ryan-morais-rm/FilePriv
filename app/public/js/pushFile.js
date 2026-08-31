@@ -65,6 +65,37 @@ function isValidExtension(filename) {
     return ALLOWED_EXTS.includes(ext); 
 }
 
+/// Dropzone com arrastar-e-soltar: destaca a área ao arrastar por cima e
+/// atribui o arquivo solto ao input nativo (dispara 'change' pra qualquer
+/// outro listener que dependa dele).
+function setupDropzone(dropzoneEl, fileInputEl) {
+    if (!dropzoneEl || !fileInputEl) return;
+
+    ['dragenter', 'dragover'].forEach((evt) => {
+        dropzoneEl.addEventListener(evt, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropzoneEl.classList.add('dragover');
+        });
+    });
+
+    ['dragleave', 'drop'].forEach((evt) => {
+        dropzoneEl.addEventListener(evt, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropzoneEl.classList.remove('dragover');
+        });
+    });
+
+    dropzoneEl.addEventListener('drop', (e) => {
+        const arquivos = e.dataTransfer.files;
+        if (arquivos && arquivos.length > 0) {
+            fileInputEl.files = arquivos;
+            fileInputEl.dispatchEvent(new Event('change'));
+        }
+    });
+}
+
 async function handleFileUpload(event, token, form, statusDiv, btn) {
     event.preventDefault(); 
 
@@ -123,17 +154,24 @@ async function handleFileUpload(event, token, form, statusDiv, btn) {
 
         if (!response.ok) throw new Error(data.error || 'Falha no envio');
 
-        statusDiv.innerHTML = `<div class="alert alert-success mt-3">
-            Arquivo enviado com sucesso!<br>
-            Redirecionando...
+        statusDiv.innerHTML = `<div class="alert alert-success mt-3 fp-animate-in">
+            <i class="fas fa-circle-check me-1"></i> Arquivo enviado com sucesso!
         </div>`;
-        
-        form.reset();
-        await updateCounters(token); 
 
-        setTimeout(() => {
-            window.location.href = 'file.html#download-section';
-        }, 3000);
+        form.reset();
+        await updateCounters(token);
+
+        // Reativa o botão na hora — antes ficava preso no spinner até o
+        // redirect de 3s acontecer, dando a impressão de que ainda estava
+        // carregando mesmo depois de já ter terminado.
+        btn.disabled = false;
+        btn.innerHTML = originalBtnText;
+
+        // Avisa o pullFile.js pra atualizar a lista, sem precisar recarregar
+        // a página inteira.
+        window.dispatchEvent(new CustomEvent('filepriv:arquivo-enviado'));
+
+        document.getElementById('download-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
     } catch (error) {
         console.error("Erro:", error);
@@ -158,6 +196,8 @@ export async function pushFile() {
 
     renderUserProfile(token, userDataJSON);
     updateCounters(token);
+
+    setupDropzone(document.querySelector('.dropzone-fp'), document.getElementById('fileInput'));
 
     if (!form) return;
 

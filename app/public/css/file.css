@@ -106,3 +106,80 @@ body {
   max-height: 520px;
   overflow-y: auto;
 }
+
+/* ---------- Botões de ação (baixar/excluir) — compactos, ícone só ---------- */
+
+.btn-icon-action {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  border: none;
+  font-size: .95rem;
+  transition: transform .15s ease, box-shadow .15s ease, background .15s ease, color .15s ease;
+}
+.btn-icon-action + .btn-icon-action { margin-left: .4rem; }
+.btn-icon-action:hover { transform: translateY(-2px); }
+
+.btn-icon-primary { background: var(--signal-100); color: var(--signal-600); }
+.btn-icon-primary:hover { background: var(--signal-500); color: #fff; }
+
+.btn-icon-danger { background: #fde3e3; color: #c0392b; }
+.btn-icon-danger:hover { background: var(--danger); color: #fff; }
+
+/* ---------- Linhas da tabela com leve destaque azulado no hover ---------- */
+
+.download-card tbody tr:hover { background: var(--signal-100); }
+
+/* ---------- Dropzone reagindo ao arrastar arquivo ---------- */
+
+.dropzone-fp.dragover {
+  border-color: var(--signal-500);
+  background: var(--signal-100);
+  transform: scale(1.01);
+}
+
+/* ---------- Interação viva entre as colunas de upload e download ---------- */
+/* Passar o mouse num lado destaca ele e recua o outro — reforça
+   visualmente a ideia de "duas metades" que o divisor central já sugere. */
+
+@media (min-width: 992px) {
+  .upload-card, .download-card {
+    transition: transform .35s cubic-bezier(.22,1,.36,1), opacity .35s ease,
+                filter .35s ease, box-shadow .35s ease, border-color .35s ease;
+  }
+
+  .file-split-grid:has(.upload-col:hover) .download-card {
+    opacity: .55;
+    transform: scale(.97);
+    filter: saturate(.7);
+  }
+  .file-split-grid:has(.upload-col:hover) .upload-card {
+    transform: scale(1.015);
+    box-shadow: 0 20px 45px rgba(47, 111, 237, 0.25);
+    border-color: var(--signal-400);
+  }
+
+  .file-split-grid:has(.download-col:hover) .upload-card {
+    opacity: .55;
+    transform: scale(.97);
+    filter: saturate(.7);
+  }
+  .file-split-grid:has(.download-col:hover) .download-card {
+    transform: scale(1.015);
+    box-shadow: 0 20px 45px rgba(63, 209, 194, 0.25);
+    border-color: var(--teal-400);
+  }
+
+  /* O divisor central "pega a cor" do lado que está sendo destacado */
+  .split-gutter span { transition: box-shadow .35s ease; }
+  .file-split-grid:has(.upload-col:hover) .split-gutter span {
+    box-shadow: 0 0 14px var(--signal-400);
+  }
+  .file-split-grid:has(.download-col:hover) .split-gutter span {
+    box-shadow: 0 0 14px var(--teal-400);
+  }
+}

@@ -22,7 +22,7 @@ async function renderUserProfile(userDataJSON) {
         if (nameEl) nameEl.textContent = userLocal.nome;  
     }
     
-    return userLocal; // Adicionado para que a verificação `if (user)` em pullFile() funcione
+    return userLocal;
 }
 
 async function updateCounters() {
@@ -106,11 +106,11 @@ function renderTable(files) {
             <td>${dataFormatada}</td>
             <td>${file.descricao || '-'}</td>
             <td class="text-center">
-              <button class="btn btn-sm btn-primary me-1" onclick="window.downloadFile('${file.id}', '${file.nome_arquivo}')" title="Baixar Arquivo">
-                <i class="bi bi-download"></i> Baixar
+              <button class="btn btn-icon-action btn-icon-primary" onclick="window.downloadFile('${file.id}', '${file.nome_arquivo}')" title="Baixar arquivo">
+                <i class="bi bi-download"></i>
               </button>
-              <button class="btn btn-sm btn-danger" onclick="window.deleteFile('${file.id}')" title="Excluir Arquivo">
-                <i class="bi bi-trash"></i> Excluir
+              <button class="btn btn-icon-action btn-icon-danger" onclick="window.deleteFile('${file.id}')" title="Excluir arquivo">
+                <i class="bi bi-trash"></i>
               </button>
             </td>
         `;
@@ -226,4 +226,10 @@ export async function pullFile() {
     if (user) {
         await fetchFiles();
     }
+
+    // Atualiza a lista sozinho quando um upload termina, sem precisar
+    // recarregar a página.
+    window.addEventListener('filepriv:arquivo-enviado', () => {
+        fetchFiles();
+    });
 }
