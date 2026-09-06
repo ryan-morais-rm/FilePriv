@@ -5,8 +5,6 @@ app/bin/automation/.vagrant
 
 app/chaves_ssh
 
-BACKLOG.md
-
 app/src/rust/target
 
 .env
