@@ -9,6 +9,7 @@ use crate::proto::filepriv::{
     ArquivoChunkUpload, MetadadosUpload, RespostaUpload, VerificarServidoresRequest,
     VerificarServidoresResponse,
 };
+use crate::s3_keys::salvar_chave;
 use crate::servidores::escolher_servidor_menos_carregado;
 use crate::storage::{enviar_para_servidor, ConexaoServidor};
 
@@ -85,10 +86,22 @@ impl ProcessadorArquivo for ProcessadorArquivoService {
             }
         };
 
-        let fingerprint_chave = &hex::encode(chave)[..8];
+        let fingerprint_chave = &hex::encode(chave.as_slice())[..8];
         let hash = hex::encode(Sha256::digest(&blob_cifrado));
         let tamanho = blob_cifrado.len() as i32;
         let nome_remoto = format!("{}.bin", Uuid::new_v4());
+
+        // A chave precisa estar salva de forma durável antes do arquivo ir
+        // pro servidor — se o S3 falhar aqui, processo é abortado sem nunca ter
+        // mandado um blob cifrado cuja chave não existe em lugar nenhum.
+        let chave_referencia = match salvar_chave(chave.as_slice()).await {
+            Ok(referencia) => referencia,
+            Err(e) => {
+                return Ok(Response::new(resposta_erro(format!(
+                    "Falha ao salvar a chave de criptografia no S3: {e}"
+                ))));
+            }
+        };
 
         let host_exibicao = conexao.host.clone();
         let porta_exibicao = conexao.porta;
@@ -100,15 +113,15 @@ impl ProcessadorArquivo for ProcessadorArquivoService {
         }
 
         println!(
-            "[filepriv-rust] Arquivo '{}' ({} bytes cifrados) do usuário {} enviado via SFTP para {}:{} como '{}'. Chave (fingerprint): {}...",
+            "[filepriv-rust] Arquivo '{}' ({} bytes cifrados) do usuário {} enviado via SFTP para {}:{} como '{}'. Chave salva em '{}' (fingerprint: {}...).",
             metadados.nome_arquivo, tamanho, metadados.usuario_id,
-            host_exibicao, porta_exibicao, nome_remoto, fingerprint_chave
+            host_exibicao, porta_exibicao, nome_remoto, chave_referencia, fingerprint_chave
         );
 
         Ok(Response::new(RespostaUpload {
             sucesso: true,
             mensagem_erro: String::new(),
-            chave_referencia: format!("PENDENTE-CHAVE-NAO-PERSISTIDA-{}", Uuid::new_v4()),
+            chave_referencia,
             servidor_id: servidor_escolhido.id,
             tamanho,
             hash,

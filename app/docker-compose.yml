@@ -22,6 +22,8 @@ services:
       context: .
       dockerfile: ./src/rust/Dockerfile
     container_name: filepriv_rust_grpc
+    env_file:
+      - .env
     restart: always
     ports:
       - "50051:50051"

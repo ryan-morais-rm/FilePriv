@@ -2,6 +2,7 @@ mod crypto;
 mod grpc;
 mod healthcheck;
 mod proto;
+mod s3_keys;
 mod servidores;
 mod storage;
 

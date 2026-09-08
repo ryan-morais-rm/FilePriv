@@ -12,6 +12,9 @@ hex = "0.4"
 uuid = { version = "1", features = ["v4"] }
 aes-gcm = "0.10"
 ssh2 = "0.9"
+aws-config = "1"
+aws-sdk-s3 = "1"
+aws-credential-types = "1"
 
 [build-dependencies]
 tonic-build = "0.11"
