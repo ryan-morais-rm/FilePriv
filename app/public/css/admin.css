@@ -1,0 +1,6 @@
+/* admin.html — configuração de infraestrutura (pré-lançamento) */
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}

@@ -1,5 +1,6 @@
 mod crypto;
 mod grpc;
+mod healthcheck;
 mod proto;
 mod servidores;
 mod storage;

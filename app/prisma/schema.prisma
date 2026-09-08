@@ -44,10 +44,21 @@ model Arquivo {
 
 model Servidor {
   id       Int       @id @default(autoincrement())
-  host     String    @db.VarChar(255)
+  host     String    @unique @db.VarChar(255)
   porta    Int
   status   String    @default("ATIVO") @db.VarChar(20) // bandeira manual, não é health-check automático
   arquivos Arquivo[]
 
   @@map("servidores")
+}
+
+model ConfiguracaoRede {
+  id               Int      @id @default(autoincrement())
+  usuario_ssh      String   @db.VarChar(100)
+  chave_privada    String   @db.Text
+  diretorio_remoto String   @db.VarChar(255)
+  porta_ssh        Int
+  atualizado_em    DateTime @default(now()) @updatedAt @db.Timestamp(6)
+
+  @@map("configuracao_rede")
 }

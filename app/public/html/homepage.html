@@ -68,8 +68,8 @@
           <h4 class="mb-3"><i class="fas fa-cloud me-2"></i>Provedores de Armazenamento</h4>
           <div id="serverListContainer"></div>
           <div class="d-flex flex-wrap gap-2 mt-3 mb-3">
-            <span class="badge-integration i-aws"><i class="fab fa-aws"></i> Amazon S3 <span class="tag-soon"></span></span>
-            <span class="badge-integration i-drive"><i class="fab fa-google-drive"></i> Google Drive <span class="tag-soon"></span></span>
+            <span class="badge-integration i-aws"><i class="fab fa-aws"></i> Amazon S3 <span class="tag-soon" id="awsBadgeTag"></span></span>
+            <span class="badge-integration i-drive"><i class="fab fa-google-drive"></i> Google Drive <span class="tag-soon" id="driveBadgeTag"></span></span>
           </div>
           <button class="btn btn-outline-primary w-100 fw-bold" data-bs-toggle="modal" data-bs-target="#manageServersModal">
             <i class="fas fa-server me-1"></i> Gerenciar Provedores
@@ -81,22 +81,66 @@
     <div class="text-center mb-3">
       <span class="section-eyebrow">Sincronização dos Arquivos</span>
       <h4 class="mt-2 mb-0">Topologia da Rede Distribuída</h4>
-      <p class="text-muted small mt-1">Clique em um nó para ver detalhes.</p>
+      <p class="text-muted small mt-1">Passe o mouse sobre qualquer caixa para ver a atividade recente.</p>
     </div>
 
     <div class="topology-container">
       <div class="topology-map">
 
-        <div class="node user" onclick="window.showUserDetails()" title="Usuário">
+        <div class="node user" title="Usuário">
           <i class="fas fa-user"></i>
           <span>Usuário</span>
         </div>
 
         <div class="connection-line line-user-app"></div>
 
-        <div class="node application" onclick="window.showApplicationDetails()" title="Aplicação FilePriv">
-          <i class="fas fa-diagram-project"></i>
-          <span>Aplicação FilePriv</span>
+        <div class="app-row">
+          <div class="provider-wrapper">
+            <div class="node provider aws" id="awsNode" title="Amazon S3">
+              <i class="fab fa-aws"></i>
+              <span>Amazon S3</span>
+              <small class="provider-status" id="awsStatusLabel">não conectado</small>
+
+              <div class="app-metrics-card">
+                <h6><i class="fab fa-aws me-1"></i>Atividade no Amazon S3</h6>
+                <p><i class="fas fa-file-circle-plus me-1"></i> Arquivos armazenados: <strong id="awsMetricStored">0</strong></p>
+                <p><i class="fas fa-file-circle-minus me-1"></i> Excluídos (últimos 7 dias): <strong id="awsMetricDeleted">0</strong></p>
+                <p class="mb-0"><i class="fas fa-clock-rotate-left me-1"></i> Uploads hoje: <strong id="awsMetricToday">0</strong></p>
+              </div>
+            </div>
+            
+            <div class="connector-line connector-aws" id="connectorAws"></div>
+          </div>
+
+          <div class="app-wrapper">
+            <div class="node application" title="Aplicação FilePriv">
+              <i class="fas fa-diagram-project"></i>
+              <span>Aplicação FilePriv</span>
+            </div>
+            <div class="app-metrics-card">
+              <h6><i class="fas fa-chart-line me-1"></i>Atividade recente</h6>
+              <p><i class="fas fa-file-circle-plus me-1"></i> Arquivos armazenados: <strong>128</strong></p>
+              <p><i class="fas fa-file-circle-minus me-1"></i> Excluídos (últimos 7 dias): <strong>4</strong></p>
+              <p class="mb-0"><i class="fas fa-clock-rotate-left me-1"></i> Uploads hoje: <strong>12</strong></p>
+            </div>
+          </div>
+
+          <div class="provider-wrapper">
+            <div class="connector-line connector-drive" id="connectorDrive"></div>
+            <div class="node provider drive" id="driveNode" title="Google Drive">
+              <i class="fab fa-google-drive"></i>
+              <span>Google Drive</span>
+              <small class="provider-status" id="driveStatusLabel">não conectado</small>
+
+              <div class="app-metrics-card">
+                <h6><i class="fab fa-google-drive me-1"></i>Atividade no Google Drive</h6>
+                <p><i class="fas fa-file-circle-plus me-1"></i> Arquivos armazenados: <strong id="driveMetricStored">0</strong></p>
+                <p><i class="fas fa-file-circle-minus me-1"></i> Excluídos (últimos 7 dias): <strong id="driveMetricDeleted">0</strong></p>
+                <p class="mb-0"><i class="fas fa-clock-rotate-left me-1"></i> Uploads hoje: <strong id="driveMetricToday">0</strong></p>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>
@@ -128,10 +172,10 @@
               <label class="form-label">E-mail</label>
               <input type="email" class="form-control" id="update-email" required>
             </div>
-            
+
             <hr class="my-4">
             <p class="text-muted small mb-2"><i class="fas fa-shield-halved"></i> Segurança (Preencha apenas se for trocar a senha):</p>
-            
+
             <div class="mb-3">
               <label class="form-label">Senha Atual</label>
               <input type="password" class="form-control" id="update-currentPassword" placeholder="Obrigatório para mudar a senha">
@@ -155,6 +199,74 @@
       </div>
     </div>
   </div>
+
+  <div class="modal fade" id="manageServersModal" tabindex="-1" aria-labelledby="manageServersModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="manageServersModalLabel"><i class="fas fa-cloud me-2"></i>Gerenciar Provedores</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+
+          <div id="providerStepChoose">
+            <p class="text-muted small mb-3">Escolha qual provedor de armazenamento você quer configurar.</p>
+            <div class="row g-3">
+              <div class="col-6">
+                <button type="button" class="provider-choice-card w-100" id="chooseAwsBtn">
+                  <i class="fab fa-aws"></i>
+                  <span>Amazon S3</span>
+                  <small id="chooseAwsStatus" class="d-block mt-1 text-muted">Não conectado</small>
+                </button>
+              </div>
+              <div class="col-6">
+                <button type="button" class="provider-choice-card w-100" id="chooseDriveBtn">
+                  <i class="fab fa-google-drive"></i>
+                  <span>Google Drive</span>
+                  <small id="chooseDriveStatus" class="d-block mt-1 text-muted">Não conectado</small>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div id="providerStepAws" style="display:none;">
+            <button type="button" class="btn btn-link p-0 mb-3 voltar-etapa"><i class="fas fa-arrow-left me-1"></i>Voltar</button>
+            <h6 class="mb-3"><i class="fab fa-aws me-2" style="color:#e8891d;"></i>Configurar Amazon S3</h6>
+            <form id="awsForm">
+              <div class="mb-3">
+                <label class="form-label">Nome do bucket</label>
+                <input type="text" class="form-control mono" id="awsBucket" placeholder="meu-bucket-filepriv" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Access Key</label>
+                <input type="text" class="form-control mono" id="awsAccessKey" placeholder="AKIA..." required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Secret Key</label>
+                <input type="password" class="form-control mono" id="awsSecretKey" placeholder="••••••••••••" required>
+              </div>
+              <button type="submit" class="btn btn-primary w-100">Salvar e conectar</button>
+            </form>
+            <button type="button" class="btn btn-link text-danger btn-sm mt-2 d-none" id="awsDisconnectBtn">Desconectar</button>
+            <div id="awsMsg"></div>
+          </div>
+
+          <div id="providerStepDrive" style="display:none;">
+            <button type="button" class="btn btn-link p-0 mb-3 voltar-etapa"><i class="fas fa-arrow-left me-1"></i>Voltar</button>
+            <h6 class="mb-3"><i class="fab fa-google-drive me-2" style="color:#2b9366;"></i>Conectar Google Drive</h6>
+            <p class="text-muted small">Vamos usar sua conta FilePriv (<strong id="driveEmailPreview"></strong>) para autorizar o acesso ao seu Google Drive.</p>
+            <button type="button" class="btn btn-primary w-100" id="driveConnectBtn">
+              <i class="fab fa-google me-2"></i>Conectar com Google Drive
+            </button>
+            <button type="button" class="btn btn-link text-danger btn-sm mt-2 d-none" id="driveDisconnectBtn">Desconectar</button>
+            <div id="driveMsg"></div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script type="module">
     import { homepage } from '../js/homepage.js'; 

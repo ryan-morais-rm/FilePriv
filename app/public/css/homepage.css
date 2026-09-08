@@ -2,7 +2,7 @@
 
 body {
   background-color: var(--mist-100);
-  padding-bottom: 70px; /* espaço para a navbar inferior fixa */
+  padding-bottom: 70px;
 }
 
 .navbar-logo-img {
@@ -31,7 +31,6 @@ body {
 }
 .info-card h4 { font-size: 1.1rem; }
 .info-card h4 i { color: var(--signal-500); }
-
 .info-card p { margin-bottom: 0.5rem; font-size: 0.95rem; }
 
 .server-item {
@@ -43,7 +42,7 @@ body {
 }
 .server-item:last-child { border-bottom: none; }
 
-/* ---------- Topologia de rede (assinatura visual do painel) ---------- */
+/* ---------- Topologia de rede ---------- */
 
 .topology-container {
   padding: 1.5rem 0 2.5rem;
@@ -61,7 +60,7 @@ body {
   position: relative;
   perspective: 1000px;
   width: 100%;
-  min-width: 500px;
+  min-width: 560px;
   margin: 0 auto;
 }
 .topology-map::before {
@@ -105,24 +104,9 @@ body {
   color: #fff;
   padding: 1.4rem 2.4rem;
   z-index: 2;
+  margin: 0;
+  cursor: default;
 }
-
-.server-nodes {
-  display: flex;
-  justify-content: center;
-  gap: 1.5rem;
-  margin-top: 1rem;
-  width: 100%;
-  flex-wrap: wrap;
-  z-index: 1;
-}
-
-.node.server {
-  background: linear-gradient(135deg, #384258, #2a3245);
-  width: 150px;
-  padding: 1rem;
-}
-.node.server.bg-danger { background: linear-gradient(135deg, #b3423a, #7c231d) !important; }
 
 .node:hover {
   transform: rotateX(10deg) translateZ(20px);
@@ -130,78 +114,154 @@ body {
   filter: brightness(1.12);
 }
 
-.node.server.clicked {
-  animation: serverClick 0.4s ease-out;
-  border: 2px solid var(--teal-400);
-}
-
-@keyframes serverClick {
-  0% { transform: rotateX(10deg) translateZ(20px); }
-  50% { transform: rotateX(10deg) translateZ(35px) scale(1.05); }
-  100% { transform: rotateX(10deg) translateZ(20px); }
-}
-
 .connection-line {
-  position: absolute;
-  transform-origin: 0 0;
-  z-index: 0;
-}
-
-.line-user-app {
+  position: relative;
   width: 3px;
   height: 60px;
   background: var(--signal-500);
-  top: 130px;
-  left: 50%;
-  transform: translateX(-50%) rotateX(10deg) translateZ(0);
+  transform: rotateX(10deg) translateZ(0);
   animation: pulseBlue 1.5s infinite alternate ease-in-out;
-}
-.line-app-servers {
-  width: 3px;
-  height: 60px;
-  background: var(--teal-400);
-  top: 290px;
-  left: 50%;
-  transform: translateX(-50%) rotateX(10deg) translateZ(0);
-  animation: pulseTeal 1.5s infinite alternate ease-in-out;
 }
 
 @keyframes pulseBlue {
   from { box-shadow: 0 0 8px var(--signal-500); }
   to   { box-shadow: 0 0 18px var(--signal-500), 0 0 26px var(--signal-500); }
 }
-@keyframes pulseTeal {
-  from { box-shadow: 0 0 8px var(--teal-400); }
-  to   { box-shadow: 0 0 18px var(--teal-400), 0 0 26px var(--teal-400); }
+
+/* ---------- Linha Aplicação + Provedores ---------- */
+/* gap garante respiro de verdade — antes dependia só do conector de 56px
+   e ficava colado em certas larguras de tela. */
+.app-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  row-gap: 2rem;
+  flex-wrap: wrap;
+  margin-top: .5rem;
 }
 
-.server-details {
+.app-wrapper, .provider-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  z-index: 5;
+}
+
+.connector-line {
+  width: 56px;
+  height: 3px;
+  align-self: center;
+  background: repeating-linear-gradient(90deg, var(--slate-300) 0 8px, transparent 8px 14px);
+  transition: background .3s ease, box-shadow .3s ease;
+}
+.connector-line.connected.connector-aws {
+  background: linear-gradient(90deg, #e8891d, var(--signal-400));
+  box-shadow: 0 0 10px rgba(232, 137, 29, .5);
+}
+.connector-line.connected.connector-drive {
+  background: linear-gradient(90deg, var(--signal-400), #2b9366);
+  box-shadow: 0 0 10px rgba(43, 147, 102, .5);
+}
+
+.node.provider {
+  width: 140px;
+  padding: 1rem .75rem;
+  margin: 0;
+  background: linear-gradient(135deg, #3a4152, #2b303d);
+  filter: grayscale(.65) brightness(.72);
+  opacity: .8;
+}
+.node.provider i { font-size: 1.8rem; }
+
+/* Rótulo de status: baixa (não maiúsculo) e truncado com reticências —
+   e-mails/nomes de bucket longos não estouram mais a caixa. O texto
+   completo continua acessível via title (tooltip nativo). */
+.node.provider .provider-status {
+  display: block;
+  margin-top: .4rem;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: .66rem;
+  color: rgba(255,255,255,.65);
+  font-weight: 600;
+  text-transform: lowercase;
+  letter-spacing: .02em;
+}
+
+.node.provider.connected {
+  filter: none;
+  opacity: 1;
+}
+.node.provider.aws.connected {
+  background: linear-gradient(135deg, #e8891d, #b96a12);
+  box-shadow: 0 10px 24px rgba(232, 137, 29, .35);
+}
+.node.provider.drive.connected {
+  background: linear-gradient(135deg, #2b9366, #1f6e4d);
+  box-shadow: 0 10px 24px rgba(43, 147, 102, .35);
+}
+
+/* ---------- Box de métricas ao passar o mouse ---------- */
+/* Compartilhada pela Aplicação (via .app-wrapper) e pelos provedores
+   (via .node.provider diretamente, que já tem position:relative). */
+
+.app-metrics-card {
   position: absolute;
-  background-color: var(--paper);
+  top: calc(100% + 14px);
+  left: 50%;
+  transform: translateX(-50%) translateY(-8px);
+  min-width: 240px;
+  background: var(--paper);
   border: 1px solid var(--slate-300);
   border-radius: var(--radius-sm);
   padding: 1rem;
-  box-shadow: 0 10px 24px rgba(0,0,0,0.28);
-  z-index: 10;
-  min-width: 200px;
-  display: none;
+  box-shadow: 0 14px 30px rgba(0,0,0,.28);
   opacity: 0;
-  transition: opacity 0.3s ease, transform 0.3s ease;
-  animation: fadeInFromTop 0.3s ease-out forwards;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity .25s ease, transform .25s ease;
+  z-index: 20;
+  cursor: default;
 }
-
-.server-details.active { display: block; opacity: 1; }
-
-@keyframes fadeInFromTop {
-  0% { transform: translate(-50%, -60%) translateZ(40px); opacity: 0; }
-  100% { transform: translate(-50%, -50%) translateZ(50px); opacity: 1; }
+.app-wrapper:hover .app-metrics-card,
+.node.provider:hover .app-metrics-card {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
 }
+.app-metrics-card h6 { color: var(--signal-600); font-weight: 700; margin-bottom: .5rem; font-size: .85rem; }
+.app-metrics-card p { margin-bottom: .3rem; font-size: .85rem; color: var(--slate-500); }
 
-.server-details h6 { color: var(--signal-600); font-weight: 700; margin-bottom: 0.5rem; }
-.server-details p { margin-bottom: 0.3rem; font-size: 0.9rem; color: var(--slate-500); }
+/* ---------- Cartões de escolha de provedor (modal, etapa 1) ---------- */
+
+.provider-choice-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .35rem;
+  padding: 1.25rem .75rem;
+  border: 1.5px solid var(--slate-300);
+  border-radius: var(--radius-md);
+  background: var(--mist-50);
+  transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+  cursor: pointer;
+}
+.provider-choice-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--signal-400);
+  box-shadow: var(--shadow-soft);
+}
+.provider-choice-card i { font-size: 1.8rem; color: var(--signal-500); }
+.provider-choice-card span { font-weight: 600; color: var(--ink-700); }
 
 /* ---------- Responsivo ---------- */
 
 @media (max-width: 767.98px) {
   .topology-map { min-width: 420px; }
+  .app-row { flex-direction: column; gap: 1.5rem; }
+  .connector-line { width: 3px; height: 30px; }
+  .provider-wrapper, .app-wrapper { flex-direction: column; }
 }
