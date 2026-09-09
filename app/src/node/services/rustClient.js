@@ -8,9 +8,11 @@ const __dirname = path.dirname(__filename);
 
 const PROTO_PATH = path.resolve(__dirname, '../../proto/arquivo.proto');
 const RUST_GRPC_ADDR = process.env.RUST_GRPC_ADDR || '172.16.10.1:50051';
-const CHUNK_SIZE = 64 * 1024; // 64KB por pedaço
-const DEADLINE_MS = 20000;              // upload de um arquivo
-const HEALTHCHECK_DEADLINE_MS = 60000;  // pode varrer até ~254 hosts, precisa de mais margem
+const CHUNK_SIZE = 64 * 1024;
+const DEADLINE_MS = 20000;
+const HEALTHCHECK_DEADLINE_MS = 60000;
+const DOWNLOAD_DEADLINE_MS = 30000; // busca + descriptografia + streaming de volta
+const DELETE_DEADLINE_MS = 15000;
 
 const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
     keepCase: true,
@@ -39,7 +41,7 @@ export function processarArquivo({
             resolve(resposta);
         });
 
-        call.on('error', () => {}); // erro já é tratado no callback acima
+        call.on('error', () => {});
 
         call.write({
             metadados: {
@@ -76,5 +78,50 @@ export function verificarServidores({ servidores, usuarioSsh, chavePrivada, dire
             if (err) return reject(err);
             resolve(resposta);
         });
+    });
+}
+
+/// Retorna o stream de leitura gRPC direto — o controller escuta 'data'
+/// (cada mensagem tem um `.pedaco` em Buffer), 'end' e 'error'. Não é uma
+/// Promise porque o dado chega aos poucos, não de uma vez.
+export function baixarArquivo({ host, porta, usuarioSsh, chavePrivada, diretorioRemoto, nomeRemoto, chaveReferencia }) {
+    const deadline = new Date(Date.now() + DOWNLOAD_DEADLINE_MS);
+
+    return client.BaixarArquivo(
+        {
+            host,
+            porta,
+            usuario_ssh: usuarioSsh,
+            chave_privada: chavePrivada,
+            diretorio_remoto: diretorioRemoto,
+            nome_remoto: nomeRemoto,
+            chave_referencia: chaveReferencia
+        },
+        new grpc.Metadata(),
+        { deadline }
+    );
+}
+
+export function excluirArquivo({ host, porta, usuarioSsh, chavePrivada, diretorioRemoto, nomeRemoto, chaveReferencia }) {
+    return new Promise((resolve, reject) => {
+        const deadline = new Date(Date.now() + DELETE_DEADLINE_MS);
+
+        client.ExcluirArquivo(
+            {
+                host,
+                porta,
+                usuario_ssh: usuarioSsh,
+                chave_privada: chavePrivada,
+                diretorio_remoto: diretorioRemoto,
+                nome_remoto: nomeRemoto,
+                chave_referencia: chaveReferencia
+            },
+            new grpc.Metadata(),
+            { deadline },
+            (err, resposta) => {
+                if (err) return reject(err);
+                resolve(resposta);
+            }
+        );
     });
 }
