@@ -32,6 +32,7 @@ message RespostaUpload {
   int32 servidor_id = 4;
   int32 tamanho = 5;
   string hash = 6;
+  string nome_remoto = 7;
 }
 
 message ServidorParaVerificar {
@@ -63,7 +64,38 @@ message VerificarServidoresResponse {
   repeated ResultadoVerificacao resultados = 1;
 }
 
+message SolicitacaoDownload {
+  string host = 1;
+  int32 porta = 2;
+  string usuario_ssh = 3;
+  string chave_privada = 4;
+  string diretorio_remoto = 5;
+  string nome_remoto = 6;
+  string chave_referencia = 7;
+}
+
+message PedacoArquivo {
+  bytes pedaco = 1;
+}
+
+message SolicitacaoExclusao {
+  string host = 1;
+  int32 porta = 2;
+  string usuario_ssh = 3;
+  string chave_privada = 4;
+  string diretorio_remoto = 5;
+  string nome_remoto = 6;
+  string chave_referencia = 7;
+}
+
+message RespostaExclusao {
+  bool sucesso = 1;
+  string mensagem_erro = 2;
+}
+
 service ProcessadorArquivo {
   rpc EnviarArquivo(stream ArquivoChunkUpload) returns (RespostaUpload);
   rpc VerificarServidores(VerificarServidoresRequest) returns (VerificarServidoresResponse);
+  rpc BaixarArquivo(SolicitacaoDownload) returns (stream PedacoArquivo);
+  rpc ExcluirArquivo(SolicitacaoExclusao) returns (RespostaExclusao);
 }

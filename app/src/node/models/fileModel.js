@@ -13,10 +13,10 @@ const fileModel = {
         });
     },
 
-    async confirmarArquivo(arquivo_id, { chave_referencia, servidor_id, tamanho, hash }) {
+    async confirmarArquivo(arquivo_id, { chave_referencia, servidor_id, nome_remoto, tamanho, hash }) {
         return await prisma.arquivo.update({
             where: { id: arquivo_id },
-            data: { status: 'CONCLUIDO', chave_referencia, servidor_id, tamanho, hash }
+            data: { status: 'CONCLUIDO', chave_referencia, servidor_id, nome_remoto, tamanho, hash }
         });
     },
 
@@ -26,7 +26,24 @@ const fileModel = {
             data: { status: 'ERRO' }
         });
     },
-    
+
+    async marcarArquivoComoExcluindo(arquivo_id) {
+        return await prisma.arquivo.update({
+            where: { id: arquivo_id },
+            data: { status: 'EXCLUINDO' }
+        });
+    },
+
+    /// Usado quando a exclusão falha depois de já termos marcado
+    /// EXCLUINDO — devolve o registro pro estado anterior em vez de
+    /// deixá-lo preso.
+    async reverterParaConcluido(arquivo_id) {
+        return await prisma.arquivo.update({
+            where: { id: arquivo_id },
+            data: { status: 'CONCLUIDO' }
+        }).catch(() => {});
+    },
+
     async listarServidoresComContagem() {
         const servidores = await prisma.servidor.findMany({
             where: { status: 'ATIVO' },
@@ -39,6 +56,10 @@ const fileModel = {
             porta: s.porta,
             arquivos_armazenados: s._count.arquivos
         }));
+    },
+
+    async buscarServidorPorId(id) {
+        return await prisma.servidor.findUnique({ where: { id } });
     },
 
     async findFileByIdAndUser(fileId, userId) {
@@ -67,6 +88,34 @@ const fileModel = {
             where: { usuario_id, status: 'CONCLUIDO' }
         });
     },
+
+    async contarUploadsHoje(usuario_id) {
+        const inicioDoDia = new Date();
+        inicioDoDia.setHours(0, 0, 0, 0);
+
+        return await prisma.arquivo.count({
+            where: {
+                usuario_id: Number(usuario_id),
+                status: 'CONCLUIDO',
+                data_upload: { gte: inicioDoDia }
+            }
+        });
+    },
+
+    async registrarEventoExclusao(usuario_id) {
+        return await prisma.eventoExclusao.create({
+            data: { usuario_id: Number(usuario_id) }
+        });
+    },
+
+    async contarExclusoesRecentes(usuario_id, dias = 7) {
+        const desde = new Date();
+        desde.setDate(desde.getDate() - dias);
+
+        return await prisma.eventoExclusao.count({
+            where: { usuario_id: Number(usuario_id), criado_em: { gte: desde } }
+        });
+    }
 };
 
 export default fileModel;
