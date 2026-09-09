@@ -1,5 +1,5 @@
 use ssh2::Session;
-use std::io::Write;
+use std::io::{Read, Write};
 use std::net::TcpStream;
 use std::path::Path;
 
@@ -25,25 +25,14 @@ impl std::fmt::Display for ErroEnvio {
 }
 impl std::error::Error for ErroEnvio {}
 
-/// Envia o blob (já cifrado) para o servidor via SFTP, autenticando com a
-/// chave em memória (texto vindo do Node, não caminho de arquivo — ver
-/// ConexaoServidor). Roda numa thread bloqueante própria porque `ssh2` é
-/// síncrona — evita travar o runtime async do tonic.
-pub async fn enviar_para_servidor(
-    servidor: ConexaoServidor,
-    nome_remoto: String,
-    blob: Vec<u8>,
-) -> Result<(), ErroEnvio> {
-    tokio::task::spawn_blocking(move || enviar_sftp_bloqueante(servidor, nome_remoto, blob))
-        .await
-        .map_err(|e| ErroEnvio(format!("Falha na thread de envio SFTP: {e}")))?
-}
-
-fn enviar_sftp_bloqueante(
-    servidor: ConexaoServidor,
-    nome_remoto: String,
-    blob: Vec<u8>,
-) -> Result<(), ErroEnvio> {
+/// Conecta e autentica via SSH (chave em memória), devolvendo o canal
+/// SFTP já aberto e o caminho completo do arquivo remoto — compartilhado
+/// entre envio, leitura e exclusão, pra não repetir a lógica de conexão
+/// três vezes.
+fn abrir_sftp(
+    servidor: &ConexaoServidor,
+    nome_remoto: &str,
+) -> Result<(ssh2::Sftp, String), ErroEnvio> {
     let endereco = format!("{}:{}", servidor.host, servidor.porta);
 
     let tcp = TcpStream::connect(&endereco)
@@ -74,6 +63,29 @@ fn enviar_sftp_bloqueante(
         nome_remoto
     );
 
+    Ok((sftp, caminho_remoto))
+}
+
+/// Envia o blob (já cifrado) para o servidor via SFTP. Roda numa thread
+/// bloqueante própria porque `ssh2` é síncrona — evita travar o runtime
+/// async do tonic.
+pub async fn enviar_para_servidor(
+    servidor: ConexaoServidor,
+    nome_remoto: String,
+    blob: Vec<u8>,
+) -> Result<(), ErroEnvio> {
+    tokio::task::spawn_blocking(move || enviar_sftp_bloqueante(servidor, nome_remoto, blob))
+        .await
+        .map_err(|e| ErroEnvio(format!("Falha na thread de envio SFTP: {e}")))?
+}
+
+fn enviar_sftp_bloqueante(
+    servidor: ConexaoServidor,
+    nome_remoto: String,
+    blob: Vec<u8>,
+) -> Result<(), ErroEnvio> {
+    let (sftp, caminho_remoto) = abrir_sftp(&servidor, &nome_remoto)?;
+
     let mut arquivo_remoto = sftp
         .create(Path::new(&caminho_remoto))
         .map_err(|e| ErroEnvio(format!("Falha ao criar arquivo remoto {caminho_remoto}: {e}")))?;
@@ -83,4 +95,61 @@ fn enviar_sftp_bloqueante(
         .map_err(|e| ErroEnvio(format!("Falha ao gravar dados em {caminho_remoto}: {e}")))?;
 
     Ok(())
+}
+
+/// Busca o blob (ainda cifrado) de volta do servidor via SFTP.
+pub async fn baixar_de_servidor(
+    servidor: ConexaoServidor,
+    nome_remoto: String,
+) -> Result<Vec<u8>, ErroEnvio> {
+    tokio::task::spawn_blocking(move || baixar_sftp_bloqueante(servidor, nome_remoto))
+        .await
+        .map_err(|e| ErroEnvio(format!("Falha na thread de download SFTP: {e}")))?
+}
+
+fn baixar_sftp_bloqueante(
+    servidor: ConexaoServidor,
+    nome_remoto: String,
+) -> Result<Vec<u8>, ErroEnvio> {
+    let (sftp, caminho_remoto) = abrir_sftp(&servidor, &nome_remoto)?;
+
+    let mut arquivo_remoto = sftp
+        .open(Path::new(&caminho_remoto))
+        .map_err(|e| ErroEnvio(format!("Falha ao abrir arquivo remoto {caminho_remoto}: {e}")))?;
+
+    let mut conteudo = Vec::new();
+    arquivo_remoto
+        .read_to_end(&mut conteudo)
+        .map_err(|e| ErroEnvio(format!("Falha ao ler dados de {caminho_remoto}: {e}")))?;
+
+    Ok(conteudo)
+}
+
+/// Apaga o arquivo remoto via SFTP. Idempotente por design: "arquivo já
+/// não existe" (SSH_FX_NO_SUCH_FILE) conta como sucesso, não como erro —
+/// evita travar uma exclusão repetida ou uma que já tinha sido feita antes
+/// de uma resposta se perder no caminho.
+pub async fn apagar_de_servidor(
+    servidor: ConexaoServidor,
+    nome_remoto: String,
+) -> Result<(), ErroEnvio> {
+    tokio::task::spawn_blocking(move || apagar_sftp_bloqueante(servidor, nome_remoto))
+        .await
+        .map_err(|e| ErroEnvio(format!("Falha na thread de exclusão SFTP: {e}")))?
+}
+
+fn apagar_sftp_bloqueante(servidor: ConexaoServidor, nome_remoto: String) -> Result<(), ErroEnvio> {
+    let (sftp, caminho_remoto) = abrir_sftp(&servidor, &nome_remoto)?;
+
+    match sftp.unlink(Path::new(&caminho_remoto)) {
+        Ok(()) => Ok(()),
+        Err(e) if e.code() == ssh2::ErrorCode::SFTP(2) => {
+            // Código 2 do protocolo SFTP = SSH_FX_NO_SUCH_FILE.
+            println!(
+                "[storage] Arquivo remoto {caminho_remoto} já não existia — tratado como sucesso."
+            );
+            Ok(())
+        }
+        Err(e) => Err(ErroEnvio(format!("Falha ao apagar {caminho_remoto}: {e}"))),
+    }
 }

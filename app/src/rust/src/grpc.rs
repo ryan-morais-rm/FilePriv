@@ -1,17 +1,20 @@
 use sha2::{Digest, Sha256};
+use std::pin::Pin;
+use tokio_stream::Stream;
 use tonic::{Request, Response, Status, Streaming};
 use uuid::Uuid;
 
-use crate::crypto::cifrar_arquivo;
+use crate::crypto::{cifrar_arquivo, descriptografar_arquivo};
 use crate::healthcheck::verificar_todos;
 use crate::proto::filepriv::{
     arquivo_chunk_upload::Conteudo, processador_arquivo_server::ProcessadorArquivo,
-    ArquivoChunkUpload, MetadadosUpload, RespostaUpload, VerificarServidoresRequest,
+    ArquivoChunkUpload, MetadadosUpload, PedacoArquivo, RespostaExclusao, RespostaUpload,
+    SolicitacaoDownload, SolicitacaoExclusao, VerificarServidoresRequest,
     VerificarServidoresResponse,
 };
-use crate::s3_keys::salvar_chave;
+use crate::s3_keys::{apagar_chave, buscar_chave, salvar_chave};
 use crate::servidores::escolher_servidor_menos_carregado;
-use crate::storage::{enviar_para_servidor, ConexaoServidor};
+use crate::storage::{apagar_de_servidor, baixar_de_servidor, enviar_para_servidor, ConexaoServidor};
 
 #[derive(Default)]
 pub struct ProcessadorArquivoService;
@@ -24,6 +27,7 @@ fn resposta_erro(mensagem: impl Into<String>) -> RespostaUpload {
         servidor_id: 0,
         tamanho: 0,
         hash: String::new(),
+        nome_remoto: String::new(),
     }
 }
 
@@ -92,7 +96,7 @@ impl ProcessadorArquivo for ProcessadorArquivoService {
         let nome_remoto = format!("{}.bin", Uuid::new_v4());
 
         // A chave precisa estar salva de forma durável antes do arquivo ir
-        // pro servidor — se o S3 falhar aqui, processo é abortado sem nunca ter
+        // pro servidor — se o S3 falhar aqui, abortamos sem nunca ter
         // mandado um blob cifrado cuja chave não existe em lugar nenhum.
         let chave_referencia = match salvar_chave(chave.as_slice()).await {
             Ok(referencia) => referencia,
@@ -125,6 +129,7 @@ impl ProcessadorArquivo for ProcessadorArquivoService {
             servidor_id: servidor_escolhido.id,
             tamanho,
             hash,
+            nome_remoto,
         }))
     }
 
@@ -134,5 +139,117 @@ impl ProcessadorArquivo for ProcessadorArquivoService {
     ) -> Result<Response<VerificarServidoresResponse>, Status> {
         let resposta = verificar_todos(request.into_inner()).await;
         Ok(Response::new(resposta))
+    }
+
+    type BaixarArquivoStream =
+        Pin<Box<dyn Stream<Item = Result<PedacoArquivo, Status>> + Send + 'static>>;
+
+    async fn baixar_arquivo(
+        &self,
+        request: Request<SolicitacaoDownload>,
+    ) -> Result<Response<Self::BaixarArquivoStream>, Status> {
+        let req = request.into_inner();
+
+        if req.usuario_ssh.is_empty() || req.chave_privada.is_empty() || req.diretorio_remoto.is_empty() {
+            return Err(Status::invalid_argument(
+                "Credenciais de conexão não informadas pelo Node.",
+            ));
+        }
+        if req.nome_remoto.is_empty() || req.chave_referencia.is_empty() {
+            return Err(Status::invalid_argument(
+                "nome_remoto e chave_referencia são obrigatórios.",
+            ));
+        }
+
+        let chave_bytes = buscar_chave(&req.chave_referencia)
+            .await
+            .map_err(Status::internal)?;
+
+        let conexao = ConexaoServidor {
+            host: req.host.clone(),
+            porta: req.porta as u16,
+            usuario_ssh: req.usuario_ssh.clone(),
+            chave_privada: req.chave_privada.clone(),
+            diretorio_remoto: req.diretorio_remoto.clone(),
+        };
+
+        let blob_cifrado = baixar_de_servidor(conexao, req.nome_remoto.clone())
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
+
+        let conteudo = descriptografar_arquivo(&blob_cifrado, &chave_bytes)
+            .map_err(Status::internal)?;
+
+        println!(
+            "[filepriv-rust] Download preparado: {} bytes decifrados, de {}:{} ('{}').",
+            conteudo.len(),
+            req.host,
+            req.porta,
+            req.nome_remoto
+        );
+
+        const TAMANHO_PEDACO: usize = 64 * 1024;
+        let pedacos: Vec<Result<PedacoArquivo, Status>> = conteudo
+            .chunks(TAMANHO_PEDACO)
+            .map(|c| Ok(PedacoArquivo { pedaco: c.to_vec() }))
+            .collect();
+
+        let fluxo = tokio_stream::iter(pedacos);
+        Ok(Response::new(Box::pin(fluxo)))
+    }
+
+    async fn excluir_arquivo(
+        &self,
+        request: Request<SolicitacaoExclusao>,
+    ) -> Result<Response<RespostaExclusao>, Status> {
+        let req = request.into_inner();
+
+        if req.usuario_ssh.is_empty() || req.chave_privada.is_empty() || req.diretorio_remoto.is_empty()
+        {
+            return Ok(Response::new(RespostaExclusao {
+                sucesso: false,
+                mensagem_erro: "Credenciais de conexão não informadas pelo Node.".into(),
+            }));
+        }
+
+        let conexao = ConexaoServidor {
+            host: req.host.clone(),
+            porta: req.porta as u16,
+            usuario_ssh: req.usuario_ssh.clone(),
+            chave_privada: req.chave_privada.clone(),
+            diretorio_remoto: req.diretorio_remoto.clone(),
+        };
+
+        // A exclusão na VM é o que precisa dar certo de verdade — é onde o
+        // dado sensível de fato vive. Só depois disso confirmado é que
+        // mexemos na chave no S3 (best-effort, ver s3_keys.rs).
+        if let Err(e) = apagar_de_servidor(conexao, req.nome_remoto.clone()).await {
+            return Ok(Response::new(RespostaExclusao {
+                sucesso: false,
+                mensagem_erro: format!(
+                    "Falha ao apagar arquivo em {}:{}: {e}",
+                    req.host, req.porta
+                ),
+            }));
+        }
+
+        if !req.chave_referencia.is_empty() {
+            if let Err(e) = apagar_chave(&req.chave_referencia).await {
+                eprintln!(
+                    "[filepriv-rust] Aviso: falha ao apagar chave órfã no S3 ({}): {e}",
+                    req.chave_referencia
+                );
+            }
+        }
+
+        println!(
+            "[filepriv-rust] Arquivo '{}' excluído de {}:{}.",
+            req.nome_remoto, req.host, req.porta
+        );
+
+        Ok(Response::new(RespostaExclusao {
+            sucesso: true,
+            mensagem_erro: String::new(),
+        }))
     }
 }

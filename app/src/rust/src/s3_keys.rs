@@ -66,3 +66,45 @@ pub async fn salvar_chave(chave_bytes: &[u8]) -> Result<String, String> {
 
     Ok(chave_referencia)
 }
+
+/// Busca a chave de volta do S3, pra descriptografar no download.
+pub async fn buscar_chave(chave_referencia: &str) -> Result<Vec<u8>, String> {
+    let bucket = std::env::var("AWS_S3_BUCKET").unwrap_or_else(|_| "filepriv-s3".to_string());
+    let cliente = montar_cliente().await?;
+
+    let saida = cliente
+        .get_object()
+        .bucket(&bucket)
+        .key(chave_referencia)
+        .send()
+        .await
+        .map_err(|e| format!("Falha ao buscar a chave no S3 ({chave_referencia}): {e}"))?;
+
+    let bytes = saida
+        .body
+        .collect()
+        .await
+        .map_err(|e| format!("Falha ao ler o corpo da chave vinda do S3: {e}"))?
+        .into_bytes();
+
+    Ok(bytes.to_vec())
+}
+
+/// Apaga a chave do bucket. É best-effort por design — quem chama (ver
+/// grpc.rs) decide se uma falha aqui deve impedir a confirmação de
+/// exclusão. Não deveria: uma chave órfã sem arquivo associado não
+/// representa risco nenhum.
+pub async fn apagar_chave(chave_referencia: &str) -> Result<(), String> {
+    let bucket = std::env::var("AWS_S3_BUCKET").unwrap_or_else(|_| "filepriv-s3".to_string());
+    let cliente = montar_cliente().await?;
+
+    cliente
+        .delete_object()
+        .bucket(&bucket)
+        .key(chave_referencia)
+        .send()
+        .await
+        .map_err(|e| format!("Falha ao apagar a chave no S3 ({chave_referencia}): {e}"))?;
+
+    Ok(())
+}
