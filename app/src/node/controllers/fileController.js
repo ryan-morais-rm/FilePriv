@@ -140,6 +140,11 @@ const fileController = {
                 return res.status(503).json({ error: 'Configuração de rede não cadastrada pelo administrador.' });
             }
 
+            function montarNomeComExtensao(nome, tipo) {
+                const extensao = `.${tipo}`.toLowerCase();
+                return nome.toLowerCase().endsWith(extensao) ? nome : `${nome}${extensao}`;
+            }
+
             const streamRust = baixarArquivo({
                 host: servidor.host,
                 porta: servidor.porta,
@@ -154,7 +159,8 @@ const fileController = {
 
             streamRust.on('data', (mensagem) => {
                 if (!res.headersSent) {
-                    res.setHeader('Content-Disposition', `attachment; filename="${arquivo.nome_arquivo}"`);
+                    const nomeArquivo = montarNomeComExtensao(arquivo.nome_arquivo, arquivo.tipo_arquivo);
+                    res.setHeader('Content-Disposition', `attachment; filename="${nomeArquivo}"`);
                     res.setHeader('Content-Type', 'application/octet-stream');
                 }
                 if (mensagem.pedaco && mensagem.pedaco.length > 0) {
