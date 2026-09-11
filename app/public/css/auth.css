@@ -1,0 +1,154 @@
+/* auth.html — login + cadastro mesclados, com carrossel entre os dois */
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.content-wrapper {
+  flex: 1;
+  display: flex;
+}
+
+.auth-shell {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1.05fr;
+  min-height: 100%;
+}
+
+/* ---------- Painel de marca (esquerda) — conteúdo alterna com crossfade ---------- */
+
+.auth-brand-panel {
+  position: relative;
+  min-height: 460px;
+}
+
+.auth-brand-content {
+  position: absolute;
+  inset: 0;
+  padding: 4rem 3.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity .45s ease, transform .45s ease;
+  pointer-events: none;
+}
+.auth-brand-content.active {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.auth-trust-list li {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: .92rem;
+  margin-bottom: .6rem;
+}
+.auth-trust-list i {
+  color: var(--teal-400);
+  width: 18px;
+  text-align: center;
+}
+
+/* ---------- Painel de formulário (direita) — carrossel + alternador ---------- */
+
+.auth-form-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+  background: var(--mist-100);
+  gap: 1.5rem;
+}
+
+.auth-carousel-viewport {
+  width: 100%;
+  max-width: 420px;
+  overflow: hidden;
+}
+
+.auth-carousel-track {
+  display: flex;
+  width: 200%;
+  transition: transform .55s cubic-bezier(.65, 0, .35, 1);
+}
+.auth-carousel-track.show-login {
+  transform: translateX(-50%);
+}
+
+.auth-slide {
+  width: 50%;
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+}
+
+.register-card, .login-card {
+  background-color: var(--paper);
+  border: 1px solid var(--slate-300);
+  border-radius: var(--radius-lg);
+  padding: 40px;
+  box-shadow: var(--shadow-card);
+  width: 100%;
+  max-width: 380px;
+}
+
+.logo {
+  max-width: 110px;
+  margin-bottom: 18px;
+}
+
+.description {
+  font-size: 0.85rem;
+  color: var(--slate-500);
+  margin-top: 5px;
+}
+
+/* ---------- Alternador Login / Cadastro ---------- */
+
+.auth-toggle-buttons {
+  display: flex;
+  gap: 6px;
+  background: var(--paper);
+  border: 1px solid var(--slate-300);
+  border-radius: 999px;
+  padding: 4px;
+  width: 100%;
+  max-width: 380px;
+  box-shadow: var(--shadow-soft);
+}
+.auth-toggle-btn {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: .55rem 0;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: .9rem;
+  color: var(--slate-500);
+  transition: background .25s ease, color .25s ease, box-shadow .25s ease;
+  cursor: pointer;
+}
+.auth-toggle-btn.active {
+  background: linear-gradient(135deg, var(--signal-500), var(--signal-600));
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(47, 111, 237, .3);
+}
+.auth-toggle-btn:not(.active):hover {
+  color: var(--signal-600);
+}
+
+@media (max-width: 991.98px) {
+  .auth-shell { grid-template-columns: 1fr; }
+  .auth-brand-panel { min-height: 340px; }
+  .auth-brand-content { padding: 3rem 2rem; text-align: center; align-items: center; }
+  .auth-trust-list { display: inline-block; text-align: left; }
+}
