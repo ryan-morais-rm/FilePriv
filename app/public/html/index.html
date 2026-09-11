@@ -7,6 +7,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/devicon.min.css">
   <link rel="stylesheet" href="../css/theme.css">
   <link rel="stylesheet" href="../css/index.css">
 </head>
@@ -33,13 +34,10 @@
             <a href="file.html#download-section" class="nav-link">Recuperar</a>
           </li>
           <li class="nav-item mx-2">
-            <a href="signup.html" class="nav-link">Cadastrar</a>
+            <a href="auth.html" class="nav-link">Cadastro/Login</a>
           </li>
           <li class="nav-item mx-2">
-            <a href="login.html" class="nav-link">Login</a>
-          </li>
-          <li class="nav-item mx-2">
-            <a href="about.html" class="nav-link">Sobre</a>
+            <a href="#sobre" class="nav-link">Sobre</a>
           </li>
         </ul>
       </div>
@@ -130,11 +128,115 @@
       </div>
     </div>
 
+    <!-- ===================== Seção "Sobre" (mesclada do about.html) ===================== -->
+    <div id="sobre" class="mt-5 pt-3">
+      <div class="text-center mb-4">
+        <span class="section-eyebrow">Sobre o projeto</span>
+        <h2 class="mt-2">Conheça a história, a motivação e a tecnologia</h2>
+        <div class="shard-divider center"></div>
+      </div>
+
+      <div class="row g-4">
+        <div class="col-lg-8">
+          <div class="fp-card p-4 p-md-5">
+            <section class="mb-5">
+              <h4>Descrição do Projeto</h4>
+              <div class="shard-divider sm"></div>
+              <p class="fs-5">
+                FilePriv é um protótipo funcional de um servidor de armazenamento seguro distribuído.
+                Os usuários podem fazer upload e download de arquivos com criptografia forte e particionamento.
+              </p>
+              <p class="mb-0">
+                Os arquivos são criptografados em nível de bit e divididos em servidores independentes,
+                cada uma protegida com uma chave privada exclusiva para garantir a segurança máxima.
+              </p>
+            </section>
+
+            <section>
+              <h4>Funcionalidades e Tecnologias</h4>
+              <div class="shard-divider sm"></div>
+              <div class="accordion" id="aboutAccordion">
+
+                <div class="accordion-item shadow-sm mb-3">
+                  <h2 class="accordion-header" id="headingFeatures">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFeatures">
+                      <i class="fas fa-list-check me-2"></i> Principais Funcionalidades
+                    </button>
+                  </h2>
+                  <div id="collapseFeatures" class="accordion-collapse collapse" data-bs-parent="#aboutAccordion">
+                    <div class="accordion-body">
+                      <ul class="list-group list-group-flush">
+                        <li class="list-group-item">Upload &amp; Download: Envie e recupere arquivos criptografados via interface web.</li>
+                        <li class="list-group-item">Criptografia: Criptografia AES-GCM segura por arquivo.</li>
+                        <li class="list-group-item">Chaves Aleatórias: Geração de chave exclusiva para cada upload de arquivo.</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="accordion-item shadow-sm">
+                  <h2 class="accordion-header" id="headingTech">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTech">
+                      <i class="fas fa-microchip me-2"></i> Tecnologias Utilizadas
+                    </button>
+                  </h2>
+                  <div id="collapseTech" class="accordion-collapse collapse" data-bs-parent="#aboutAccordion">
+                    <div class="accordion-body">
+                      <ul class="list-group list-group-flush">
+                        <li class="list-group-item"><i class="devicon-bootstrap-plain colored me-2"></i>Bootstrap 5</li>
+                        <li class="list-group-item"><i class="devicon-html5-plain colored me-2"></i>HTML</li>
+                        <li class="list-group-item"><i class="devicon-css3-plain colored me-2"></i>CSS</li>
+                        <li class="list-group-item"><i class="devicon-javascript-plain colored me-2"></i>JavaScript</li>
+                        <li class="list-group-item"><i class="devicon-nodejs-plain colored me-2"></i>Node.js</li>
+                        <li class="list-group-item"><i class="devicon-rust-original me-2"></i>Rust</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </section>
+          </div>
+        </div>
+
+        <div class="col-lg-4">
+          <div class="row g-3">
+            <div class="col-md-6 col-lg-12">
+              <div class="fp-card about-info-card p-3">
+                <h6 class="mb-1">Criador</h6>
+                <p class="mb-0 fw-bold">Ryan de Morais Correia</p>
+                <p class="small text-muted mb-0">Estudante</p>
+              </div>
+            </div>
+            <div class="col-md-6 col-lg-12">
+              <div class="fp-card about-info-card p-3">
+                <h6 class="mb-1">Motivação</h6>
+                <p class="small mb-0">Desenvolver uma ferramenta que funcione de maneira simples e efetiva, focada em segurança e privacidade.</p>
+              </div>
+            </div>
+            <div class="col-md-6 col-lg-12">
+              <div class="fp-card about-info-card p-3">
+                <h6 class="mb-1">Tipo de projeto</h6>
+                <p class="small mb-0">Projeto acadêmico para gerenciamento seguro de arquivos distribuídos.</p>
+              </div>
+            </div>
+            <div class="col-md-6 col-lg-12">
+              <div class="fp-card about-info-card p-3">
+                <h6 class="mb-1">Status</h6>
+                <p class="small fw-bold text-success mb-0"><i class="fas fa-circle-check me-1"></i>Estágio de protótipo funcional.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- ===================== fim da seção "Sobre" ===================== -->
+
     <div class="text-center mt-5 p-4 p-md-5 fp-card">
       <h3 class="mb-3">Pronto para começar?</h3>
       <p class="mb-4 text-muted">Proteja seus dados e projetos de pesquisa com a segurança do FilePriv.</p>
-      <a href="signup.html" class="btn btn-primary btn-lg px-5">Cadastre agora!</a>
-      <a href="login.html" class="btn btn-outline-primary btn-lg px-5 ms-3">Fazer Login</a>
+      <a href="auth.html" class="btn btn-primary btn-lg px-5">Cadastre agora!</a>
+      <a href="auth.html" class="btn btn-outline-primary btn-lg px-5 ms-3">Fazer Login</a>
     </div>
   </div>
 
@@ -145,6 +247,7 @@
       <a href="support.html" class="mx-2">Suporte</a> |
       <a href="index.html" class="mx-2">Início</a>
       <div class="fp-footer-tagline">Armazenamento distribuído e criptografado — projeto acadêmico IFPB.</div>
+      <div class="fp-footer-tagline mt-1">Criado por Ryan de Morais Correia</div>
     </div>
   </footer>
 

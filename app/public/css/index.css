@@ -78,3 +78,12 @@ body {
   .hero-section { padding: 40px 15px; }
   .hero-lead { max-width: none; }
 }
+
+/* ---------- Seção "Sobre" ---------- */
+.about-info-card h6 {
+  font-family: 'Space Grotesk', sans-serif;
+  color: var(--signal-600);
+  font-size: .8rem;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
