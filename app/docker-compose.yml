@@ -27,6 +27,9 @@ services:
     restart: always
     ports:
       - "50051:50051"
+    volumes:
+      - ./certs/rust-grpc/server.crt:/etc/filepriv/tls/server.crt:ro
+      - ./certs/rust-grpc/server.key:/etc/filepriv/tls/server.key:ro
     depends_on:
       postgres:
         condition: service_healthy
@@ -41,6 +44,9 @@ services:
       - "443:443"
     environment:
       RUST_GRPC_ADDR: rust-grpc:50051
+      RUST_GRPC_TLS_CA_PATH: /etc/filepriv/tls/server.crt
+    volumes:
+      - ./certs/rust-grpc/server.crt:/etc/filepriv/tls/server.crt:ro
     env_file:
       - .env
     depends_on:

@@ -1,3 +1,4 @@
+import fs from 'fs';
 import grpc from '@grpc/grpc-js';
 import protoLoader from '@grpc/proto-loader';
 import path from 'path';
@@ -8,6 +9,7 @@ const __dirname = path.dirname(__filename);
 
 const PROTO_PATH = path.resolve(__dirname, '../../proto/arquivo.proto');
 const RUST_GRPC_ADDR = process.env.RUST_GRPC_ADDR || '172.16.10.1:50051';
+const RUST_GRPC_TLS_CA_PATH = process.env.RUST_GRPC_TLS_CA_PATH || '/etc/filepriv/tls/server.crt';
 const CHUNK_SIZE = 64 * 1024;
 const DEADLINE_MS = 20000;
 const HEALTHCHECK_DEADLINE_MS = 60000;
@@ -24,10 +26,20 @@ const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
 
 const proto = grpc.loadPackageDefinition(packageDefinition).filepriv;
 
-const client = new proto.ProcessadorArquivo(
-    RUST_GRPC_ADDR,
-    grpc.credentials.createInsecure() // TODO: TLS quando o Rust tiver certificado
-);
+// Sem TLS configurado corretamente, não faz sentido continuar rodando
+// silenciosamente inseguro — falha alto e cedo, na subida do processo.
+let credenciais;
+try {
+    const certificadoCA = fs.readFileSync(RUST_GRPC_TLS_CA_PATH);
+    credenciais = grpc.credentials.createSsl(certificadoCA);
+    console.log('[rustClient] Conectando ao Rust via gRPC com TLS.');
+} catch (e) {
+    throw new Error(
+        `[rustClient] Não foi possível carregar o certificado TLS em ${RUST_GRPC_TLS_CA_PATH}: ${e.message}`
+    );
+}
+
+const client = new proto.ProcessadorArquivo(RUST_GRPC_ADDR, credenciais);
 
 export function processarArquivo({
     usuarioId, nomeArquivo, tipoArquivo, buffer, servidoresDisponiveis,
@@ -81,9 +93,6 @@ export function verificarServidores({ servidores, usuarioSsh, chavePrivada, dire
     });
 }
 
-/// Retorna o stream de leitura gRPC direto — o controller escuta 'data'
-/// (cada mensagem tem um `.pedaco` em Buffer), 'end' e 'error'. Não é uma
-/// Promise porque o dado chega aos poucos, não de uma vez.
 export function baixarArquivo({ host, porta, usuarioSsh, chavePrivada, diretorioRemoto, nomeRemoto, chaveReferencia }) {
     const deadline = new Date(Date.now() + DOWNLOAD_DEADLINE_MS);
 
