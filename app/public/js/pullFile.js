@@ -77,6 +77,11 @@ const FILE_ICONS = {
     png: 'fa-file-image'
 };
 
+function montarNomeComExtensao(nome, tipo) {
+    const extensao = `.${tipo}`.toLowerCase();
+    return nome.toLowerCase().endsWith(extensao) ? nome : `${nome}${extensao}`;
+}
+
 function renderTable(files) {
     const tbody = document.getElementById('filesTableBody');
     if(!tbody) return;
@@ -98,20 +103,20 @@ function renderTable(files) {
 
         tr.innerHTML = `
             <td>
-              <span class="file-name-cell">
+            <span class="file-name-cell">
                 <span class="file-ext-badge file-ext-${tipoReal}"><i class="fas ${icon}"></i></span>
                 ${file.nome_arquivo}
-              </span>
+            </span>
             </td>
             <td>${dataFormatada}</td>
             <td>${file.descricao || '-'}</td>
             <td class="text-center">
-              <button class="btn btn-icon-action btn-icon-primary" onclick="window.downloadFile('${file.id}', '${file.nome_arquivo}')" title="Baixar arquivo">
+            <button class="btn btn-icon-action btn-icon-primary" onclick="window.downloadFile('${file.id}', '${montarNomeComExtensao(file.nome_arquivo, tipoReal)}')" title="Baixar arquivo">
                 <i class="bi bi-download"></i>
-              </button>
-              <button class="btn btn-icon-action btn-icon-danger" onclick="window.deleteFile('${file.id}')" title="Excluir arquivo">
+            </button>
+            <button class="btn btn-icon-action btn-icon-danger" onclick="window.deleteFile('${file.id}')" title="Excluir arquivo">
                 <i class="bi bi-trash"></i>
-              </button>
+            </button>
             </td>
         `;
         tbody.appendChild(tr);

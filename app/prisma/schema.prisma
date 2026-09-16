@@ -8,11 +8,12 @@ datasource db {
 }
 
 model Usuario {
-  id       Int       @id @default(autoincrement())
-  nome     String    @db.VarChar(100)
-  email    String    @unique @db.VarChar(100)
-  senha    String    @db.VarChar(255)
-  arquivos Arquivo[]
+  id               Int              @id @default(autoincrement())
+  nome             String           @db.VarChar(100)
+  email            String           @unique @db.VarChar(100)
+  senha            String           @db.VarChar(255)
+  arquivos         Arquivo[]
+  eventos_exclusao EventoExclusao[]
 
   @@map("usuarios")
 }
@@ -32,6 +33,7 @@ model Arquivo {
   status           StatusArquivo @default(PENDENTE)
   chave_referencia String?       @db.VarChar(255) // chave/caminho no bucket S3 — só preenchido quando CONCLUIDO
   servidor_id      Int?          // servidor onde o arquivo (inteiro) foi gravado
+  nome_remoto      String?       @db.VarChar(255) // nome do blob cifrado dentro do servidor (SFTP) — necessário pra download/delete
   tamanho          Int?          // bytes
   hash             String?       @db.VarChar(64)  // sha256 do arquivo, integridade
   usuario_id       Int
@@ -61,4 +63,15 @@ model ConfiguracaoRede {
   atualizado_em    DateTime @default(now()) @updatedAt @db.Timestamp(6)
 
   @@map("configuracao_rede")
+}
+
+/// Contador de eventos para a feature de arquivos excluídos nos últimos 
+/// 7 dias 
+model EventoExclusao {
+  id         Int      @id @default(autoincrement())
+  usuario_id Int
+  criado_em  DateTime @default(now()) @db.Timestamp(6)
+  usuario    Usuario  @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+
+  @@map("eventos_exclusao")
 }

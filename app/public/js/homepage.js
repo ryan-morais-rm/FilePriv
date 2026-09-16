@@ -294,10 +294,30 @@ function configurarModalProvedores() {
     });
 }
 
+async function carregarMetricasAplicacao() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    try {
+        const response = await fetch('/arquivos/metricas', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!response.ok) throw new Error('Falha ao buscar métricas.');
+
+        const dados = await response.json();
+        document.getElementById('appMetricStored').textContent = dados.armazenados;
+        document.getElementById('appMetricDeleted').textContent = dados.excluidos7dias;
+        document.getElementById('appMetricToday').textContent = dados.uploadsHoje;
+    } catch (error) {
+        console.error('Erro ao carregar métricas da aplicação:', error);
+    }
+}
+
 window.updateAttributes = updateAttributes;
 
 export async function homepage() {
     await renderUserProfile();
     configurarModalProvedores();
     atualizarVisualProvedores();
+    await carregarMetricasAplicacao();
 }
