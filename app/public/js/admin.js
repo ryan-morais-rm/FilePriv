@@ -13,6 +13,33 @@ function mostrarLogin() {
     document.getElementById('admin-painel').style.display = 'none';
 }
 
+// Validação visual para saber se a chave é .pem. A validação real ainda é feita no backend, aqui é só
+// status visual.
+const REGEX_CHAVE_PEM = /^-----BEGIN [A-Z0-9 ]+PRIVATE KEY-----[\s\S]+-----END [A-Z0-9 ]+PRIVATE KEY-----\s*$/;
+
+function validarChavePrivada() {
+    const textarea = document.getElementById('chave-privada');
+    const feedback = document.getElementById('chave-privada-feedback');
+    const valor = textarea.value.trim();
+
+    textarea.classList.remove('chave-valida');
+    feedback.classList.remove('valida', 'invalida');
+
+    if (valor.length === 0) {
+        feedback.textContent = '';
+        return;
+    }
+
+    if (REGEX_CHAVE_PEM.test(valor)) {
+        textarea.classList.add('chave-valida');
+        feedback.classList.add('valida');
+        feedback.innerHTML = '<i class="fas fa-check-circle me-1"></i>Formato de chave reconhecido.';
+    } else {
+        feedback.classList.add('invalida');
+        feedback.innerHTML = '<i class="fas fa-triangle-exclamation me-1"></i>Formato inesperado — confira se colou a chave inteira.';
+    }
+}
+
 async function fazerLogin(event) {
     event.preventDefault();
     const usuario = document.getElementById('admin-usuario').value;
@@ -118,10 +145,7 @@ async function carregarServidores() {
 export function admin() {
     document.getElementById('admin-login-form').addEventListener('submit', fazerLogin);
     document.getElementById('popular-form').addEventListener('submit', popularSubnet);
+    document.getElementById('chave-privada').addEventListener('input', validarChavePrivada);
 
-    if (getAdminToken()) {
-        mostrarPainel();
-    } else {
-        mostrarLogin();
-    }
+    mostrarPainel();
 }
