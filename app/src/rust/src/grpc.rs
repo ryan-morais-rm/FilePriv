@@ -9,10 +9,12 @@ use crate::healthcheck::verificar_todos;
 use crate::proto::filepriv::{
     arquivo_chunk_upload::Conteudo, processador_arquivo_server::ProcessadorArquivo,
     ArquivoChunkUpload, MetadadosUpload, PedacoArquivo, RespostaExclusao, RespostaUpload,
-    SolicitacaoDownload, SolicitacaoExclusao, VerificarServidoresRequest,
-    VerificarServidoresResponse,
+    SalvarCredencialSshRequest, SalvarCredencialSshResponse, SolicitacaoDownload,
+    SolicitacaoExclusao, VerificarServidoresRequest, VerificarServidoresResponse,
 };
-use crate::s3_keys::{apagar_chave, buscar_chave, salvar_chave};
+use crate::s3_keys::{
+    apagar_chave, buscar_chave, buscar_credencial_ssh, salvar_chave, salvar_credencial_ssh,
+};
 use crate::servidores::escolher_servidor_menos_carregado;
 use crate::storage::{apagar_de_servidor, baixar_de_servidor, enviar_para_servidor, ConexaoServidor};
 
@@ -29,6 +31,16 @@ fn resposta_erro(mensagem: impl Into<String>) -> RespostaUpload {
         hash: String::new(),
         nome_remoto: String::new(),
     }
+}
+
+/// Busca a credencial SSH no S3 e converte pra String
+async fn resolver_chave_privada(referencia: &str) -> Result<String, Status> {
+    let bytes = buscar_credencial_ssh(referencia)
+        .await
+        .map_err(Status::internal)?;
+    String::from_utf8(bytes).map_err(|_| {
+        Status::internal("Credencial SSH armazenada no S3 não é UTF-8 válido (PEM corrompido?).")
+    })
 }
 
 #[tonic::async_trait]
@@ -65,19 +77,29 @@ impl ProcessadorArquivo for ProcessadorArquivoService {
         };
 
         if metadados.usuario_ssh.is_empty()
-            || metadados.chave_privada.is_empty()
+            || metadados.chave_privada_referencia.is_empty()
             || metadados.diretorio_remoto.is_empty()
         {
             return Ok(Response::new(resposta_erro(
-                "Credenciais de conexão (usuario_ssh/chave_privada/diretorio_remoto) não foram informadas pelo Node.",
+                "Credenciais de conexão (usuario_ssh/chave_privada_referencia/diretorio_remoto) não foram informadas pelo Node.",
             )));
         }
+
+        let chave_privada = match resolver_chave_privada(&metadados.chave_privada_referencia).await {
+            Ok(valor) => valor,
+            Err(status) => {
+                return Ok(Response::new(resposta_erro(format!(
+                    "Falha ao buscar credencial SSH no S3: {}",
+                    status.message()
+                ))));
+            }
+        };
 
         let conexao = ConexaoServidor {
             host: servidor_escolhido.host.clone(),
             porta: servidor_escolhido.porta as u16,
             usuario_ssh: metadados.usuario_ssh.clone(),
-            chave_privada: metadados.chave_privada.clone(),
+            chave_privada,
             diretorio_remoto: metadados.diretorio_remoto.clone(),
         };
 
@@ -95,9 +117,6 @@ impl ProcessadorArquivo for ProcessadorArquivoService {
         let tamanho = blob_cifrado.len() as i32;
         let nome_remoto = format!("{}.bin", Uuid::new_v4());
 
-        // A chave precisa estar salva de forma durável antes do arquivo ir
-        // pro servidor — se o S3 falhar aqui, abortamos sem nunca ter
-        // mandado um blob cifrado cuja chave não existe em lugar nenhum.
         let chave_referencia = match salvar_chave(chave.as_slice()).await {
             Ok(referencia) => referencia,
             Err(e) => {
@@ -137,7 +156,9 @@ impl ProcessadorArquivo for ProcessadorArquivoService {
         &self,
         request: Request<VerificarServidoresRequest>,
     ) -> Result<Response<VerificarServidoresResponse>, Status> {
-        let resposta = verificar_todos(request.into_inner()).await;
+        let req = request.into_inner();
+        let chave_privada = resolver_chave_privada(&req.chave_privada_referencia).await?;
+        let resposta = verificar_todos(req, chave_privada).await;
         Ok(Response::new(resposta))
     }
 
@@ -150,7 +171,10 @@ impl ProcessadorArquivo for ProcessadorArquivoService {
     ) -> Result<Response<Self::BaixarArquivoStream>, Status> {
         let req = request.into_inner();
 
-        if req.usuario_ssh.is_empty() || req.chave_privada.is_empty() || req.diretorio_remoto.is_empty() {
+        if req.usuario_ssh.is_empty()
+            || req.chave_privada_referencia.is_empty()
+            || req.diretorio_remoto.is_empty()
+        {
             return Err(Status::invalid_argument(
                 "Credenciais de conexão não informadas pelo Node.",
             ));
@@ -165,11 +189,13 @@ impl ProcessadorArquivo for ProcessadorArquivoService {
             .await
             .map_err(Status::internal)?;
 
+        let chave_privada = resolver_chave_privada(&req.chave_privada_referencia).await?;
+
         let conexao = ConexaoServidor {
             host: req.host.clone(),
             porta: req.porta as u16,
             usuario_ssh: req.usuario_ssh.clone(),
-            chave_privada: req.chave_privada.clone(),
+            chave_privada,
             diretorio_remoto: req.diretorio_remoto.clone(),
         };
 
@@ -204,7 +230,9 @@ impl ProcessadorArquivo for ProcessadorArquivoService {
     ) -> Result<Response<RespostaExclusao>, Status> {
         let req = request.into_inner();
 
-        if req.usuario_ssh.is_empty() || req.chave_privada.is_empty() || req.diretorio_remoto.is_empty()
+        if req.usuario_ssh.is_empty()
+            || req.chave_privada_referencia.is_empty()
+            || req.diretorio_remoto.is_empty()
         {
             return Ok(Response::new(RespostaExclusao {
                 sucesso: false,
@@ -212,17 +240,27 @@ impl ProcessadorArquivo for ProcessadorArquivoService {
             }));
         }
 
+        let chave_privada = match resolver_chave_privada(&req.chave_privada_referencia).await {
+            Ok(valor) => valor,
+            Err(status) => {
+                return Ok(Response::new(RespostaExclusao {
+                    sucesso: false,
+                    mensagem_erro: format!(
+                        "Falha ao buscar credencial SSH no S3: {}",
+                        status.message()
+                    ),
+                }));
+            }
+        };
+
         let conexao = ConexaoServidor {
             host: req.host.clone(),
             porta: req.porta as u16,
             usuario_ssh: req.usuario_ssh.clone(),
-            chave_privada: req.chave_privada.clone(),
+            chave_privada,
             diretorio_remoto: req.diretorio_remoto.clone(),
         };
 
-        // A exclusão na VM é o que precisa dar certo de verdade — é onde o
-        // dado sensível de fato vive. Só depois disso confirmado é que
-        // mexemos na chave no S3 (best-effort, ver s3_keys.rs).
         if let Err(e) = apagar_de_servidor(conexao, req.nome_remoto.clone()).await {
             return Ok(Response::new(RespostaExclusao {
                 sucesso: false,
@@ -251,5 +289,33 @@ impl ProcessadorArquivo for ProcessadorArquivoService {
             sucesso: true,
             mensagem_erro: String::new(),
         }))
+    }
+
+    async fn salvar_credencial_ssh(
+        &self,
+        request: Request<SalvarCredencialSshRequest>,
+    ) -> Result<Response<SalvarCredencialSshResponse>, Status> {
+        let req = request.into_inner();
+
+        if req.chave_privada.is_empty() {
+            return Ok(Response::new(SalvarCredencialSshResponse {
+                sucesso: false,
+                mensagem_erro: "Chave privada vazia.".into(),
+                chave_privada_referencia: String::new(),
+            }));
+        }
+
+        match salvar_credencial_ssh(&req.chave_privada).await {
+            Ok(referencia) => Ok(Response::new(SalvarCredencialSshResponse {
+                sucesso: true,
+                mensagem_erro: String::new(),
+                chave_privada_referencia: referencia,
+            })),
+            Err(e) => Ok(Response::new(SalvarCredencialSshResponse {
+                sucesso: false,
+                mensagem_erro: format!("Falha ao salvar credencial SSH no S3: {e}"),
+                chave_privada_referencia: String::new(),
+            })),
+        }
     }
 }

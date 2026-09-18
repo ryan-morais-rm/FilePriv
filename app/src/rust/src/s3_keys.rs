@@ -6,7 +6,8 @@ use aws_sdk_s3::primitives::ByteStream;
 use aws_sdk_s3::Client;
 use uuid::Uuid;
 
-const PREFIXO_OBJETO: &str = "chaves";
+const PREFIXO_CHAVE_ARQUIVO: &str = "chaves";
+const PREFIXO_CREDENCIAL_SSH: &str = "credenciais_ssh";
 
 async fn resolver_credenciais() -> Result<Credentials, String> {
     let imds = ImdsCredentialsProvider::builder().build();
@@ -20,7 +21,6 @@ async fn resolver_credenciais() -> Result<Credentials, String> {
         }
     }
 
-    // Bloco temporário
     let access_key = std::env::var("AWS_ACCESS_KEY_ID")
         .map_err(|_| "Nem IMDS nem AWS_ACCESS_KEY_ID disponíveis.".to_string())?;
     let secret_key = std::env::var("AWS_SECRET_ACCESS_KEY")
@@ -28,7 +28,6 @@ async fn resolver_credenciais() -> Result<Credentials, String> {
 
     println!("[s3] Autenticado via AK/SK (variáveis de ambiente) — modo de desenvolvimento.");
     Ok(Credentials::new(access_key, secret_key, None, None, "filepriv-static"))
-    // Bloco temporário
 }
 
 async fn montar_cliente() -> Result<Client, String> {
@@ -44,67 +43,88 @@ async fn montar_cliente() -> Result<Client, String> {
     Ok(Client::new(&config))
 }
 
-/// Sobe a chave de criptografia (bytes brutos, nunca em texto/log) para o
-/// bucket dedicado, num objeto novo por arquivo. Retorna a referência
-/// (caminho do objeto) que o Node vai gravar em `chave_referencia`.
-pub async fn salvar_chave(chave_bytes: &[u8]) -> Result<String, String> {
+/// Rotina genérica de gravação para SSH e SFTP
+async fn salvar_objeto(prefixo: &str, extensao: &str, bytes: &[u8]) -> Result<String, String> {
     let bucket = std::env::var("AWS_S3_BUCKET").unwrap_or_else(|_| "filepriv-s3".to_string());
     let cliente = montar_cliente().await?;
 
-    let chave_referencia = format!("{PREFIXO_OBJETO}/{}.key", Uuid::new_v4());
+    let referencia = format!("{prefixo}/{}.{extensao}", Uuid::new_v4());
 
     cliente
         .put_object()
         .bucket(&bucket)
-        .key(&chave_referencia)
-        .body(ByteStream::from(chave_bytes.to_vec()))
+        .key(&referencia)
+        .body(ByteStream::from(bytes.to_vec()))
         .send()
         .await
-        .map_err(|e| format!("Falha ao gravar a chave no S3 (bucket '{bucket}'): {e}"))?;
+        .map_err(|e| format!("Falha ao gravar objeto no S3 (bucket '{bucket}'): {e}"))?;
 
-    println!("[s3] Chave gravada em s3://{bucket}/{chave_referencia}");
-
-    Ok(chave_referencia)
+    Ok(referencia)
 }
 
-/// Busca a chave de volta do S3, pra descriptografar no download.
-pub async fn buscar_chave(chave_referencia: &str) -> Result<Vec<u8>, String> {
+async fn buscar_objeto(referencia: &str) -> Result<Vec<u8>, String> {
     let bucket = std::env::var("AWS_S3_BUCKET").unwrap_or_else(|_| "filepriv-s3".to_string());
     let cliente = montar_cliente().await?;
 
     let saida = cliente
         .get_object()
         .bucket(&bucket)
-        .key(chave_referencia)
+        .key(referencia)
         .send()
         .await
-        .map_err(|e| format!("Falha ao buscar a chave no S3 ({chave_referencia}): {e}"))?;
+        .map_err(|e| format!("Falha ao buscar objeto no S3 ({referencia}): {e}"))?;
 
     let bytes = saida
         .body
         .collect()
         .await
-        .map_err(|e| format!("Falha ao ler o corpo da chave vinda do S3: {e}"))?
+        .map_err(|e| format!("Falha ao ler o corpo do objeto vindo do S3: {e}"))?
         .into_bytes();
 
     Ok(bytes.to_vec())
 }
 
-/// Apaga a chave do bucket. É best-effort por design — quem chama (ver
-/// grpc.rs) decide se uma falha aqui deve impedir a confirmação de
-/// exclusão. Não deveria: uma chave órfã sem arquivo associado não
-/// representa risco nenhum.
-pub async fn apagar_chave(chave_referencia: &str) -> Result<(), String> {
+async fn apagar_objeto(referencia: &str) -> Result<(), String> {
     let bucket = std::env::var("AWS_S3_BUCKET").unwrap_or_else(|_| "filepriv-s3".to_string());
     let cliente = montar_cliente().await?;
 
     cliente
         .delete_object()
         .bucket(&bucket)
-        .key(chave_referencia)
+        .key(referencia)
         .send()
         .await
-        .map_err(|e| format!("Falha ao apagar a chave no S3 ({chave_referencia}): {e}"))?;
+        .map_err(|e| format!("Falha ao apagar objeto no S3 ({referencia}): {e}"))?;
 
     Ok(())
+}
+
+/// Chave de criptografia dos arquivos
+pub async fn salvar_chave(chave_bytes: &[u8]) -> Result<String, String> {
+    let referencia = salvar_objeto(PREFIXO_CHAVE_ARQUIVO, "key", chave_bytes).await?;
+    println!("[s3] Chave de arquivo gravada em '{referencia}'.");
+    Ok(referencia)
+}
+
+pub async fn buscar_chave(chave_referencia: &str) -> Result<Vec<u8>, String> {
+    buscar_objeto(chave_referencia).await
+}
+
+pub async fn apagar_chave(chave_referencia: &str) -> Result<(), String> {
+    apagar_objeto(chave_referencia).await
+}
+
+/// Credenciais SSH para comunicação com as VMs
+pub async fn salvar_credencial_ssh(chave_privada_bytes: &[u8]) -> Result<String, String> {
+    let referencia = salvar_objeto(PREFIXO_CREDENCIAL_SSH, "pem", chave_privada_bytes).await?;
+    println!("[s3] Credencial SSH gravada em '{referencia}'.");
+    Ok(referencia)
+}
+
+pub async fn buscar_credencial_ssh(referencia: &str) -> Result<Vec<u8>, String> {
+    buscar_objeto(referencia).await
+}
+
+pub async fn apagar_credencial_ssh(referencia: &str) -> Result<(), String> {
+    apagar_objeto(referencia).await
 }

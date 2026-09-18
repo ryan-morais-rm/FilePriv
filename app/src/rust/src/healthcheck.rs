@@ -14,9 +14,10 @@ const TIMEOUT_POR_SERVIDOR: Duration = Duration::from_secs(5);
 /// servidor, já que `ssh2` é síncrona) e devolve o veredito de cada um,
 /// correlacionado por host — funciona tanto pra hosts já cadastrados
 /// quanto pra candidatos que ainda não existem no banco.
-pub async fn verificar_todos(request: VerificarServidoresRequest) -> VerificarServidoresResponse {
+pub async fn verificar_todos(
+    request: VerificarServidoresRequest,
+    chave_privada: String,) -> VerificarServidoresResponse {
     let usuario_ssh = request.usuario_ssh;
-    let chave_privada = request.chave_privada;
     let diretorio_remoto = request.diretorio_remoto;
 
     let tarefas: Vec<_> = request
