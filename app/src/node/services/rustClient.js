@@ -43,7 +43,7 @@ const client = new proto.ProcessadorArquivo(RUST_GRPC_ADDR, credenciais);
 
 export function processarArquivo({
     usuarioId, nomeArquivo, tipoArquivo, buffer, servidoresDisponiveis,
-    usuarioSsh, chavePrivada, diretorioRemoto
+    usuarioSsh, chavePrivadaReferencia, diretorioRemoto
 }) {
     return new Promise((resolve, reject) => {
         const deadline = new Date(Date.now() + DEADLINE_MS);
@@ -62,7 +62,7 @@ export function processarArquivo({
                 tipo_arquivo: tipoArquivo,
                 servidores_disponiveis: servidoresDisponiveis,
                 usuario_ssh: usuarioSsh,
-                chave_privada: chavePrivada,
+                chave_privada_referencia: chavePrivadaReferencia,
                 diretorio_remoto: diretorioRemoto
             }
         });
@@ -75,14 +75,14 @@ export function processarArquivo({
     });
 }
 
-export function verificarServidores({ servidores, usuarioSsh, chavePrivada, diretorioRemoto }) {
+export function verificarServidores({ servidores, usuarioSsh, chavePrivadaReferencia, diretorioRemoto }) {
     return new Promise((resolve, reject) => {
         const deadline = new Date(Date.now() + HEALTHCHECK_DEADLINE_MS);
 
         const requisicao = {
             servidores,
             usuario_ssh: usuarioSsh,
-            chave_privada: chavePrivada,
+            chave_privada_referencia: chavePrivadaReferencia,
             diretorio_remoto: diretorioRemoto
         };
 
@@ -93,7 +93,7 @@ export function verificarServidores({ servidores, usuarioSsh, chavePrivada, dire
     });
 }
 
-export function baixarArquivo({ host, porta, usuarioSsh, chavePrivada, diretorioRemoto, nomeRemoto, chaveReferencia }) {
+export function baixarArquivo({ host, porta, usuarioSsh, chavePrivadaReferencia, diretorioRemoto, nomeRemoto, chaveReferencia }) {
     const deadline = new Date(Date.now() + DOWNLOAD_DEADLINE_MS);
 
     return client.BaixarArquivo(
@@ -101,7 +101,7 @@ export function baixarArquivo({ host, porta, usuarioSsh, chavePrivada, diretorio
             host,
             porta,
             usuario_ssh: usuarioSsh,
-            chave_privada: chavePrivada,
+            chave_privada_referencia: chavePrivadaReferencia,
             diretorio_remoto: diretorioRemoto,
             nome_remoto: nomeRemoto,
             chave_referencia: chaveReferencia
@@ -111,7 +111,7 @@ export function baixarArquivo({ host, porta, usuarioSsh, chavePrivada, diretorio
     );
 }
 
-export function excluirArquivo({ host, porta, usuarioSsh, chavePrivada, diretorioRemoto, nomeRemoto, chaveReferencia }) {
+export function excluirArquivo({ host, porta, usuarioSsh, chavePrivadaReferencia, diretorioRemoto, nomeRemoto, chaveReferencia }) {
     return new Promise((resolve, reject) => {
         const deadline = new Date(Date.now() + DELETE_DEADLINE_MS);
 
@@ -120,11 +120,27 @@ export function excluirArquivo({ host, porta, usuarioSsh, chavePrivada, diretori
                 host,
                 porta,
                 usuario_ssh: usuarioSsh,
-                chave_privada: chavePrivada,
+                chave_privada_referencia: chavePrivadaReferencia,
                 diretorio_remoto: diretorioRemoto,
                 nome_remoto: nomeRemoto,
                 chave_referencia: chaveReferencia
             },
+            new grpc.Metadata(),
+            { deadline },
+            (err, resposta) => {
+                if (err) return reject(err);
+                resolve(resposta);
+            }
+        );
+    });
+}
+
+export function salvarCredencialSsh(chavePrivada) {
+    return new Promise((resolve, reject) => {
+        const deadline = new Date(Date.now() + DEADLINE_MS);
+
+        client.SalvarCredencialSsh(
+            { chave_privada: Buffer.from(chavePrivada, 'utf8') },
             new grpc.Metadata(),
             { deadline },
             (err, resposta) => {

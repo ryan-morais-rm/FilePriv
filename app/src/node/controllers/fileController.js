@@ -75,7 +75,7 @@ const fileController = {
                     buffer: req.file.buffer,
                     servidoresDisponiveis,
                     usuarioSsh: configuracaoRede.usuario_ssh,
-                    chavePrivada: configuracaoRede.chave_privada,
+                    chavePrivadaReferencia: configuracaoRede.chave_privada_referencia,
                     diretorioRemoto: configuracaoRede.diretorio_remoto
                 });
             } catch (grpcError) {
@@ -149,7 +149,7 @@ const fileController = {
                 host: servidor.host,
                 porta: servidor.porta,
                 usuarioSsh: configuracaoRede.usuario_ssh,
-                chavePrivada: configuracaoRede.chave_privada,
+                chavePrivadaReferencia: configuracaoRede.chave_privada_referencia,
                 diretorioRemoto: configuracaoRede.diretorio_remoto,
                 nomeRemoto: arquivo.nome_remoto,
                 chaveReferencia: arquivo.chave_referencia
@@ -230,7 +230,7 @@ const fileController = {
                     host: servidor.host,
                     porta: servidor.porta,
                     usuarioSsh: configuracaoRede.usuario_ssh,
-                    chavePrivada: configuracaoRede.chave_privada,
+                    chavePrivadaReferencia: configuracaoRede.chave_privada_referencia,
                     diretorioRemoto: configuracaoRede.diretorio_remoto,
                     nomeRemoto: arquivo.nome_remoto,
                     chaveReferencia: arquivo.chave_referencia || ''

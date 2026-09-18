@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 import adminModel from '../models/adminModel.js';
-import { verificarServidores } from '../services/rustClient.js';
+import { verificarServidores, salvarCredencialSsh } from '../services/rustClient.js';
 
 const adminController = {
     async login(req, res) {
@@ -34,15 +34,23 @@ const adminController = {
             if (!enderecos) {
                 return res.status(400).json({ error: 'Sub-rede inválida. Use o formato "10.0.0.0/24".' });
             }
+            
+            const respostaCredencial = await salvarCredencialSsh(chave_privada);
+            if (!respostaCredencial.sucesso) {
+                return res.status(502).json({
+                    error: respostaCredencial.mensagem_erro || 'Falha ao salvar credencial SSH no cofre.'
+                });
+            }
+            const chave_privada_referencia = respostaCredencial.chave_privada_referencia;
 
             await adminModel.salvarConfiguracaoRede({
-                usuario_ssh, chave_privada, diretorio_remoto, porta_ssh: Number(porta)
+                usuario_ssh, chave_privada_referencia, diretorio_remoto, porta_ssh: Number(porta)
             });
 
             const respostaVerificacao = await verificarServidores({
                 servidores: enderecos.map((host) => ({ host, porta: Number(porta) })),
                 usuarioSsh: usuario_ssh,
-                chavePrivada: chave_privada,
+                chavePrivadaReferencia: chave_privada_referencia,
                 diretorioRemoto: diretorio_remoto
             });
 

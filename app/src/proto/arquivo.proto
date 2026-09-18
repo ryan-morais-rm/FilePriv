@@ -14,7 +14,7 @@ message MetadadosUpload {
   string tipo_arquivo = 3;
   repeated ServidorCandidato servidores_disponiveis = 4;
   string usuario_ssh = 5;
-  string chave_privada = 6;
+  string chave_privada_referencia = 6;   // ANTES: chave_privada
   string diretorio_remoto = 7;
 }
 
@@ -33,6 +33,16 @@ message RespostaUpload {
   int32 tamanho = 5;
   string hash = 6;
   string nome_remoto = 7;
+}
+
+message SalvarCredencialSshRequest {
+  bytes chave_privada = 1; // somente nessa chamada
+}
+
+message SalvarCredencialSshResponse {
+  bool sucesso = 1;
+  string mensagem_erro = 2;
+  string chave_privada_referencia = 3;
 }
 
 message ServidorParaVerificar {
@@ -56,7 +66,7 @@ message ResultadoVerificacao {
 message VerificarServidoresRequest {
   repeated ServidorParaVerificar servidores = 1;
   string usuario_ssh = 2;
-  string chave_privada = 3;
+  string chave_privada_referencia = 3;   // ANTES: chave_privada
   string diretorio_remoto = 4;
 }
 
@@ -68,7 +78,7 @@ message SolicitacaoDownload {
   string host = 1;
   int32 porta = 2;
   string usuario_ssh = 3;
-  string chave_privada = 4;
+  string chave_privada_referencia = 4;   // ANTES: chave_privada
   string diretorio_remoto = 5;
   string nome_remoto = 6;
   string chave_referencia = 7;
@@ -82,7 +92,7 @@ message SolicitacaoExclusao {
   string host = 1;
   int32 porta = 2;
   string usuario_ssh = 3;
-  string chave_privada = 4;
+  string chave_privada_referencia = 4;   // ANTES: chave_privada
   string diretorio_remoto = 5;
   string nome_remoto = 6;
   string chave_referencia = 7;
@@ -98,4 +108,5 @@ service ProcessadorArquivo {
   rpc VerificarServidores(VerificarServidoresRequest) returns (VerificarServidoresResponse);
   rpc BaixarArquivo(SolicitacaoDownload) returns (stream PedacoArquivo);
   rpc ExcluirArquivo(SolicitacaoExclusao) returns (RespostaExclusao);
+  rpc SalvarCredencialSsh(SalvarCredencialSshRequest) returns (SalvarCredencialSshResponse); // NOVO
 }

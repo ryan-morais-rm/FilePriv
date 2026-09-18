@@ -18,11 +18,11 @@ const adminModel = {
         return enderecos;
     },
 
-    async salvarConfiguracaoRede({ usuario_ssh, chave_privada, diretorio_remoto, porta_ssh }) {
+    async salvarConfiguracaoRede({ usuario_ssh, chave_privada_referencia, diretorio_remoto, porta_ssh }) {
         return await prisma.configuracaoRede.upsert({
             where: { id: 1 },
-            update: { usuario_ssh, chave_privada, diretorio_remoto, porta_ssh },
-            create: { id: 1, usuario_ssh, chave_privada, diretorio_remoto, porta_ssh }
+            update: { usuario_ssh, chave_privada_referencia, diretorio_remoto, porta_ssh },
+            create: { id: 1, usuario_ssh, chave_privada_referencia, diretorio_remoto, porta_ssh }
         });
     },
 

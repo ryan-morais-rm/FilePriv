@@ -20,7 +20,7 @@ async function executarVerificacao() {
         const resposta = await verificarServidores({
             servidores,
             usuarioSsh: config.usuario_ssh,
-            chavePrivada: config.chave_privada,
+            chavePrivadaReferencia: config.chave_privada_referencia,
             diretorioRemoto: config.diretorio_remoto
         });
 
