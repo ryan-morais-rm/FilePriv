@@ -11,5 +11,6 @@ authRouter.post('/login', userController.loginUser);
 // Rota privada
 authRouter.get('/perfil/:id', verificarToken, userController.consultUser);
 authRouter.put('/perfil', verificarToken, userController.updateProfile);
+authRouter.get('/categorias-perfil', userController.listarCategoriasPerfil);
 
 export default authRouter;

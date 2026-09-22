@@ -1,13 +1,15 @@
 import prisma from '../config/db.js';
+import { CATEGORIA_ARQUIVO_MIGRACAO } from '../constants/categorias.js';
 
 const fileModel = {
-    async criarArquivoPendente(usuario_id, nome_arquivo, descricao, tipo_arquivo) {
+    async criarArquivoPendente(usuario_id, nome_arquivo, descricao, tipo_arquivo, categoria) {
         return await prisma.arquivo.create({
             data: {
                 nome_arquivo,
                 descricao,
                 tipo_arquivo,
                 status: 'PENDENTE',
+                categoria,
                 usuario: { connect: { id: Number(usuario_id) } }
             }
         });
@@ -34,9 +36,6 @@ const fileModel = {
         });
     },
 
-    /// Usado quando a exclusão falha depois de já termos marcado
-    /// EXCLUINDO — devolve o registro pro estado anterior em vez de
-    /// deixá-lo preso.
     async reverterParaConcluido(arquivo_id) {
         return await prisma.arquivo.update({
             where: { id: arquivo_id },
@@ -76,9 +75,14 @@ const fileModel = {
         return await prisma.arquivo.findUnique({ where: { id } });
     },
 
-    async listarPorUsuario(usuario_id) {
+    // T5 — filtro opcional por categoria, sem quebrar quem já chama sem o parâmetro
+    async listarPorUsuario(usuario_id, categoria = null) {
         return await prisma.arquivo.findMany({
-            where: { usuario_id, status: 'CONCLUIDO' },
+            where: {
+                usuario_id,
+                status: 'CONCLUIDO',
+                ...(categoria ? { categoria } : {})
+            },
             orderBy: { data_upload: 'desc' }
         });
     },
@@ -114,6 +118,22 @@ const fileModel = {
 
         return await prisma.eventoExclusao.count({
             where: { usuario_id: Number(usuario_id), criado_em: { gte: desde } }
+        });
+    },
+
+    // T4 — dispara a migração de categoria quando o usuário troca de perfil.
+    // Só toca em arquivos CONCLUIDO; um PENDENTE/ERRO ainda não tem
+    // categoria "definitiva" em uso real, e um EXCLUINDO está prestes a
+    // sumir — mexer nele é trabalho inútil e pode colidir com o
+    // reverterParaConcluido se a exclusão falhar no meio do caminho.
+    async migrarCategoriasParaMigracao(usuario_id, categoriasValidasNoNovoPerfil) {
+        return await prisma.arquivo.updateMany({
+            where: {
+                usuario_id: Number(usuario_id),
+                status: 'CONCLUIDO',
+                categoria: { notIn: categoriasValidasNoNovoPerfil }
+            },
+            data: { categoria: CATEGORIA_ARQUIVO_MIGRACAO }
         });
     }
 };

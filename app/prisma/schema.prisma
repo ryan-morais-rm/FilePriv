@@ -7,11 +7,25 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum CategoriaUsuario {
+  ESTUDANTE
+  CONCURSEIRO
+  ADVOGADO
+  CONTADOR
+  DESENVOLVEDOR
+  SAUDE
+  DESIGNER
+  EMPRESARIO
+  SERVIDOR_PUBLICO
+  OUTROS
+}
+
 model Usuario {
   id               Int              @id @default(autoincrement())
   nome             String           @db.VarChar(100)
   email            String           @unique @db.VarChar(100)
   senha            String           @db.VarChar(255)
+  categoria_perfil CategoriaUsuario
   arquivos         Arquivo[]
   eventos_exclusao EventoExclusao[]
 
@@ -30,6 +44,7 @@ model Arquivo {
   nome_arquivo     String        @db.VarChar(255)
   descricao        String
   tipo_arquivo     String        @db.VarChar(10)
+  categoria        String        @db.VarChar(50) // atributo de organização do usuário — não é pasta física, Rust não sabe disso
   status           StatusArquivo @default(PENDENTE)
   chave_referencia String?       @db.VarChar(255) // chave/caminho no bucket S3 — só preenchido quando CONCLUIDO
   servidor_id      Int?          // servidor onde o arquivo (inteiro) foi gravado
@@ -55,12 +70,12 @@ model Servidor {
 }
 
 model ConfiguracaoRede {
-  id               Int      @id @default(autoincrement())
-  usuario_ssh      String   @db.VarChar(100)
-  chave_privada_referencia    String   @db.Text
-  diretorio_remoto String   @db.VarChar(255)
-  porta_ssh        Int
-  atualizado_em    DateTime @default(now()) @updatedAt @db.Timestamp(6)
+  id                        Int      @id @default(autoincrement())
+  usuario_ssh               String   @db.VarChar(100)
+  chave_privada_referencia  String   @db.Text
+  diretorio_remoto          String   @db.VarChar(255)
+  porta_ssh                 Int
+  atualizado_em             DateTime @default(now()) @updatedAt @db.Timestamp(6)
 
   @@map("configuracao_rede")
 }

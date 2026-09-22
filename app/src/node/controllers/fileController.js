@@ -1,6 +1,8 @@
 import fileModel from '../models/fileModel.js';
 import adminModel from '../models/adminModel.js';
+import authModel from '../models/authModel.js';
 import { processarArquivo, baixarArquivo, excluirArquivo } from '../services/rustClient.js';
+import { categoriasArquivoValidasParaPerfil } from '../constants/categorias.js';
 
 const MAX_SIZE = 100 * 1024 * 1024; // 100MB
 const ALLOWED_TYPES = ['pdf', 'docx', 'jpg', 'jpeg', 'png'];
@@ -23,6 +25,21 @@ const fileController = {
             allowedExtensions: ALLOWED_TYPES
         });
     },
+    
+    async listarCategoriasArquivo(req, res) {
+        try {
+            const usuario = await authModel.buscarPorId(req.usuarioId);
+            if (!usuario) {
+                return res.status(404).json({ error: 'Usuário não encontrado.' });
+            }
+
+            const categorias = categoriasArquivoValidasParaPerfil(usuario.categoria_perfil);
+            return res.status(200).json({ categorias });
+        } catch (error) {
+            console.error('Erro ao listar categorias de arquivo:', error);
+            return res.status(500).json({ error: 'Erro ao buscar categorias.' });
+        }
+    },
 
     async uploadFile(req, res) {
         let arquivoPendente = null;
@@ -42,14 +59,30 @@ const fileController = {
             }
 
             const usuario_id = req.usuarioId;
-            const { descricao, nome_customizado } = req.body;
+            const { descricao, nome_customizado, categoria } = req.body;
 
             if (!usuario_id) {
                 return res.status(400).json({ error: 'ID do usuário não fornecido.' });
             }
 
+            if (!categoria) {
+                return res.status(400).json({ error: 'categoria é obrigatória.' });
+            }
+
+            const usuario = await authModel.buscarPorId(usuario_id);
+            if (!usuario) {
+                return res.status(404).json({ error: 'Usuário não encontrado.' });
+            }
+
+            const categoriasValidas = categoriasArquivoValidasParaPerfil(usuario.categoria_perfil);
+            if (!categoriasValidas.includes(categoria)) {
+                return res.status(400).json({
+                    error: `categoria inválida para o seu perfil. Valores aceitos: ${categoriasValidas.join(', ')}`
+                });
+            }
+
             arquivoPendente = await fileModel.criarArquivoPendente(
-                usuario_id, nome_customizado, descricao, fileType
+                usuario_id, nome_customizado, descricao, fileType, categoria
             );
 
             const servidoresDisponiveis = await fileModel.listarServidoresComContagem();
@@ -208,8 +241,6 @@ const fileController = {
             }
 
             if (!arquivo.servidor_id || !arquivo.nome_remoto) {
-                // Nunca chegou a ser gravado de verdade em nenhum servidor —
-                // não há nada remoto pra apagar, só o registro local.
                 await fileModel.deleteFileRecord(arquivo.id);
                 return res.status(200).json({ message: 'Registro removido (arquivo nunca chegou a ser armazenado).' });
             }
@@ -270,10 +301,12 @@ const fileController = {
         }
     },
 
+    // T5 — aceita ?categoria= opcional na querystring
     async listUserFiles(req, res) {
         try {
             const usuario_id = req.usuarioId;
-            const lista = await fileModel.listarPorUsuario(Number(usuario_id));
+            const { categoria } = req.query;
+            const lista = await fileModel.listarPorUsuario(Number(usuario_id), categoria || null);
             return res.status(200).json(lista);
         } catch (error) {
             console.error("Erro ao listar:", error);
