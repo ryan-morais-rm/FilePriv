@@ -15,6 +15,29 @@ async function fetchRules() {
     }
 }
 
+async function fetchCategorias(token) {
+    const select = document.getElementById('fileCategoria');
+    if (!select || !token) return;
+
+    try {
+        const response = await fetch('/arquivos/categorias', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!response.ok) throw new Error();
+
+        const data = await response.json();
+        (data.categorias || []).forEach((categoria) => {
+            const option = document.createElement('option');
+            option.value = categoria;
+            option.textContent = categoria;
+            select.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Erro ao buscar categorias de arquivo:', error);
+        select.innerHTML += '<option value="Outros">Outros</option>';
+    }
+}
+
 async function renderUserProfile(token, userDataJSON) {
     if (!userDataJSON || !token) return;
     
@@ -65,9 +88,6 @@ function isValidExtension(filename) {
     return ALLOWED_EXTS.includes(ext); 
 }
 
-/// Dropzone com arrastar-e-soltar: destaca a área ao arrastar por cima e
-/// atribui o arquivo solto ao input nativo (dispara 'change' pra qualquer
-/// outro listener que dependa dele).
 function setupDropzone(dropzoneEl, fileInputEl) {
     if (!dropzoneEl || !fileInputEl) return;
 
@@ -103,9 +123,15 @@ async function handleFileUpload(event, token, form, statusDiv, btn) {
     const fileInput = document.getElementById('fileInput');
     const file = fileInput.files[0];
     const fileDesc = document.getElementById('fileDesc') ? document.getElementById('fileDesc').value : "";
+    const categoria = document.getElementById('fileCategoria')?.value || '';
 
     if (!file) {
         statusDiv.innerHTML = `<div class="alert alert-danger mt-3">Selecione um arquivo!</div>`;
+        return;
+    }
+
+    if (!categoria) {
+        statusDiv.innerHTML = `<div class="alert alert-danger mt-3">Selecione uma categoria!</div>`;
         return;
     }
 
@@ -143,6 +169,7 @@ async function handleFileUpload(event, token, form, statusDiv, btn) {
         formData.append('arquivo', file);
         formData.append('descricao', fileDesc);
         formData.append('nome_customizado', fileName);
+        formData.append('categoria', categoria);
 
         const response = await fetch(`/arquivos/upload`, {
             method: 'POST',
@@ -161,14 +188,9 @@ async function handleFileUpload(event, token, form, statusDiv, btn) {
         form.reset();
         await updateCounters(token);
 
-        // Reativa o botão na hora — antes ficava preso no spinner até o
-        // redirect de 3s acontecer, dando a impressão de que ainda estava
-        // carregando mesmo depois de já ter terminado.
         btn.disabled = false;
         btn.innerHTML = originalBtnText;
 
-        // Avisa o pullFile.js pra atualizar a lista, sem precisar recarregar
-        // a página inteira.
         window.dispatchEvent(new CustomEvent('filepriv:arquivo-enviado'));
 
         document.getElementById('download-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -193,6 +215,7 @@ export async function pushFile() {
     const btn = document.getElementById('submitBtn');
 
     await fetchRules();
+    await fetchCategorias(token);
 
     renderUserProfile(token, userDataJSON);
     updateCounters(token);

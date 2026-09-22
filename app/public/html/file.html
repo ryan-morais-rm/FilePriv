@@ -86,6 +86,12 @@
               <label for="fileDesc" class="form-label">Descrição</label>
               <textarea class="form-control" id="fileDesc" rows="3" placeholder="Adicionar uma descrição..."></textarea>
             </div>
+            <div class="mb-4">
+              <label for="fileCategoria" class="form-label">Categoria</label>
+              <select class="form-select" id="fileCategoria" required>
+                <option value="" selected disabled>Selecione uma categoria...</option>
+              </select>
+            </div>
             <button type="submit" id="submitBtn" class="btn btn-primary w-100">
               <i class="fas fa-upload me-2"></i>Enviar
             </button>
@@ -115,6 +121,10 @@
                 <option value="jpeg">JPEG</option>
                 <option value="png">PNG</option>
               </select>
+              
+              <select id="categoriaFilter" class="form-select w-auto" onchange="filterFiles()">
+                <option value="">categorias</option>
+              </select>
 
               <button class="btn btn-primary" type="submit"><i class="fas fa-magnifying-glass me-1"></i>Procurar</button>
             </form>
@@ -129,12 +139,13 @@
                   <th scope="col">Nome do arquivo</th>
                   <th scope="col">Data de upload</th>
                   <th scope="col">Descrição</th>
+                  <th scope="col">Categoria</th>
                   <th scope="col" class="text-center">Ações</th>
                 </tr>
               </thead>
               <tbody id="filesTableBody">
                 <tr>
-                    <td colspan="4" class="text-center py-4">Listagem de arquivos.</td>
+                    <td colspan="5" class="text-center py-4">Listagem de arquivos.</td>
                 </tr>
               </tbody>
             </table>

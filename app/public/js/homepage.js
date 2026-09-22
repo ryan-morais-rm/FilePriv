@@ -1,5 +1,23 @@
+import { labelCategoriaUsuario, slugCategoriaUsuario } from './categoriasLabels.js';
+
+let categoriasPerfilDisponiveis = [];
+let paginaTravada = false;
+
+async function carregarCategoriasPerfilDisponiveis() {
+    try {
+        const response = await fetch('/usuarios/categorias-perfil');
+        if (!response.ok) throw new Error();
+        const data = await response.json();
+        categoriasPerfilDisponiveis = data.categorias || [];
+    } catch (error) {
+        console.error('Erro ao carregar categorias de perfil:', error);
+        categoriasPerfilDisponiveis = [];
+    }
+}
+
 async function renderUserProfile() {
     const nameEl = document.getElementById('display-name'); 
+    const categoriaEl = document.getElementById('display-categoria');
     const emailEl = document.getElementById('display-email');         
     const userDataJSON = localStorage.getItem('userData'); 
     const token = localStorage.getItem('token'); 
@@ -33,6 +51,7 @@ async function renderUserProfile() {
         const userAtualizado = await response.json(); 
         if(nameEl) nameEl.textContent = userAtualizado.nome;
         if(emailEl) emailEl.textContent = userAtualizado.email;
+        if(categoriaEl) categoriaEl.textContent = `/${slugCategoriaUsuario(userAtualizado.categoria_perfil)}`;
         
         localStorage.setItem('userData', JSON.stringify(userAtualizado));
         
@@ -40,6 +59,7 @@ async function renderUserProfile() {
         console.error("Erro ou Fallback: ", error); 
         if (nameEl) nameEl.textContent = userLocal.nome; 
         if (emailEl) emailEl.textContent = userLocal.email; 
+        if (categoriaEl) categoriaEl.textContent = `/${slugCategoriaUsuario(userLocal.categoria_perfil)}`;
     }
 }
 
@@ -120,11 +140,148 @@ async function updateAttributes() {
 }
 
 /* ==========================================================================
+   Troca de perfil (categoria_perfil) — dispara migração de categorias de
+   arquivo no backend (T4). A "migração" acontece de forma síncrona dentro
+   da mesma requisição PUT /usuarios/perfil, então travar a página durante
+   o fetch já é suficiente: quando a resposta volta, a migração já terminou.
+   ========================================================================== */
+
+function travarPagina(mensagem) {
+    paginaTravada = true;
+    const overlay = document.getElementById('pageLockOverlay');
+    if (overlay) {
+        const texto = overlay.querySelector('.page-lock-text');
+        if (texto) texto.textContent = mensagem || 'Processando, aguarde...';
+        overlay.style.display = 'flex';
+    }
+    document.getElementById('btnTrocarPerfil')?.setAttribute('disabled', 'true');
+    document.getElementById('trocar-perfil-select')?.setAttribute('disabled', 'true');
+}
+
+function destravarPagina() {
+    paginaTravada = false;
+    const overlay = document.getElementById('pageLockOverlay');
+    if (overlay) overlay.style.display = 'none';
+    document.getElementById('btnTrocarPerfil')?.removeAttribute('disabled');
+    document.getElementById('trocar-perfil-select')?.removeAttribute('disabled');
+}
+
+function popularSelectTrocaPerfil(categoriaAtual) {
+    const select = document.getElementById('trocar-perfil-select');
+    if (!select) return;
+
+    select.innerHTML = '<option value="" selected disabled>Selecione um novo perfil...</option>';
+    categoriasPerfilDisponiveis
+        .filter((valor) => valor !== categoriaAtual)
+        .forEach((valor) => {
+            const option = document.createElement('option');
+            option.value = valor;
+            option.textContent = labelCategoriaUsuario(valor);
+            select.appendChild(option);
+        });
+}
+
+async function trocarPerfil() {
+    const select = document.getElementById('trocar-perfil-select');
+    const novoPerfil = select?.value;
+    const msgEl = document.getElementById('trocaPerfilMessage');
+
+    if (!novoPerfil) {
+        msgEl.style.display = 'block';
+        msgEl.className = 'mt-2 small fw-bold text-warning';
+        msgEl.textContent = 'Selecione um novo perfil antes de confirmar.';
+        return;
+    }
+
+    const confirmar = confirm(
+        'Trocar de perfil move automaticamente os arquivos que não pertencem às categorias do novo perfil para "Migração". Deseja continuar?'
+    );
+    if (!confirmar) return;
+
+    travarPagina('Migrando arquivos para o novo perfil, aguarde...');
+
+    const token = localStorage.getItem('token');
+    const userLocal = JSON.parse(localStorage.getItem('userData') || '{}');
+
+    try {
+        const response = await fetch('/usuarios/perfil', {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                // nome/email precisam ir junto — o backend faz update
+                // completo desses dois campos independente do que mais
+                // vier no corpo, então reenviamos os valores atuais pra
+                // não sobrescrever com vazio.
+                nome: userLocal.nome,
+                email: userLocal.email,
+                categoria_perfil: novoPerfil
+            })
+        });
+
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Falha ao trocar de perfil.');
+
+        userLocal.categoria_perfil = data.usuario.categoria_perfil;
+        localStorage.setItem('userData', JSON.stringify(userLocal));
+
+        const nameEl = document.getElementById('display-name');
+        const categoriaEl = document.getElementById('display-categoria');
+        if (nameEl) nameEl.textContent = data.usuario.nome;
+        if (categoriaEl) categoriaEl.textContent = `/${slugCategoriaUsuario(data.usuario.categoria_perfil)}`;
+
+        const label = document.getElementById('perfil-atual-label');
+        if (label) label.textContent = labelCategoriaUsuario(data.usuario.categoria_perfil);
+        popularSelectTrocaPerfil(data.usuario.categoria_perfil);
+
+        const qtd = data.arquivosMigrados ?? 0;
+        msgEl.style.display = 'block';
+        msgEl.className = 'mt-2 small fw-bold text-success';
+        msgEl.textContent = qtd > 0
+            ? `Perfil atualizado! ${qtd} arquivo(s) movido(s) para a categoria "Migração".`
+            : 'Perfil atualizado! Nenhum arquivo precisou ser migrado.';
+
+    } catch (error) {
+        msgEl.style.display = 'block';
+        msgEl.className = 'mt-2 small fw-bold text-danger';
+        msgEl.textContent = error.message;
+    } finally {
+        destravarPagina();
+    }
+}
+
+function configurarTrocaPerfil() {
+    document.getElementById('btnTrocarPerfil')?.addEventListener('click', trocarPerfil);
+
+    // Impede fechar o modal (ESC, clique no fundo, botão X) enquanto a
+    // migração está em andamento.
+    document.getElementById('updateAttributesModal')?.addEventListener('hide.bs.modal', (event) => {
+        if (paginaTravada) event.preventDefault();
+    });
+
+    document.getElementById('updateAttributesModal')?.addEventListener('show.bs.modal', () => {
+        const userLocal = JSON.parse(localStorage.getItem('userData') || '{}');
+        const categoriaAtual = userLocal.categoria_perfil;
+
+        const nameInput = document.getElementById('update-name');
+        const emailInput = document.getElementById('update-email');
+        if (nameInput) nameInput.value = userLocal.nome || '';
+        if (emailInput) emailInput.value = userLocal.email || '';
+
+        const label = document.getElementById('perfil-atual-label');
+        if (label) label.textContent = labelCategoriaUsuario(categoriaAtual);
+        popularSelectTrocaPerfil(categoriaAtual);
+
+        const msgEl = document.getElementById('trocaPerfilMessage');
+        if (msgEl) { msgEl.style.display = 'none'; msgEl.textContent = ''; }
+    });
+}
+
+/* ==========================================================================
    Provedores de Armazenamento (AWS S3 / Google Drive) — MOCK de frontend.
-   Nada aqui fala com API, banco de dados ou gRPC — é só estado local
-   (localStorage), incluindo os números de "atividade" de cada provedor,
-   que são fixos e diferentes entre si só pra deixar visualmente claro que
-   cada provedor tem seu próprio uso (opcional, então pode ser zero).
+   Sem alteração — permanece idêntico ao original.
    ========================================================================== */
 
 const AWS_KEY = 'filepriv_provider_aws';
@@ -316,8 +473,10 @@ async function carregarMetricasAplicacao() {
 window.updateAttributes = updateAttributes;
 
 export async function homepage() {
+    await carregarCategoriasPerfilDisponiveis();
     await renderUserProfile();
     configurarModalProvedores();
+    configurarTrocaPerfil();
     atualizarVisualProvedores();
     await carregarMetricasAplicacao();
 }

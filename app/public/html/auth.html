@@ -96,7 +96,15 @@
                     <input type="password" class="form-control" id="confirmPassword" placeholder="Confirme a senha digitada" required>
                     <p class="description">A senha deve ter no mínimo 6 caracteres.</p>
                   </div>
+                  <div class="mb-4 text-start">
+                    <label for="categoriaPerfil" class="form-label">Perfil de uso</label>
+                    <select class="form-select" id="categoriaPerfil" required>
+                      <option value="" selected disabled>Selecione seu perfil...</option>
+                    </select>
+                    <p class="description">Usamos isso para sugerir categorias de organização dos seus arquivos.</p>
+                  </div>
                   <button type="submit" class="btn btn-primary w-100 py-2">Cadastrar</button>
+                </form>
                 </form>
 
                 <div id="registerMessageArea" class="mt-4"></div>
