@@ -21,13 +21,14 @@ enum CategoriaUsuario {
 }
 
 model Usuario {
-  id               Int              @id @default(autoincrement())
-  nome             String           @db.VarChar(100)
-  email            String           @unique @db.VarChar(100)
-  senha            String           @db.VarChar(255)
-  categoria_perfil CategoriaUsuario
-  arquivos         Arquivo[]
-  eventos_exclusao EventoExclusao[]
+  id                Int               @id @default(autoincrement())
+  nome              String            @db.VarChar(100)
+  email             String            @unique @db.VarChar(100)
+  senha             String            @db.VarChar(255)
+  categoria_perfil  CategoriaUsuario
+  arquivos          Arquivo[]
+  eventos_exclusao  EventoExclusao[]
+  provedores_externos ProvedorExterno[]
 
   @@map("usuarios")
 }
@@ -40,21 +41,23 @@ enum StatusArquivo {
 }
 
 model Arquivo {
-  id               Int           @id @default(autoincrement())
-  nome_arquivo     String        @db.VarChar(255)
-  descricao        String
-  tipo_arquivo     String        @db.VarChar(10)
-  categoria        String        @db.VarChar(50) // atributo de organização do usuário — não é pasta física, Rust não sabe disso
-  status           StatusArquivo @default(PENDENTE)
-  chave_referencia String?       @db.VarChar(255) // chave/caminho no bucket S3 — só preenchido quando CONCLUIDO
-  servidor_id      Int?          // servidor onde o arquivo (inteiro) foi gravado
-  nome_remoto      String?       @db.VarChar(255) // nome do blob cifrado dentro do servidor (SFTP) — necessário pra download/delete
-  tamanho          Int?          // bytes
-  hash             String?       @db.VarChar(64)  // sha256 do arquivo, integridade
-  usuario_id       Int
-  data_upload      DateTime?     @default(now()) @db.Timestamp(6)
-  usuario          Usuario       @relation(fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  servidor         Servidor?     @relation(fields: [servidor_id], references: [id])
+  id                  Int              @id @default(autoincrement())
+  nome_arquivo        String           @db.VarChar(255)
+  descricao           String
+  tipo_arquivo        String           @db.VarChar(10)
+  categoria           String           @db.VarChar(50) // atributo de organização do usuário — não é pasta física, Rust não sabe disso
+  status              StatusArquivo    @default(PENDENTE)
+  chave_referencia    String?          @db.VarChar(255) // chave/caminho no bucket S3 — só preenchido quando CONCLUIDO
+  servidor_id         Int?             // preenchido quando o arquivo foi para uma VM
+  provedor_externo_id Int?             // preenchido quando o arquivo foi para o S3 do próprio usuário — exatamente um dos dois, nunca ambos
+  nome_remoto         String?          @db.VarChar(255) // nome do blob cifrado no destino (SFTP ou bucket externo)
+  tamanho             Int?             // bytes
+  hash                String?          @db.VarChar(64)  // sha256 do arquivo, integridade
+  usuario_id          Int
+  data_upload         DateTime?        @default(now()) @db.Timestamp(6)
+  usuario             Usuario          @relation(fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  servidor            Servidor?        @relation(fields: [servidor_id], references: [id])
+  provedor_externo    ProvedorExterno? @relation(fields: [provedor_externo_id], references: [id])
 
   @@map("arquivos")
 }
@@ -78,6 +81,32 @@ model ConfiguracaoRede {
   atualizado_em             DateTime @default(now()) @updatedAt @db.Timestamp(6)
 
   @@map("configuracao_rede")
+}
+
+enum TipoProvedorExterno {
+  S3
+  // DRIVE — futuramente
+}
+
+/// Bucket/conta externa conectada por um usuário (BYOC). No máximo um por
+/// (usuario_id, tipo) — sem suporte a múltiplos buckets do mesmo tipo por
+/// enquanto. Desconectar não apaga nada no lado do provedor — é
+/// responsabilidade do usuário, não do FilePriv.
+model ProvedorExterno {
+  id                     Int                 @id @default(autoincrement())
+  usuario_id             Int
+  tipo                   TipoProvedorExterno
+  bucket                 String              @db.VarChar(255)
+  regiao                 String              @default("us-east-1") @db.VarChar(50)
+  credencial_referencia  String              @db.VarChar(255) // AK+SK no cofre S3 da aplicação — nunca em texto puro aqui
+  status                 String              @default("CONECTADO") @db.VarChar(20)
+  usuario                Usuario             @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+  arquivos               Arquivo[]
+  criado_em              DateTime            @default(now()) @db.Timestamp(6)
+  atualizado_em          DateTime            @default(now()) @updatedAt @db.Timestamp(6)
+
+  @@unique([usuario_id, tipo])
+  @@map("provedores_externos")
 }
 
 /// Contador de eventos para a feature de arquivos excluídos nos últimos 

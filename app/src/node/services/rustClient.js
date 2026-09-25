@@ -13,7 +13,7 @@ const RUST_GRPC_TLS_CA_PATH = process.env.RUST_GRPC_TLS_CA_PATH || '/etc/filepri
 const CHUNK_SIZE = 64 * 1024;
 const DEADLINE_MS = 20000;
 const HEALTHCHECK_DEADLINE_MS = 60000;
-const DOWNLOAD_DEADLINE_MS = 30000; // busca + descriptografia + streaming de volta
+const DOWNLOAD_DEADLINE_MS = 30000;
 const DELETE_DEADLINE_MS = 15000;
 
 const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
@@ -26,8 +26,6 @@ const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
 
 const proto = grpc.loadPackageDefinition(packageDefinition).filepriv;
 
-// Sem TLS configurado corretamente, não faz sentido continuar rodando
-// silenciosamente inseguro — falha alto e cedo, na subida do processo.
 let credenciais;
 try {
     const certificadoCA = fs.readFileSync(RUST_GRPC_TLS_CA_PATH);
@@ -41,10 +39,9 @@ try {
 
 const client = new proto.ProcessadorArquivo(RUST_GRPC_ADDR, credenciais);
 
-export function processarArquivo({
-    usuarioId, nomeArquivo, tipoArquivo, buffer, servidoresDisponiveis,
-    usuarioSsh, chavePrivadaReferencia, diretorioRemoto
-}) {
+// destino: { vm: { servidores_disponiveis, usuario_ssh, chave_privada_referencia, diretorio_remoto } }
+//       ou { s3_externo: { bucket, credencial_referencia, regiao } }
+export function processarArquivo({ usuarioId, nomeArquivo, tipoArquivo, buffer, destino }) {
     return new Promise((resolve, reject) => {
         const deadline = new Date(Date.now() + DEADLINE_MS);
 
@@ -60,10 +57,7 @@ export function processarArquivo({
                 usuario_id: usuarioId,
                 nome_arquivo: nomeArquivo,
                 tipo_arquivo: tipoArquivo,
-                servidores_disponiveis: servidoresDisponiveis,
-                usuario_ssh: usuarioSsh,
-                chave_privada_referencia: chavePrivadaReferencia,
-                diretorio_remoto: diretorioRemoto
+                ...destino
             }
         });
 
@@ -75,6 +69,7 @@ export function processarArquivo({
     });
 }
 
+// Continua exclusivo de VM — sem healthcheck automático contra provedores externos.
 export function verificarServidores({ servidores, usuarioSsh, chavePrivadaReferencia, diretorioRemoto }) {
     return new Promise((resolve, reject) => {
         const deadline = new Date(Date.now() + HEALTHCHECK_DEADLINE_MS);
@@ -93,37 +88,31 @@ export function verificarServidores({ servidores, usuarioSsh, chavePrivadaRefere
     });
 }
 
-export function baixarArquivo({ host, porta, usuarioSsh, chavePrivadaReferencia, diretorioRemoto, nomeRemoto, chaveReferencia }) {
+// destino: { vm: { host, porta, usuario_ssh, chave_privada_referencia, diretorio_remoto } }
+//       ou { s3_externo: { bucket, credencial_referencia, regiao } }
+export function baixarArquivo({ nomeRemoto, chaveReferencia, destino }) {
     const deadline = new Date(Date.now() + DOWNLOAD_DEADLINE_MS);
 
     return client.BaixarArquivo(
         {
-            host,
-            porta,
-            usuario_ssh: usuarioSsh,
-            chave_privada_referencia: chavePrivadaReferencia,
-            diretorio_remoto: diretorioRemoto,
             nome_remoto: nomeRemoto,
-            chave_referencia: chaveReferencia
+            chave_referencia: chaveReferencia,
+            ...destino
         },
         new grpc.Metadata(),
         { deadline }
     );
 }
 
-export function excluirArquivo({ host, porta, usuarioSsh, chavePrivadaReferencia, diretorioRemoto, nomeRemoto, chaveReferencia }) {
+export function excluirArquivo({ nomeRemoto, chaveReferencia, destino }) {
     return new Promise((resolve, reject) => {
         const deadline = new Date(Date.now() + DELETE_DEADLINE_MS);
 
         client.ExcluirArquivo(
             {
-                host,
-                porta,
-                usuario_ssh: usuarioSsh,
-                chave_privada_referencia: chavePrivadaReferencia,
-                diretorio_remoto: diretorioRemoto,
                 nome_remoto: nomeRemoto,
-                chave_referencia: chaveReferencia
+                chave_referencia: chaveReferencia,
+                ...destino
             },
             new grpc.Metadata(),
             { deadline },
@@ -141,6 +130,28 @@ export function salvarCredencialSsh(chavePrivada) {
 
         client.SalvarCredencialSsh(
             { chave_privada: Buffer.from(chavePrivada, 'utf8') },
+            new grpc.Metadata(),
+            { deadline },
+            (err, resposta) => {
+                if (err) return reject(err);
+                resolve(resposta);
+            }
+        );
+    });
+}
+
+// NOVO
+export function conectarProvedorS3({ bucket, accessKey, secretKey, regiao }) {
+    return new Promise((resolve, reject) => {
+        const deadline = new Date(Date.now() + DEADLINE_MS);
+
+        client.ConectarProvedorS3(
+            {
+                bucket,
+                access_key: accessKey,
+                secret_key: secretKey,
+                regiao: regiao || ''
+            },
             new grpc.Metadata(),
             { deadline },
             (err, resposta) => {

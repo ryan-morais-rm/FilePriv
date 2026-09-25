@@ -135,7 +135,21 @@ const fileModel = {
             },
             data: { categoria: CATEGORIA_ARQUIVO_MIGRACAO }
         });
-    }
+    },
+    async confirmarArquivo(arquivo_id, { chave_referencia, servidor_id, provedor_externo_id, nome_remoto, tamanho, hash }) {
+        return await prisma.arquivo.update({
+            where: { id: arquivo_id },
+            data: {
+                status: 'CONCLUIDO',
+                chave_referencia,
+                servidor_id: servidor_id || null,
+                provedor_externo_id: provedor_externo_id || null,
+                nome_remoto,
+                tamanho,
+                hash
+            }
+        });
+    },
 };
 
 export default fileModel;
