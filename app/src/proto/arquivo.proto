@@ -8,14 +8,37 @@ message ServidorCandidato {
   int32 arquivos_armazenados = 4;
 }
 
+// ---- Destinos de armazenamento ----
+
+message DestinoVmParaUpload {
+  repeated ServidorCandidato servidores_disponiveis = 1; // Rust escolhe o menos carregado
+  string usuario_ssh = 2;
+  string chave_privada_referencia = 3;
+  string diretorio_remoto = 4;
+}
+
+message DestinoVmEspecifico {
+  string host = 1;
+  int32 porta = 2;
+  string usuario_ssh = 3;
+  string chave_privada_referencia = 4;
+  string diretorio_remoto = 5;
+}
+
+message DestinoS3Externo {
+  string bucket = 1;
+  string credencial_referencia = 2; // referência no cofre S3 da aplicação — nunca AK/SK em texto puro
+  string regiao = 3;                // vazio = Rust usa us-east-1 como default
+}
+
 message MetadadosUpload {
   int32 usuario_id = 1;
   string nome_arquivo = 2;
   string tipo_arquivo = 3;
-  repeated ServidorCandidato servidores_disponiveis = 4;
-  string usuario_ssh = 5;
-  string chave_privada_referencia = 6;   // ANTES: chave_privada
-  string diretorio_remoto = 7;
+  oneof destino {
+    DestinoVmParaUpload vm = 4;
+    DestinoS3Externo s3_externo = 5;
+  }
 }
 
 message ArquivoChunkUpload {
@@ -29,20 +52,37 @@ message RespostaUpload {
   bool sucesso = 1;
   string mensagem_erro = 2;
   string chave_referencia = 3;
-  int32 servidor_id = 4;
+  int32 servidor_id = 4;                        // > 0 só quando o destino foi uma VM
   int32 tamanho = 5;
   string hash = 6;
   string nome_remoto = 7;
+  bool armazenado_em_provedor_externo = 8;       // true quando foi salvo no S3 do próprio usuário
 }
 
 message SalvarCredencialSshRequest {
-  bytes chave_privada = 1; // somente nessa chamada
+  bytes chave_privada = 1;
 }
 
 message SalvarCredencialSshResponse {
   bool sucesso = 1;
   string mensagem_erro = 2;
   string chave_privada_referencia = 3;
+}
+
+// ---- NOVO: conexão com o S3 do próprio usuário ----
+
+message ConectarProvedorS3Request {
+  string bucket = 1;
+  string access_key = 2;
+  string secret_key = 3;
+  string regiao = 4; // vazio = Rust usa us-east-1 como default
+}
+
+message ConectarProvedorS3Response {
+  bool sucesso = 1;
+  string mensagem_erro = 2;
+  string credencial_referencia = 3;
+  string regiao_usada = 4; // a informada, ou us-east-1 se ficou vazia
 }
 
 message ServidorParaVerificar {
@@ -63,10 +103,12 @@ message ResultadoVerificacao {
   string detalhe = 4;
 }
 
+// VerificarServidores permanece exclusivo de VM — não se aplica a
+// provedores externos (sem healthcheck automático contra a conta do usuário).
 message VerificarServidoresRequest {
   repeated ServidorParaVerificar servidores = 1;
   string usuario_ssh = 2;
-  string chave_privada_referencia = 3;   // ANTES: chave_privada
+  string chave_privada_referencia = 3;
   string diretorio_remoto = 4;
 }
 
@@ -75,13 +117,12 @@ message VerificarServidoresResponse {
 }
 
 message SolicitacaoDownload {
-  string host = 1;
-  int32 porta = 2;
-  string usuario_ssh = 3;
-  string chave_privada_referencia = 4;   // ANTES: chave_privada
-  string diretorio_remoto = 5;
-  string nome_remoto = 6;
-  string chave_referencia = 7;
+  string nome_remoto = 1;
+  string chave_referencia = 2;
+  oneof destino {
+    DestinoVmEspecifico vm = 3;
+    DestinoS3Externo s3_externo = 4;
+  }
 }
 
 message PedacoArquivo {
@@ -89,13 +130,12 @@ message PedacoArquivo {
 }
 
 message SolicitacaoExclusao {
-  string host = 1;
-  int32 porta = 2;
-  string usuario_ssh = 3;
-  string chave_privada_referencia = 4;   // ANTES: chave_privada
-  string diretorio_remoto = 5;
-  string nome_remoto = 6;
-  string chave_referencia = 7;
+  string nome_remoto = 1;
+  string chave_referencia = 2;
+  oneof destino {
+    DestinoVmEspecifico vm = 3;
+    DestinoS3Externo s3_externo = 4;
+  }
 }
 
 message RespostaExclusao {
@@ -108,5 +148,6 @@ service ProcessadorArquivo {
   rpc VerificarServidores(VerificarServidoresRequest) returns (VerificarServidoresResponse);
   rpc BaixarArquivo(SolicitacaoDownload) returns (stream PedacoArquivo);
   rpc ExcluirArquivo(SolicitacaoExclusao) returns (RespostaExclusao);
-  rpc SalvarCredencialSsh(SalvarCredencialSshRequest) returns (SalvarCredencialSshResponse); // NOVO
+  rpc SalvarCredencialSsh(SalvarCredencialSshRequest) returns (SalvarCredencialSshResponse);
+  rpc ConectarProvedorS3(ConectarProvedorS3Request) returns (ConectarProvedorS3Response); // NOVO
 }

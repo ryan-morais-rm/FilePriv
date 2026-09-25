@@ -3,6 +3,7 @@ mod grpc;
 mod healthcheck;
 mod proto;
 mod s3_keys;
+mod s3_storage;
 mod servidores;
 mod storage;
 

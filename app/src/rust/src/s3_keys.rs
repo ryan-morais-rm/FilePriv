@@ -8,6 +8,7 @@ use uuid::Uuid;
 
 const PREFIXO_CHAVE_ARQUIVO: &str = "chaves";
 const PREFIXO_CREDENCIAL_SSH: &str = "credenciais_ssh";
+const PREFIXO_CREDENCIAL_S3_USUARIO: &str = "credenciais_s3_usuario";
 
 async fn resolver_credenciais() -> Result<Credentials, String> {
     let imds = ImdsCredentialsProvider::builder().build();
@@ -126,5 +127,33 @@ pub async fn buscar_credencial_ssh(referencia: &str) -> Result<Vec<u8>, String> 
 }
 
 pub async fn apagar_credencial_ssh(referencia: &str) -> Result<(), String> {
+    apagar_objeto(referencia).await
+}
+
+/// Implementação da integração com o bucket externo do usuário
+pub async fn salvar_credencial_s3_usuario(access_key: &str, secret_key: &str) -> Result<String, String> {
+    let payload = format!("{access_key}\n{secret_key}");
+    let referencia = salvar_objeto(PREFIXO_CREDENCIAL_S3_USUARIO, "cred", payload.as_bytes()).await?;
+    println!("[s3] Credencial S3 de usuário gravada em '{referencia}'.");
+    Ok(referencia)
+}
+
+pub async fn buscar_credencial_s3_usuario(referencia: &str) -> Result<(String, String), String> {
+    let bytes = buscar_objeto(referencia).await?;
+    let texto = String::from_utf8(bytes)
+        .map_err(|_| "Credencial S3 armazenada não é UTF-8 válido.".to_string())?;
+
+    let mut partes = texto.splitn(2, '\n');
+    let access_key = partes.next().unwrap_or("").to_string();
+    let secret_key = partes.next().unwrap_or("").to_string();
+
+    if access_key.is_empty() || secret_key.is_empty() {
+        return Err("Credencial S3 armazenada está corrompida (formato inesperado).".to_string());
+    }
+
+    Ok((access_key, secret_key))
+}
+
+pub async fn apagar_credencial_s3_usuario(referencia: &str) -> Result<(), String> {
     apagar_objeto(referencia).await
 }
