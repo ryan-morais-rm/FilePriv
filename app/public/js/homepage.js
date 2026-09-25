@@ -139,13 +139,6 @@ async function updateAttributes() {
     }
 }
 
-/* ==========================================================================
-   Troca de perfil (categoria_perfil) — dispara migração de categorias de
-   arquivo no backend (T4). A "migração" acontece de forma síncrona dentro
-   da mesma requisição PUT /usuarios/perfil, então travar a página durante
-   o fetch já é suficiente: quando a resposta volta, a migração já terminou.
-   ========================================================================== */
-
 function travarPagina(mensagem) {
     paginaTravada = true;
     const overlay = document.getElementById('pageLockOverlay');
@@ -211,10 +204,6 @@ async function trocarPerfil() {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                // nome/email precisam ir junto — o backend faz update
-                // completo desses dois campos independente do que mais
-                // vier no corpo, então reenviamos os valores atuais pra
-                // não sobrescrever com vazio.
                 nome: userLocal.nome,
                 email: userLocal.email,
                 categoria_perfil: novoPerfil
@@ -280,11 +269,10 @@ function configurarTrocaPerfil() {
 }
 
 /* ==========================================================================
-   Provedores de Armazenamento (AWS S3 / Google Drive) — MOCK de frontend.
-   Sem alteração — permanece idêntico ao original.
+   Provedores de Armazenamento (AWS S3 / Google Drive)
+   Integração REAL com backend para AWS. Google Drive mantido em mock.
    ========================================================================== */
 
-const AWS_KEY = 'filepriv_provider_aws';
 const DRIVE_KEY = 'filepriv_provider_drive';
 
 const AWS_MOCK_METRICS = { stored: 42, deleted: 1, today: 3 };
@@ -310,20 +298,37 @@ function salvarEstadoProvedor(chave, estado) {
     localStorage.setItem(chave, JSON.stringify(estado));
 }
 
-function mascarar(valor) {
-    if (!valor || valor.length < 6) return '••••••';
-    return `${valor.slice(0, 4)}••••${valor.slice(-2)}`;
-}
-
 function definirMetricas(prefixo, metricas, conectado) {
     document.getElementById(`${prefixo}MetricStored`).textContent = conectado ? metricas.stored : 0;
     document.getElementById(`${prefixo}MetricDeleted`).textContent = conectado ? metricas.deleted : 0;
     document.getElementById(`${prefixo}MetricToday`).textContent = conectado ? metricas.today : 0;
 }
 
-function atualizarVisualProvedores() {
-    const aws = lerEstadoProvedor(AWS_KEY);
+async function atualizarVisualProvedores() {
+    const token = localStorage.getItem('token');
+    
+    let aws = { connected: false, bucket: '' };
     const drive = lerEstadoProvedor(DRIVE_KEY);
+
+    if (token) {
+        try {
+            const response = await fetch('/usuarios/provedores', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                
+                const s3Data = data.aws || data.s3;
+                
+                if (s3Data && (s3Data.connected === true || s3Data.bucket)) {
+                    aws = { connected: true, bucket: s3Data.bucket };
+                }
+            }
+        } catch (error) {
+            console.error('Erro ao buscar status da AWS no backend:', error);
+        }
+    }
 
     const awsNode = document.getElementById('awsNode');
     const driveNode = document.getElementById('driveNode');
@@ -332,16 +337,16 @@ function atualizarVisualProvedores() {
     const awsStatusLabel = document.getElementById('awsStatusLabel');
     const driveStatusLabel = document.getElementById('driveStatusLabel');
 
-    if (awsNode) awsNode.classList.toggle('connected', aws.connected);
-    if (connAws) connAws.classList.toggle('connected', aws.connected);
+    if (awsNode) awsNode.classList.toggle('connected', !!aws.connected);
+    if (connAws) connAws.classList.toggle('connected', !!aws.connected);
     if (awsStatusLabel) {
-        const texto = aws.connected ? `conectado · ${aws.bucket}` : 'não conectado';
+        const texto = aws.connected ? `conectado · ${aws.bucket || 'AWS S3'}` : 'não conectado';
         awsStatusLabel.textContent = texto;
         awsStatusLabel.title = texto;
     }
 
-    if (driveNode) driveNode.classList.toggle('connected', drive.connected);
-    if (connDrive) connDrive.classList.toggle('connected', drive.connected);
+    if (driveNode) driveNode.classList.toggle('connected', !!drive.connected);
+    if (connDrive) connDrive.classList.toggle('connected', !!drive.connected);
     if (driveStatusLabel) {
         const texto = drive.connected ? `conectado · ${drive.email}` : 'não conectado';
         driveStatusLabel.textContent = texto;
@@ -384,35 +389,63 @@ function configurarModalProvedores() {
         btn.addEventListener('click', () => mostrarEtapaProvedor('choose'));
     });
 
-    document.getElementById('manageServersModal')?.addEventListener('show.bs.modal', () => {
+    document.getElementById('manageServersModal')?.addEventListener('show.bs.modal', async () => {
         mostrarEtapaProvedor('choose');
-        atualizarVisualProvedores();
+        await atualizarVisualProvedores();
 
         const userData = JSON.parse(localStorage.getItem('userData') || '{}');
         const emailPreview = document.getElementById('driveEmailPreview');
         if (emailPreview) emailPreview.textContent = userData.email || 'seu e-mail cadastrado';
     });
 
-    document.getElementById('awsForm')?.addEventListener('submit', (event) => {
+    document.getElementById('awsForm')?.addEventListener('submit', async (event) => {
         event.preventDefault();
         const bucket = document.getElementById('awsBucket').value.trim();
         const accessKey = document.getElementById('awsAccessKey').value.trim();
-
-        salvarEstadoProvedor(AWS_KEY, {
-            connected: true,
-            bucket,
-            akMasked: mascarar(accessKey)
-        });
-
+        const secretKey = document.getElementById('awsSecretKey').value.trim();
         const msg = document.getElementById('awsMsg');
-        msg.innerHTML = `<div class="alert alert-success mt-3 mb-0">Conectado ao bucket <strong>${bucket}</strong>.</div>`;
-        atualizarVisualProvedores();
+        const token = localStorage.getItem('token');
+        const btnSubmit = event.target.querySelector('button[type="submit"]');
 
-        setTimeout(() => {
-            fecharModal('manageServersModal');
-            msg.innerHTML = '';
-            document.getElementById('awsForm').reset();
-        }, 1400);
+        const originalBtnText = btnSubmit.innerHTML;
+        btnSubmit.disabled = true;
+        btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Conectando...';
+
+        try {
+            const response = await fetch('/usuarios/provedores/s3', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ 
+                    bucket: bucket, 
+                    access_key: accessKey, 
+                    secret_key: secretKey 
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Falha ao conectar na AWS.');
+            }
+
+            msg.innerHTML = `<div class="alert alert-success mt-3 mb-0">Conectado ao bucket <strong>${bucket}</strong>.</div>`;
+            await atualizarVisualProvedores();
+
+            setTimeout(() => {
+                fecharModal('manageServersModal');
+                msg.innerHTML = '';
+                document.getElementById('awsForm').reset();
+            }, 1400);
+
+        } catch (error) {
+            msg.innerHTML = `<div class="alert alert-danger mt-3 mb-0">${error.message}</div>`;
+        } finally {
+            btnSubmit.disabled = false;
+            btnSubmit.innerHTML = originalBtnText;
+        }
     });
 
     document.getElementById('driveConnectBtn')?.addEventListener('click', () => {
@@ -424,10 +457,10 @@ function configurarModalProvedores() {
         btn.disabled = true;
         btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Conectando...`;
 
-        setTimeout(() => {
+        setTimeout(async () => {
             salvarEstadoProvedor(DRIVE_KEY, { connected: true, email: (userData.email || 'usuario@filepriv').toLowerCase() });
             msg.innerHTML = `<div class="alert alert-success mt-3 mb-0">Google Drive conectado.</div>`;
-            atualizarVisualProvedores();
+            await atualizarVisualProvedores();
             btn.disabled = false;
             btn.innerHTML = originalHtml;
 
@@ -438,15 +471,34 @@ function configurarModalProvedores() {
         }, 1200);
     });
 
-    document.getElementById('awsDisconnectBtn')?.addEventListener('click', () => {
-        salvarEstadoProvedor(AWS_KEY, { connected: false });
-        atualizarVisualProvedores();
-        mostrarEtapaProvedor('choose');
+    document.getElementById('awsDisconnectBtn')?.addEventListener('click', async () => {
+        const btn = document.getElementById('awsDisconnectBtn');
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = 'Desconectando...';
+        const token = localStorage.getItem('token');
+
+        try {
+            const response = await fetch('/usuarios/provedores/s3', {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (!response.ok) throw new Error('Falha ao desconectar da AWS.');
+
+            await atualizarVisualProvedores();
+            mostrarEtapaProvedor('choose');
+        } catch (error) {
+            alert(error.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
     });
 
-    document.getElementById('driveDisconnectBtn')?.addEventListener('click', () => {
+    document.getElementById('driveDisconnectBtn')?.addEventListener('click', async () => {
         salvarEstadoProvedor(DRIVE_KEY, { connected: false });
-        atualizarVisualProvedores();
+        await atualizarVisualProvedores();
         mostrarEtapaProvedor('choose');
     });
 }
