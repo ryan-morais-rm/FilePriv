@@ -18,5 +18,6 @@ authRouter.put('/perfil', verificarToken, userController.updateProfile);
 authRouter.post('/provedores/s3', verificarToken, provedorController.conectarS3);
 authRouter.delete('/provedores/s3', verificarToken, provedorController.desconectarS3);
 authRouter.get('/provedores', verificarToken, provedorController.listarProvedores);
+authRouter.get('/provedores/metricas', verificarToken, provedorController.metricasProvedores);
 
 export default authRouter;

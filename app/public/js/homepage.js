@@ -274,8 +274,6 @@ function configurarTrocaPerfil() {
    ========================================================================== */
 
 const DRIVE_KEY = 'filepriv_provider_drive';
-
-const AWS_MOCK_METRICS = { stored: 42, deleted: 1, today: 3 };
 const DRIVE_MOCK_METRICS = { stored: 15, deleted: 0, today: 2 };
 
 function fecharModal(id) {
@@ -307,26 +305,28 @@ function definirMetricas(prefixo, metricas, conectado) {
 async function atualizarVisualProvedores() {
     const token = localStorage.getItem('token');
     
-    let aws = { connected: false, bucket: '' };
+    let aws = { connected: false, bucket: '', metrics: { stored: 0, deleted: 0, today: 0 } };
     const drive = lerEstadoProvedor(DRIVE_KEY);
 
     if (token) {
         try {
-            const response = await fetch('/usuarios/provedores', {
+            const response = await fetch('/usuarios/provedores/metricas', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             
             if (response.ok) {
                 const data = await response.json();
-                
-                const s3Data = data.aws || data.s3;
-                
-                if (s3Data && (s3Data.connected === true || s3Data.bucket)) {
-                    aws = { connected: true, bucket: s3Data.bucket };
+                const s3Data = data.s3;
+                if (s3Data && s3Data.conectado) {
+                    aws = {
+                        connected: true,
+                        bucket: s3Data.bucket,
+                        metrics: { stored: s3Data.stored, deleted: s3Data.deleted, today: s3Data.today }
+                    };
                 }
             }
         } catch (error) {
-            console.error('Erro ao buscar status da AWS no backend:', error);
+            console.error('Erro ao buscar status/métricas da AWS no backend:', error);
         }
     }
 
@@ -353,7 +353,7 @@ async function atualizarVisualProvedores() {
         driveStatusLabel.title = texto;
     }
 
-    definirMetricas('aws', AWS_MOCK_METRICS, aws.connected);
+    definirMetricas('aws', aws.metrics, aws.connected);
     definirMetricas('drive', DRIVE_MOCK_METRICS, drive.connected);
 
     const chooseAwsStatus = document.getElementById('chooseAwsStatus');

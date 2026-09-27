@@ -1,4 +1,5 @@
 import provedorModel from '../models/provedorModel.js';
+import fileModel from '../models/fileModel.js';
 import { conectarProvedorS3 } from '../services/rustClient.js';
 
 const provedorController = {
@@ -89,6 +90,32 @@ const provedorController = {
         } catch (error) {
             console.error('Erro ao listar provedores:', error);
             return res.status(500).json({ error: 'Erro ao buscar provedores.' });
+        }
+    },
+    
+    async metricasProvedores(req, res) {
+        try {
+            const usuario_id = req.usuarioId;
+            const provedorS3 = await provedorModel.buscarPorUsuarioETipo(usuario_id, 'S3');
+
+            if (!provedorS3) {
+                return res.status(200).json({
+                    s3: { conectado: false, stored: 0, deleted: 0, today: 0 }
+                });
+            }
+
+            const [stored, deleted, today] = await Promise.all([
+                fileModel.contarArquivosPorProvedor(provedorS3.id),
+                fileModel.contarExclusoesRecentesPorProvedor(provedorS3.id),
+                fileModel.contarUploadsHojePorProvedor(provedorS3.id)
+            ]);
+
+            return res.status(200).json({
+                s3: { conectado: true, bucket: provedorS3.bucket, stored, deleted, today }
+            });
+        } catch (error) {
+            console.error('Erro ao buscar métricas de provedores:', error);
+            return res.status(500).json({ error: 'Erro ao buscar métricas de provedores.' });
         }
     }
 };

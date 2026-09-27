@@ -343,7 +343,7 @@ const fileController = {
             }
 
             await fileModel.deleteFileRecord(arquivo.id);
-            await fileModel.registrarEventoExclusao(usuario_id);
+            await fileModel.registrarEventoExclusao(usuario_id, arquivo.provedor_externo_id);
 
             return res.status(200).json({ message: 'Arquivo excluído com sucesso.' });
 
