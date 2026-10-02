@@ -116,10 +116,11 @@ function setupDropzone(dropzoneEl, fileInputEl) {
     });
 }
 
-async function fetchStatusS3(token) {
-    const checkbox = document.getElementById('replicarS3');
-    const statusEl = document.getElementById('replicarS3Status');
-    if (!checkbox || !statusEl) return;
+async function fetchStatusProvedores(token) {
+     const optS3 = document.getElementById('optMeuS3');
+     const optDrive = document.getElementById('optMeuDrive');
+     const statusEl = document.getElementById('destinoArquivoStatus');
+     if (!optS3 || !optDrive || !statusEl) return;
 
     if (!token) {
         checkbox.disabled = true;
@@ -134,24 +135,27 @@ async function fetchStatusS3(token) {
         if (!response.ok) throw new Error();
 
         const data = await response.json();
-        const s3 = data.s3 || data.aws;
+        const s3 = data.s3;
+        const drive = data.drive;
+        optS3.disabled = !(s3 && s3.conectado);
+        optDrive.disabled = !(drive && drive.conectado);
 
-        if (s3 && s3.conectado) {
-            checkbox.disabled = false;
-            statusEl.className = 'form-text text-success';
-            statusEl.textContent = `S3 conectado (bucket ${s3.bucket}).`;
-        } else {
-            checkbox.disabled = true;
-            checkbox.checked = false;
+        if (optS3.disabled && optDrive.disabled) {
             statusEl.className = 'form-text';
-            statusEl.innerHTML = 'S3 não conectado. <a href="homepage.html">Conectar na Home</a>.';
+            statusEl.innerHTML = 'Nenhum provedor externo conectado. <a href="homepage.html">Conectar na Home</a>.';
+        } else {
+            const conectados = [];
+            if (!optS3.disabled) conectados.push(`S3 (bucket ${s3.bucket})`);
+            if (!optDrive.disabled) conectados.push('Google Drive');
+            statusEl.className = 'form-text text-success';
+            statusEl.textContent = `Conectado: ${conectados.join(' e ')}.`;
         }
     } catch (error) {
-        console.error('Erro ao verificar status do S3:', error);
-        checkbox.disabled = true;
-        checkbox.checked = false;
+        console.error('Erro ao verificar status dos provedores:', error);
+        optS3.disabled = true;
+        optDrive.disabled = true; 
         statusEl.className = 'form-text text-danger';
-        statusEl.innerHTML = 'Não foi possível verificar o S3. <a href="homepage.html">Ir para Home</a>.';
+        statusEl.innerHTML = 'Não foi possível verificar os provedores. <a href="homepage.html">Ir para Home</a>.';
     }
 }
 
@@ -204,15 +208,15 @@ async function handleFileUpload(event, token, form, statusDiv, btn) {
     statusDiv.innerHTML = '';
 
     try {
-        const replicarS3 = document.getElementById('replicarS3')?.checked || false;
+        const destinoEscolhido = document.getElementById('destinoArquivo')?.value || 'distribuido';
         const formData = new FormData();
         formData.append('arquivo', file);
         formData.append('descricao', fileDesc);
         formData.append('nome_customizado', fileName);
         formData.append('categoria', categoria);
-        if (replicarS3) {
-            formData.append('destino', 'meu_s3');
-        }
+        if (destinoEscolhido !== 'distribuido') {
++            formData.append('destino', destinoEscolhido); 
+         }
 
         const response = await fetch(`/arquivos/upload`, {
             method: 'POST',
@@ -259,7 +263,7 @@ export async function pushFile() {
 
     await fetchRules();
     await fetchCategorias(token);
-    await fetchStatusS3(token);
+    await fetchStatusProvedores(token);
 
     renderUserProfile(token, userDataJSON);
     updateCounters(token);

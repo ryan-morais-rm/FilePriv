@@ -268,13 +268,7 @@ function configurarTrocaPerfil() {
     });
 }
 
-/* ==========================================================================
-   Provedores de Armazenamento (AWS S3 / Google Drive)
-   Integração REAL com backend para AWS. Google Drive mantido em mock.
-   ========================================================================== */
-
-const DRIVE_KEY = 'filepriv_provider_drive';
-const DRIVE_MOCK_METRICS = { stored: 15, deleted: 0, today: 2 };
+/* Provedores de Armazenamento (AWS S3 / Google Drive) */
 
 function fecharModal(id) {
     const modalElement = document.getElementById(id);
@@ -282,18 +276,6 @@ function fecharModal(id) {
         const modal = window.bootstrap.Modal.getInstance(modalElement) || new window.bootstrap.Modal(modalElement);
         modal.hide();
     }
-}
-
-function lerEstadoProvedor(chave) {
-    try {
-        return JSON.parse(localStorage.getItem(chave)) || { connected: false };
-    } catch {
-        return { connected: false };
-    }
-}
-
-function salvarEstadoProvedor(chave, estado) {
-    localStorage.setItem(chave, JSON.stringify(estado));
 }
 
 function definirMetricas(prefixo, metricas, conectado) {
@@ -306,16 +288,17 @@ async function atualizarVisualProvedores() {
     const token = localStorage.getItem('token');
     
     let aws = { connected: false, bucket: '', metrics: { stored: 0, deleted: 0, today: 0 } };
-    const drive = lerEstadoProvedor(DRIVE_KEY);
+    let drive = { connected: false };
 
     if (token) {
         try {
-            const response = await fetch('/usuarios/provedores/metricas', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            
-            if (response.ok) {
-                const data = await response.json();
+            const [respMetricas, respProvedores] = await Promise.all([
+                fetch('/usuarios/provedores/metricas', { headers: { 'Authorization': `Bearer ${token}` } }),
+                fetch('/usuarios/provedores', { headers: { 'Authorization': `Bearer ${token}` } })
+            ]);
+
+            if (respMetricas.ok) {
+                const data = await respMetricas.json();
                 const s3Data = data.s3;
                 if (s3Data && s3Data.conectado) {
                     aws = {
@@ -325,8 +308,14 @@ async function atualizarVisualProvedores() {
                     };
                 }
             }
+            if (respProvedores.ok) {
+                const data = await respProvedores.json();
+                if (data.drive && data.drive.conectado) {
+                    drive = { connected: true };
+                }
+            }
         } catch (error) {
-            console.error('Erro ao buscar status/métricas da AWS no backend:', error);
+            console.error('Erro ao buscar status/métricas dos provedores no backend:', error);
         }
     }
 
@@ -348,13 +337,13 @@ async function atualizarVisualProvedores() {
     if (driveNode) driveNode.classList.toggle('connected', !!drive.connected);
     if (connDrive) connDrive.classList.toggle('connected', !!drive.connected);
     if (driveStatusLabel) {
-        const texto = drive.connected ? `conectado · ${drive.email}` : 'não conectado';
+        const texto = drive.connected ? 'conectado' : 'não conectado';
         driveStatusLabel.textContent = texto;
         driveStatusLabel.title = texto;
     }
 
     definirMetricas('aws', aws.metrics, aws.connected);
-    definirMetricas('drive', DRIVE_MOCK_METRICS, drive.connected);
+    definirMetricas('drive', drive.metrics, drive.connected);
 
     const chooseAwsStatus = document.getElementById('chooseAwsStatus');
     if (chooseAwsStatus) {
@@ -392,10 +381,6 @@ function configurarModalProvedores() {
     document.getElementById('manageServersModal')?.addEventListener('show.bs.modal', async () => {
         mostrarEtapaProvedor('choose');
         await atualizarVisualProvedores();
-
-        const userData = JSON.parse(localStorage.getItem('userData') || '{}');
-        const emailPreview = document.getElementById('driveEmailPreview');
-        if (emailPreview) emailPreview.textContent = userData.email || 'seu e-mail cadastrado';
     });
 
     document.getElementById('awsForm')?.addEventListener('submit', async (event) => {
@@ -448,27 +433,28 @@ function configurarModalProvedores() {
         }
     });
 
-    document.getElementById('driveConnectBtn')?.addEventListener('click', () => {
+    document.getElementById('driveConnectBtn')?.addEventListener('click', async () => {
         const btn = document.getElementById('driveConnectBtn');
         const msg = document.getElementById('driveMsg');
-        const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+        const token = localStorage.getItem('token');
         const originalHtml = btn.innerHTML;
 
         btn.disabled = true;
-        btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Conectando...`;
+        btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Redirecionando...`;
 
-        setTimeout(async () => {
-            salvarEstadoProvedor(DRIVE_KEY, { connected: true, email: (userData.email || 'usuario@filepriv').toLowerCase() });
-            msg.innerHTML = `<div class="alert alert-success mt-3 mb-0">Google Drive conectado.</div>`;
-            await atualizarVisualProvedores();
+        try {
+            const response = await fetch('/usuarios/provedores/drive/conectar', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await response.json();
+            if (!response.ok || !data.url) throw new Error(data.error || 'Falha ao iniciar conexão com o Drive.');
+
+            window.location.href = data.url; 
+        } catch (error) {
+            msg.innerHTML = `<div class="alert alert-danger mt-3 mb-0">${error.message}</div>`;
             btn.disabled = false;
             btn.innerHTML = originalHtml;
-
-            setTimeout(() => {
-                fecharModal('manageServersModal');
-                msg.innerHTML = '';
-            }, 1000);
-        }, 1200);
+        }
     });
 
     document.getElementById('awsDisconnectBtn')?.addEventListener('click', async () => {
@@ -497,10 +483,46 @@ function configurarModalProvedores() {
     });
 
     document.getElementById('driveDisconnectBtn')?.addEventListener('click', async () => {
-        salvarEstadoProvedor(DRIVE_KEY, { connected: false });
-        await atualizarVisualProvedores();
-        mostrarEtapaProvedor('choose');
+        const btn = document.getElementById('driveDisconnectBtn');
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = 'Desconectando...';
+        const token = localStorage.getItem('token');
+
+        try {
+            const response = await fetch('/usuarios/provedores/drive', {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (!response.ok) throw new Error('Falha ao desconectar do Drive.');
+
+            await atualizarVisualProvedores();
+            mostrarEtapaProvedor('choose');
+        } catch (error) {
+            alert(error.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
     });
+}
+
+function mostrarMensagemRetornoDrive() {
+    const params = new URLSearchParams(window.location.search);
+    const erro = params.get('drive_erro');
+    const conectado = params.get('drive_conectado');
+
+    if (!erro && !conectado) return;
+
+    const mensagens = {
+        state_invalido: 'Sessão expirada durante a conexão com o Drive. Tente novamente.',
+        falha_conexao: 'Não foi possível conectar ao Google Drive. Tente novamente.',
+        interno: 'Erro interno ao conectar ao Google Drive.'
+    };
+
+    alert(conectado ? 'Google Drive conectado com sucesso!' : (mensagens[erro] || 'Falha ao conectar ao Google Drive.'));
+    window.history.replaceState({}, '', window.location.pathname); // limpa a URL sem recarregar
 }
 
 async function carregarMetricasAplicacao() {
@@ -525,6 +547,7 @@ async function carregarMetricasAplicacao() {
 window.updateAttributes = updateAttributes;
 
 export async function homepage() {
+    mostrarMensagemRetornoDrive();
     await carregarCategoriasPerfilDisponiveis();
     await renderUserProfile();
     configurarModalProvedores();
