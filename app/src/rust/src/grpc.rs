@@ -15,13 +15,16 @@ use crate::proto::filepriv::{
     ArquivoChunkUpload, ConectarProvedorS3Request, ConectarProvedorS3Response, MetadadosUpload,
     PedacoArquivo, RespostaExclusao, RespostaUpload, SalvarCredencialSshRequest,
     SalvarCredencialSshResponse, SolicitacaoDownload, SolicitacaoExclusao,
-    VerificarServidoresRequest, VerificarServidoresResponse,
+    VerificarServidoresRequest, VerificarServidoresResponse, ConectarProvedorDriveRequest, 
+    ConectarProvedorDriveResponse, MoverArquivoCategoriaRequest, MoverArquivoCategoriaResponse, 
 };
 use crate::s3_keys::{
     apagar_chave, buscar_chave, buscar_credencial_s3_usuario, buscar_credencial_ssh, salvar_chave,
     salvar_credencial_s3_usuario, salvar_credencial_ssh,
+    salvar_credencial_drive_usuario, buscar_credencial_drive_usuario
 };
 use crate::s3_storage::{self, ConexaoS3Externo};
+use crate::drive_storage::{self, ConexaoGoogleDriveExterno};
 use crate::servidores::escolher_servidor_menos_carregado;
 use crate::storage::{apagar_de_servidor, baixar_de_servidor, enviar_para_servidor, ConexaoServidor};
 
@@ -226,6 +229,51 @@ impl ProcessadorArquivo for ProcessadorArquivoService {
                     nome_remoto,
                     armazenado_em_provedor_externo: true,
                 }))
+            },
+            
+            DestinoUpload::GoogleDrive(destino_drive) => {
+                let refresh_token = match buscar_credencial_drive_usuario(&destino_drive.credencial_referencia).await {
+                    Ok(valor) => valor,
+                    Err(e) => {
+                        return Ok(Response::new(resposta_erro(format!(
+                            "Falha ao buscar credencial Drive no cofre: {e}"
+                        ))))
+                    }
+                };
+
+                let conexao = ConexaoGoogleDriveExterno {
+                    pasta_raiz_id: destino_drive.pasta_raiz_id.clone(),
+                    credencial_referencia: destino_drive.credencial_referencia.clone(),
+                };
+
+                let file_id = match drive_storage::enviar(
+                    &conexao,
+                    &refresh_token,
+                    &metadados.categoria,
+                    &metadados.nome_arquivo,
+                    blob_cifrado,
+                )
+                .await
+                {
+                    Ok(id) => id,
+                    Err(e) => return Ok(Response::new(resposta_erro(format!("Falha ao enviar ao Google Drive: {e}")))),
+                };
+
+                println!(
+                    "[filepriv-rust] Arquivo '{}' do usuário {} enviado ao Google Drive (categoria '{}') como fileId '{}'. Chave salva em '{}' (fingerprint: {}...).",
+                    metadados.nome_arquivo, metadados.usuario_id, metadados.categoria, file_id, chave_referencia, fingerprint_chave
+                );
+
+                Ok(Response::new(RespostaUpload {
+                    sucesso: true,
+                    mensagem_erro: String::new(),
+                    chave_referencia,
+                    servidor_id: 0,
+                    tamanho,
+                    hash,
+                    nome_remoto: file_id,
+                    armazenado_em_provedor_externo: true,
+                }))
             }
         }
     }
@@ -304,6 +352,16 @@ impl ProcessadorArquivo for ProcessadorArquivoService {
                     .await
                     .map_err(|_| Status::internal(ERRO_S3_EXTERNO))?
             }
+
+            DestinoDownload::GoogleDrive(destino_drive) => {
+                let refresh_token = buscar_credencial_drive_usuario(&destino_drive.credencial_referencia)
+                    .await
+                    .map_err(Status::internal)?;
+
+                drive_storage::baixar(&refresh_token, &req.nome_remoto)
+                    .await
+                    .map_err(Status::internal)?
+            }
         };
 
         let conteudo = descriptografar_arquivo(&blob_cifrado, &chave_bytes)
@@ -376,6 +434,7 @@ impl ProcessadorArquivo for ProcessadorArquivoService {
                     .await
                     .map_err(|e| e.to_string())
             }
+
             DestinoExclusao::S3Externo(destino_s3) => {
                 match resolver_conexao_s3_externo(
                     &destino_s3.bucket,
@@ -388,6 +447,15 @@ impl ProcessadorArquivo for ProcessadorArquivoService {
                         .await
                         .map_err(|_| ERRO_S3_EXTERNO.to_string()),
                     Err(_) => Err(ERRO_S3_EXTERNO.to_string()),
+                }
+            }
+
+            DestinoExclusao::GoogleDrive(destino_drive) => {
+                match buscar_credencial_drive_usuario(&destino_drive.credencial_referencia).await {
+                    Ok(refresh_token) => drive_storage::apagar(&refresh_token, &req.nome_remoto)
+                        .await
+                        .map_err(|e| e.to_string()),
+                    Err(e) => Err(format!("Falha ao buscar credencial Drive no cofre: {e}")),
                 }
             }
         };
@@ -416,8 +484,7 @@ impl ProcessadorArquivo for ProcessadorArquivoService {
         }))
     }
 
-    async fn salvar_credencial_ssh(
-        &self,
+    async fn salvar_credencial_ssh(&self,
         request: Request<SalvarCredencialSshRequest>,
     ) -> Result<Response<SalvarCredencialSshResponse>, Status> {
         let req = request.into_inner();
@@ -444,8 +511,7 @@ impl ProcessadorArquivo for ProcessadorArquivoService {
         }
     }
 
-    async fn conectar_provedor_s3(
-        &self,
+    async fn conectar_provedor_s3(&self,
         request: Request<ConectarProvedorS3Request>,
     ) -> Result<Response<ConectarProvedorS3Response>, Status> {
         let req = request.into_inner();
@@ -496,6 +562,92 @@ impl ProcessadorArquivo for ProcessadorArquivoService {
                 credencial_referencia: String::new(),
                 regiao_usada: String::new(),
             })),
+        }
+    }
+
+    async fn conectar_provedor_drive(&self,
+        request: Request<ConectarProvedorDriveRequest>,
+    ) -> Result<Response<ConectarProvedorDriveResponse>, Status> {
+        let req = request.into_inner();
+
+        if req.code.is_empty() || req.redirect_uri.is_empty() {
+            return Ok(Response::new(ConectarProvedorDriveResponse {
+                sucesso: false,
+                mensagem_erro: "code e redirect_uri são obrigatórios.".into(),
+                credencial_referencia: String::new(),
+                pasta_raiz_id: String::new(),
+            }));
+        }
+
+        let (_access_token, refresh_token) = match drive_storage::trocar_code_por_tokens(&req.code, &req.redirect_uri).await {
+            Ok(tokens) => tokens,
+            Err(e) => {
+                return Ok(Response::new(ConectarProvedorDriveResponse {
+                    sucesso: false,
+                    mensagem_erro: format!("Falha ao trocar code por tokens: {e}"),
+                    credencial_referencia: String::new(),
+                    pasta_raiz_id: String::new(),
+                }));
+            }
+        };
+
+        let pasta_raiz_id = match drive_storage::criar_pasta_raiz(&refresh_token).await {
+            Ok(id) => id,
+            Err(e) => {
+                return Ok(Response::new(ConectarProvedorDriveResponse {
+                    sucesso: false,
+                    mensagem_erro: format!("Tokens obtidos, mas falha ao criar a pasta raiz no Drive: {e}"),
+                    credencial_referencia: String::new(),
+                    pasta_raiz_id: String::new(),
+                }));
+            }
+        };
+
+        match salvar_credencial_drive_usuario(&refresh_token).await {
+            Ok(referencia) => {
+                println!("[filepriv-rust] Provedor Drive conectado (pasta raiz '{pasta_raiz_id}').");
+                Ok(Response::new(ConectarProvedorDriveResponse {
+                    sucesso: true,
+                    mensagem_erro: String::new(),
+                    credencial_referencia: referencia,
+                    pasta_raiz_id,
+                }))
+            }
+            Err(e) => Ok(Response::new(ConectarProvedorDriveResponse {
+                sucesso: false,
+                mensagem_erro: format!("Pasta criada, mas falha ao salvar a credencial no cofre: {e}"),
+                credencial_referencia: String::new(),
+                pasta_raiz_id: String::new(),
+            })),
+        }
+    }
+
+    async fn mover_arquivo_categoria(
+        &self,
+        request: Request<MoverArquivoCategoriaRequest>,
+    ) -> Result<Response<MoverArquivoCategoriaResponse>, Status> {
+        let req = request.into_inner();
+
+        let refresh_token = match buscar_credencial_drive_usuario(&req.credencial_referencia).await {
+            Ok(valor) => valor,
+            Err(e) => {
+                return Ok(Response::new(MoverArquivoCategoriaResponse {
+                    sucesso: false,
+                    mensagem_erro: format!("Falha ao buscar credencial Drive no cofre: {e}"),
+                }));
+            }
+        };
+
+        let conexao = ConexaoGoogleDriveExterno {
+            pasta_raiz_id: req.pasta_raiz_id.clone(),
+            credencial_referencia: req.credencial_referencia.clone(),
+        };
+
+        match drive_storage::mover_entre_categorias(
+            &conexao, &refresh_token, &req.nome_remoto, &req.categoria_antiga, &req.categoria_nova,
+        ).await {
+            Ok(()) => Ok(Response::new(MoverArquivoCategoriaResponse { sucesso: true, mensagem_erro: String::new() })),
+            Err(e) => Ok(Response::new(MoverArquivoCategoriaResponse { sucesso: false, mensagem_erro: e })),
         }
     }
 }

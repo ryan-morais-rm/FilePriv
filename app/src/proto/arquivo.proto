@@ -31,13 +31,20 @@ message DestinoS3Externo {
   string regiao = 3;                // vazio = Rust usa us-east-1 como default
 }
 
+message DestinoGoogleDriveExterno {
+  string pasta_raiz_id = 1;
+  string credencial_referencia = 2;
+}
+
 message MetadadosUpload {
   int32 usuario_id = 1;
   string nome_arquivo = 2;
   string tipo_arquivo = 3;
+  string categoria = 6;
   oneof destino {
     DestinoVmParaUpload vm = 4;
     DestinoS3Externo s3_externo = 5;
+    DestinoGoogleDriveExterno google_drive = 7; 
   }
 }
 
@@ -69,8 +76,7 @@ message SalvarCredencialSshResponse {
   string chave_privada_referencia = 3;
 }
 
-// ---- NOVO: conexão com o S3 do próprio usuário ----
-
+// conexão com o S3 do próprio usuário 
 message ConectarProvedorS3Request {
   string bucket = 1;
   string access_key = 2;
@@ -83,6 +89,32 @@ message ConectarProvedorS3Response {
   string mensagem_erro = 2;
   string credencial_referencia = 3;
   string regiao_usada = 4; // a informada, ou us-east-1 se ficou vazia
+}
+
+// conexão com o Google Drive do usuário 
+message ConectarProvedorDriveRequest {
+  string code = 1;
+  string redirect_uri = 2;
+}
+
+message ConectarProvedorDriveResponse {
+  bool sucesso = 1;
+  string mensagem_erro = 2;
+  string credencial_referencia = 3;
+  string pasta_raiz_id = 4; 
+}
+
+message MoverArquivoCategoriaRequest {
+  string nome_remoto = 1;
+  string credencial_referencia = 2;
+  string pasta_raiz_id = 3;
+  string categoria_antiga = 4;
+  string categoria_nova = 5;
+}
+
+message MoverArquivoCategoriaResponse {
+  bool sucesso = 1;
+  string mensagem_erro = 2;
 }
 
 message ServidorParaVerificar {
@@ -122,6 +154,7 @@ message SolicitacaoDownload {
   oneof destino {
     DestinoVmEspecifico vm = 3;
     DestinoS3Externo s3_externo = 4;
+    DestinoGoogleDriveExterno google_drive = 5;
   }
 }
 
@@ -135,6 +168,7 @@ message SolicitacaoExclusao {
   oneof destino {
     DestinoVmEspecifico vm = 3;
     DestinoS3Externo s3_externo = 4;
+    DestinoGoogleDriveExterno google_drive = 5;
   }
 }
 
@@ -149,5 +183,7 @@ service ProcessadorArquivo {
   rpc BaixarArquivo(SolicitacaoDownload) returns (stream PedacoArquivo);
   rpc ExcluirArquivo(SolicitacaoExclusao) returns (RespostaExclusao);
   rpc SalvarCredencialSsh(SalvarCredencialSshRequest) returns (SalvarCredencialSshResponse);
-  rpc ConectarProvedorS3(ConectarProvedorS3Request) returns (ConectarProvedorS3Response); // NOVO
+  rpc ConectarProvedorS3(ConectarProvedorS3Request) returns (ConectarProvedorS3Response);
+  rpc ConectarProvedorDrive(ConectarProvedorDriveRequest) returns (ConectarProvedorDriveResponse); 
+  rpc MoverArquivoCategoria(MoverArquivoCategoriaRequest) returns (MoverArquivoCategoriaResponse);   
 }

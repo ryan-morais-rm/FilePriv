@@ -9,6 +9,7 @@ use uuid::Uuid;
 const PREFIXO_CHAVE_ARQUIVO: &str = "chaves";
 const PREFIXO_CREDENCIAL_SSH: &str = "credenciais_ssh";
 const PREFIXO_CREDENCIAL_S3_USUARIO: &str = "credenciais_s3_usuario";
+const PREFIXO_CREDENCIAL_DRIVE_USUARIO: &str = "credenciais_drive_usuario"; 
 
 async fn resolver_credenciais() -> Result<Credentials, String> {
     let imds = ImdsCredentialsProvider::builder().build();
@@ -155,5 +156,22 @@ pub async fn buscar_credencial_s3_usuario(referencia: &str) -> Result<(String, S
 }
 
 pub async fn apagar_credencial_s3_usuario(referencia: &str) -> Result<(), String> {
+    apagar_objeto(referencia).await
+}
+
+/// Implementação da integração com o Google Drive do usuário
+pub async fn salvar_credencial_drive_usuario(refresh_token: &str) -> Result<String, String> {
+    let referencia = salvar_objeto(PREFIXO_CREDENCIAL_DRIVE_USUARIO, "cred", refresh_token.as_bytes()).await?;
+    println!("[s3] Credencial Drive de usuário gravada em '{referencia}'.");
+    Ok(referencia)
+}
+
+pub async fn buscar_credencial_drive_usuario(referencia: &str) -> Result<String, String> {
+    let bytes = buscar_objeto(referencia).await?;
+    String::from_utf8(bytes).map_err(|_| "Credencial Drive armazenada não é UTF-8 válida.".to_string())
+}
+
+
+pub async fn apagar_credencial_drive_usuario(referencia: &str) -> Result<(), String> {
     apagar_objeto(referencia).await
 }
