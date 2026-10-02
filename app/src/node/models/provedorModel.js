@@ -11,11 +11,11 @@ const provedorModel = {
         return await prisma.provedorExterno.findUnique({ where: { id: Number(id) } });
     },
 
-    async criarOuAtualizar(usuario_id, tipo, { bucket, regiao, credencial_referencia }) {
+    async criarOuAtualizar(usuario_id, tipo, dados) {
         return await prisma.provedorExterno.upsert({
             where: { usuario_id_tipo: { usuario_id: Number(usuario_id), tipo } },
-            update: { bucket, regiao, credencial_referencia, status: 'CONECTADO' },
-            create: { usuario_id: Number(usuario_id), tipo, bucket, regiao, credencial_referencia, status: 'CONECTADO' }
+            update: { ...dados, status: 'CONECTADO' },
+            create: { usuario_id: Number(usuario_id), tipo, ...dados, status: 'CONECTADO' }
         });
     },
 

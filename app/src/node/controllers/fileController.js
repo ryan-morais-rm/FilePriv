@@ -41,6 +41,10 @@ function montarDestinoS3Externo(provedor) {
     };
 }
 
+function montarDestinoGoogleDrive(provedor) {
+    return { google_drive: { pasta_raiz_id: provedor.pasta_raiz_id, credencial_referencia: provedor.credencial_referencia } };
+}
+
 const fileController = {
     async verifiyFile(req, res) {
         return res.status(200).json({
@@ -83,7 +87,7 @@ const fileController = {
 
             const usuario_id = req.usuarioId;
             const { descricao, nome_customizado, categoria, destino } = req.body;
-            const destinoEscolhido = destino === 'meu_s3' ? 'meu_s3' : 'distribuido';
+            const destinoEscolhido = ['meu_s3', 'meu_drive'].includes(destino) ? destino : 'distribuido';
 
             if (!usuario_id) {
                 return res.status(400).json({ error: 'ID do usuário não fornecido.' });
@@ -112,16 +116,15 @@ const fileController = {
             let destinoRpc;
             let provedorUsadoId = null;
 
-            if (destinoEscolhido === 'meu_s3') {
-                const provedor = await provedorModel.buscarPorUsuarioETipo(usuario_id, 'S3');
+            if (destinoEscolhido === 'meu_s3' || destinoEscolhido === 'meu_drive') {
+                const tipoProvedor = destinoEscolhido === 'meu_s3' ? 'S3' : 'DRIVE';
+                const provedor = await provedorModel.buscarPorUsuarioETipo(usuario_id, tipoProvedor);
                 if (!provedor) {
                     await fileModel.marcarArquivoComoErro(arquivoPendente.id);
-                    return res.status(400).json({ error: 'Você ainda não conectou um provedor S3.' });
+                    return res.status(400).json({ error: `Você ainda não conectou um provedor ${tipoProvedor}.` });
                 }
-
-                destinoRpc = montarDestinoS3Externo(provedor);
+                destinoRpc = tipoProvedor === 'S3' ? montarDestinoS3Externo(provedor) : montarDestinoGoogleDrive(provedor);
                 provedorUsadoId = provedor.id;
-
             } else {
                 const servidoresDisponiveis = await fileModel.listarServidoresComContagem();
 
@@ -153,6 +156,7 @@ const fileController = {
                     usuarioId: usuario_id,
                     nomeArquivo: nome_customizado,
                     tipoArquivo: fileType,
+                    categoria,
                     buffer: req.file.buffer,
                     destino: destinoRpc
                 });
@@ -216,8 +220,8 @@ const fileController = {
                 if (!provedor) {
                     return res.status(500).json({ error: 'Provedor externo do arquivo não encontrado.' });
                 }
-                destino = montarDestinoS3Externo(provedor);
-
+                destino = provedor.tipo === 'S3' ? montarDestinoS3Externo(provedor) : montarDestinoGoogleDrive(provedor);
+            
             } else if (arquivo.servidor_id) {
                 const servidor = await fileModel.buscarServidorPorId(arquivo.servidor_id);
                 if (!servidor) {
@@ -311,7 +315,7 @@ const fileController = {
                     await fileModel.reverterParaConcluido(arquivo.id);
                     return res.status(500).json({ error: 'Provedor externo do arquivo não encontrado.' });
                 }
-                destino = montarDestinoS3Externo(provedor);
+                destino = provedor.tipo === 'S3' ? montarDestinoS3Externo(provedor) : montarDestinoGoogleDrive(provedor);
 
             } else {
                 const servidor = await fileModel.buscarServidorPorId(arquivo.servidor_id);

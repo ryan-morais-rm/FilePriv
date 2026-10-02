@@ -1,6 +1,9 @@
 import provedorModel from '../models/provedorModel.js';
 import fileModel from '../models/fileModel.js';
-import { conectarProvedorS3 } from '../services/rustClient.js';
+import { conectarProvedorS3, conectarProvedorDrive } from '../services/rustClient.js';
+
+const GOOGLE_AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
+const GOOGLE_DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
 
 const provedorController = {
     async conectarS3(req, res) {
@@ -80,11 +83,17 @@ const provedorController = {
     async listarProvedores(req, res) {
         try {
             const usuario_id = req.usuarioId;
-            const provedorS3 = await provedorModel.buscarPorUsuarioETipo(usuario_id, 'S3');
+            const [provedorS3, provedorDrive] = await Promise.all([
+                provedorModel.buscarPorUsuarioETipo(usuario_id, 'S3'),
+                provedorModel.buscarPorUsuarioETipo(usuario_id, 'DRIVE')
+            ]);
 
             return res.status(200).json({
                 s3: provedorS3
                     ? { conectado: true, bucket: provedorS3.bucket, regiao: provedorS3.regiao, status: provedorS3.status }
+                    : { conectado: false },
+                drive: provedorDrive
+                    ? { conectado: true, status: provedorDrive.status }
                     : { conectado: false }
             });
         } catch (error) {
@@ -116,6 +125,92 @@ const provedorController = {
         } catch (error) {
             console.error('Erro ao buscar métricas de provedores:', error);
             return res.status(500).json({ error: 'Erro ao buscar métricas de provedores.' });
+        }
+    },
+    
+    async iniciarConexaoDrive(req, res) {
+        try {
+            const usuario_id = req.usuarioId;
+            const state = jwt.sign({ usuario_id }, process.env.JWT_SECRET, { expiresIn: '10m' });
+
+            const params = new URLSearchParams({
+                client_id: process.env.GOOGLE_OAUTH_CLIENT_ID,
+                redirect_uri: process.env.GOOGLE_OAUTH_REDIRECT_URI,
+                response_type: 'code',
+                scope: GOOGLE_DRIVE_SCOPE,
+                access_type: 'offline',
+                prompt: 'consent', // garante refresh_token mesmo numa reconexão
+                state
+            });
+
+            return res.status(200).json({ url: `${GOOGLE_AUTH_URL}?${params.toString()}` });
+        } catch (error) {
+            console.error('Erro ao iniciar conexão com o Drive:', error);
+            return res.status(500).json({ error: 'Erro ao iniciar conexão com o Google Drive.' });
+        }
+    },
+
+    // Pública — o navegador chega aqui redirecionado pelo Google, sem JWT no header.
+    async driveCallback(req, res) {
+        const { code, state, error: erroGoogle } = req.query;
+
+        if (erroGoogle) {
+            return res.redirect(`/html/homepage.html?drive_erro=${encodeURIComponent(erroGoogle)}`);
+        }
+
+        let usuario_id;
+        try {
+            ({ usuario_id } = jwt.verify(state, process.env.JWT_SECRET));
+        } catch {
+            return res.redirect('/html/homepage.html?drive_erro=state_invalido');
+        }
+
+        try {
+            const respostaRust = await conectarProvedorDrive({
+                code,
+                redirectUri: process.env.GOOGLE_OAUTH_REDIRECT_URI
+            });
+
+            if (!respostaRust.sucesso) {
+                console.error('Falha ao conectar Drive:', respostaRust.mensagem_erro);
+                return res.redirect('/html/homepage.html?drive_erro=falha_conexao');
+            }
+
+            await provedorModel.criarOuAtualizar(usuario_id, 'DRIVE', {
+                pasta_raiz_id: respostaRust.pasta_raiz_id,
+                credencial_referencia: respostaRust.credencial_referencia
+            });
+
+            return res.redirect('/html/homepage.html?drive_conectado=true');
+        } catch (error) {
+            console.error('Erro no callback do Drive:', error);
+            return res.redirect('/html/homepage.html?drive_erro=interno');
+        }
+    },
+
+    async desconectarDrive(req, res) {
+        try {
+            const usuario_id = req.usuarioId;
+            const confirmar = req.query.confirmar === 'true';
+
+            const provedor = await provedorModel.buscarPorUsuarioETipo(usuario_id, 'DRIVE');
+            if (!provedor) {
+                return res.status(404).json({ error: 'Nenhum provedor Drive conectado.' });
+            }
+
+            const totalArquivos = await provedorModel.contarArquivosVinculados(provedor.id);
+            if (totalArquivos > 0 && !confirmar) {
+                return res.status(409).json({
+                    aviso: 'Se ainda existirem arquivos no Drive, o FilePriv não poderá deletá-los ou realocá-los, deseja desconectar?',
+                    arquivosVinculados: totalArquivos
+                });
+            }
+
+            await provedorModel.remover(usuario_id, 'DRIVE');
+            return res.status(200).json({ message: 'Provedor Drive desconectado.', arquivosVinculados: totalArquivos });
+        } catch (error) {
+            console.error('Erro ao desconectar provedor Drive:', error);
+            return res.status(500).json({ error: 'Erro interno ao desconectar provedor Drive.' });
         }
     }
 };

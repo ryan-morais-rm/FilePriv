@@ -41,7 +41,7 @@ const client = new proto.ProcessadorArquivo(RUST_GRPC_ADDR, credenciais);
 
 // destino: { vm: { servidores_disponiveis, usuario_ssh, chave_privada_referencia, diretorio_remoto } }
 //       ou { s3_externo: { bucket, credencial_referencia, regiao } }
-export function processarArquivo({ usuarioId, nomeArquivo, tipoArquivo, buffer, destino }) {
+export function processarArquivo({ usuarioId, nomeArquivo, tipoArquivo, buffer, categoria, destino }) {
     return new Promise((resolve, reject) => {
         const deadline = new Date(Date.now() + DEADLINE_MS);
 
@@ -57,6 +57,7 @@ export function processarArquivo({ usuarioId, nomeArquivo, tipoArquivo, buffer, 
                 usuario_id: usuarioId,
                 nome_arquivo: nomeArquivo,
                 tipo_arquivo: tipoArquivo,
+                categoria: categoria || '',
                 ...destino
             }
         });
@@ -140,7 +141,6 @@ export function salvarCredencialSsh(chavePrivada) {
     });
 }
 
-// NOVO
 export function conectarProvedorS3({ bucket, accessKey, secretKey, regiao }) {
     return new Promise((resolve, reject) => {
         const deadline = new Date(Date.now() + DEADLINE_MS);
@@ -158,6 +158,36 @@ export function conectarProvedorS3({ bucket, accessKey, secretKey, regiao }) {
                 if (err) return reject(err);
                 resolve(resposta);
             }
+        );
+    });
+}
+
+export function conectarProvedorDrive({ code, redirectUri }) {
+    return new Promise((resolve, reject) => {
+        const deadline = new Date(Date.now() + DEADLINE_MS);
+        client.ConectarProvedorDrive(
+            { code, redirect_uri: redirectUri },
+            new grpc.Metadata(),
+            { deadline },
+            (err, resposta) => (err ? reject(err) : resolve(resposta))
+        );
+    });
+}
+
+export function moverArquivoCategoria({ nomeRemoto, credencialReferencia, pastaRaizId, categoriaAntiga, categoriaNova }) {
+    return new Promise((resolve, reject) => {
+        const deadline = new Date(Date.now() + DEADLINE_MS);
+        client.MoverArquivoCategoria(
+            {
+                nome_remoto: nomeRemoto,
+                credencial_referencia: credencialReferencia,
+                pasta_raiz_id: pastaRaizId,
+                categoria_antiga: categoriaAntiga,
+                categoria_nova: categoriaNova
+            },
+            new grpc.Metadata(),
+            { deadline },
+            (err, resposta) => (err ? reject(err) : resolve(resposta))
         );
     });
 }

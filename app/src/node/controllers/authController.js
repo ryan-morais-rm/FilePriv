@@ -1,8 +1,10 @@
 import authModel from '../models/authModel.js';
 import fileModel from '../models/fileModel.js';
+import provedorModel from '../models/provedorModel.js';
+import { moverArquivoCategoria } from '../services/rustClient.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { CATEGORIAS_USUARIO, categoriasArquivoValidasParaPerfil } from '../constants/categorias.js';
+import { CATEGORIAS_USUARIO, categoriasArquivoValidasParaPerfil, CATEGORIA_ARQUIVO_MIGRACAO } from '../constants/categorias.js';
 
 const userController = {
     
@@ -134,13 +136,34 @@ const userController = {
                         error: `categoria_perfil inválida. Valores aceitos: ${CATEGORIAS_USUARIO.join(', ')}`
                     });
                 }
-
+                
                 const categoriasValidasNoNovoPerfil = categoriasArquivoValidasParaPerfil(categoria_perfil);
 
-                // Migra os arquivos ANTES de confirmar a troca de perfil no
-                // usuário — se a migração falhar, abortamos sem deixar o
-                // usuário com um perfil novo e arquivos na categoria antiga
-                // "invisíveis" pro seletor de upload.
+                // Arquivos no Drive são espelhados por subpasta de categoria
+                const provedorDrive = await provedorModel.buscarPorUsuarioETipo(userId, 'DRIVE');
+                if (provedorDrive) {
+                    const arquivosParaMover = await fileModel.listarArquivosParaMigrarPorProvedor(
+                        userId, provedorDrive.id, categoriasValidasNoNovoPerfil
+                    );
+
+                    for (const arquivo of arquivosParaMover) {
+                        try {
+                            const respostaMove = await moverArquivoCategoria({
+                                nomeRemoto: arquivo.nome_remoto,
+                                credencialReferencia: provedorDrive.credencial_referencia,
+                                pastaRaizId: provedorDrive.pasta_raiz_id,
+                                categoriaAntiga: arquivo.categoria,
+                                categoriaNova: CATEGORIA_ARQUIVO_MIGRACAO
+                            });
+                            if (!respostaMove.sucesso) {
+                                console.error(`Falha ao mover arquivo ${arquivo.id} no Drive: ${respostaMove.mensagem_erro}`);
+                            }
+                        } catch (erroMove) {
+                            console.error(`Erro de gRPC ao mover arquivo ${arquivo.id} no Drive:`, erroMove);
+                        }
+                    }
+                };
+
                 const resultado = await fileModel.migrarCategoriasParaMigracao(
                     userId, categoriasValidasNoNovoPerfil
                 );

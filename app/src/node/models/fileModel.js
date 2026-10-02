@@ -191,6 +191,19 @@ const fileModel = {
             where: { provedor_externo_id, criado_em: { gte: desde } }
         });
     },
+    
+    async listarArquivosParaMigrarPorProvedor(usuario_id, provedor_externo_id, categoriasValidasNoNovoPerfil) {
+        return await prisma.arquivo.findMany({
+            where: {
+                usuario_id: Number(usuario_id),
+                status: 'CONCLUIDO',
+                provedor_externo_id,
+                categoria: { notIn: categoriasValidasNoNovoPerfil }
+            }
+        });
+    },
 };
+
+
 
 export default fileModel;

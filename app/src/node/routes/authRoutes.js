@@ -14,10 +14,14 @@ authRouter.get('/categorias-perfil', userController.listarCategoriasPerfil);
 authRouter.get('/perfil/:id', verificarToken, userController.consultUser);
 authRouter.put('/perfil', verificarToken, userController.updateProfile);
 
-// Provedores externos
+// Rotas do provedor s3
 authRouter.post('/provedores/s3', verificarToken, provedorController.conectarS3);
 authRouter.delete('/provedores/s3', verificarToken, provedorController.desconectarS3);
 authRouter.get('/provedores', verificarToken, provedorController.listarProvedores);
 authRouter.get('/provedores/metricas', verificarToken, provedorController.metricasProvedores);
 
+// Rotas do provedor Drive
+authRouter.get('/provedores/drive/conectar', verificarToken, provedorController.iniciarConexaoDrive);
++authRouter.get('/provedores/drive/callback', provedorController.driveCallback);
++authRouter.delete('/provedores/drive', verificarToken, provedorController.desconectarDrive);
 export default authRouter;
