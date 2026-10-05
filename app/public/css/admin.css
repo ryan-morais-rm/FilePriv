@@ -4,3 +4,38 @@ body {
   flex-direction: column;
   min-height: 100vh;
 }
+
+/* Container mais largo só nesta página, pra caber duas colunas com folga */
+.admin-container {
+  max-width: 1100px;
+}
+
+/* Box da chave privada: tamanho fixo, sem arrastar pra redimensionar */
+.chave-privada-input {
+  height: 130px;
+  resize: none;
+  overflow-y: auto;
+  transition: border-color .2s ease, background-color .2s ease;
+}
+
+.chave-privada-input.chave-valida {
+  border-color: #2b9366;
+  background-color: rgba(43, 147, 102, 0.08);
+}
+
+.chave-feedback {
+  min-height: 1.1em;
+}
+
+.chave-feedback.valida {
+  color: #2b9366;
+}
+
+.chave-feedback.invalida {
+  color: var(--bs-danger, #dc3545);
+}
+
+.servidores-scroll {
+  max-height: 380px;
+  overflow-y: auto;
+}

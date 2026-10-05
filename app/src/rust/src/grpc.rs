@@ -7,16 +7,30 @@ use uuid::Uuid;
 use crate::crypto::{cifrar_arquivo, descriptografar_arquivo};
 use crate::healthcheck::verificar_todos;
 use crate::proto::filepriv::{
-    arquivo_chunk_upload::Conteudo, processador_arquivo_server::ProcessadorArquivo,
-    ArquivoChunkUpload, MetadadosUpload, PedacoArquivo, RespostaExclusao, RespostaUpload,
-    SalvarCredencialSshRequest, SalvarCredencialSshResponse, SolicitacaoDownload,
-    SolicitacaoExclusao, VerificarServidoresRequest, VerificarServidoresResponse,
+    arquivo_chunk_upload::Conteudo,
+    metadados_upload::Destino as DestinoUpload,
+    processador_arquivo_server::ProcessadorArquivo,
+    solicitacao_download::Destino as DestinoDownload,
+    solicitacao_exclusao::Destino as DestinoExclusao,
+    ArquivoChunkUpload, ConectarProvedorS3Request, ConectarProvedorS3Response, MetadadosUpload,
+    PedacoArquivo, RespostaExclusao, RespostaUpload, SalvarCredencialSshRequest,
+    SalvarCredencialSshResponse, SolicitacaoDownload, SolicitacaoExclusao,
+    VerificarServidoresRequest, VerificarServidoresResponse, ConectarProvedorDriveRequest, 
+    ConectarProvedorDriveResponse, MoverArquivoCategoriaRequest, MoverArquivoCategoriaResponse, 
 };
 use crate::s3_keys::{
-    apagar_chave, buscar_chave, buscar_credencial_ssh, salvar_chave, salvar_credencial_ssh,
+    apagar_chave, buscar_chave, buscar_credencial_s3_usuario, buscar_credencial_ssh, salvar_chave,
+    salvar_credencial_s3_usuario, salvar_credencial_ssh,
+    salvar_credencial_drive_usuario, buscar_credencial_drive_usuario
 };
+use crate::s3_storage::{self, ConexaoS3Externo};
+use crate::drive_storage::{self, ConexaoGoogleDriveExterno};
 use crate::servidores::escolher_servidor_menos_carregado;
 use crate::storage::{apagar_de_servidor, baixar_de_servidor, enviar_para_servidor, ConexaoServidor};
+
+// Mensagem única, por decisão de produto — nunca tentamos distinguir se a
+// falha foi AK/SK inválida, bucket inexistente ou região errada.
+const ERRO_S3_EXTERNO: &str = "Verifique os status de sua AK/SK no seu painel da AWS ou a região informada.";
 
 #[derive(Default)]
 pub struct ProcessadorArquivoService;
@@ -30,16 +44,33 @@ fn resposta_erro(mensagem: impl Into<String>) -> RespostaUpload {
         tamanho: 0,
         hash: String::new(),
         nome_remoto: String::new(),
+        armazenado_em_provedor_externo: false,
     }
 }
 
-/// Busca a credencial SSH no S3 e converte pra String
 async fn resolver_chave_privada(referencia: &str) -> Result<String, Status> {
     let bytes = buscar_credencial_ssh(referencia)
         .await
         .map_err(Status::internal)?;
     String::from_utf8(bytes).map_err(|_| {
         Status::internal("Credencial SSH armazenada no S3 não é UTF-8 válido (PEM corrompido?).")
+    })
+}
+
+/// Busca a credencial do usuário no cofre e monta a conexão pronta pra
+/// s3_storage, já com a região resolvida (default us-east-1 se vazia).
+async fn resolver_conexao_s3_externo(
+    bucket: &str,
+    credencial_referencia: &str,
+    regiao: &str,
+) -> Result<ConexaoS3Externo, String> {
+    let (access_key, secret_key) = buscar_credencial_s3_usuario(credencial_referencia).await?;
+
+    Ok(ConexaoS3Externo {
+        bucket: bucket.to_string(),
+        access_key,
+        secret_key,
+        regiao: s3_storage::regiao_efetiva(regiao),
     })
 }
 
@@ -68,41 +99,15 @@ impl ProcessadorArquivo for ProcessadorArquivoService {
             )));
         };
 
-        let Some(servidor_escolhido) =
-            escolher_servidor_menos_carregado(&metadados.servidores_disponiveis).cloned()
-        else {
+        let Some(destino) = metadados.destino.clone() else {
             return Ok(Response::new(resposta_erro(
-                "Nenhum servidor disponível informado pelo Node.",
+                "Nenhum destino de armazenamento informado pelo Node.",
             )));
         };
 
-        if metadados.usuario_ssh.is_empty()
-            || metadados.chave_privada_referencia.is_empty()
-            || metadados.diretorio_remoto.is_empty()
-        {
-            return Ok(Response::new(resposta_erro(
-                "Credenciais de conexão (usuario_ssh/chave_privada_referencia/diretorio_remoto) não foram informadas pelo Node.",
-            )));
-        }
-
-        let chave_privada = match resolver_chave_privada(&metadados.chave_privada_referencia).await {
-            Ok(valor) => valor,
-            Err(status) => {
-                return Ok(Response::new(resposta_erro(format!(
-                    "Falha ao buscar credencial SSH no S3: {}",
-                    status.message()
-                ))));
-            }
-        };
-
-        let conexao = ConexaoServidor {
-            host: servidor_escolhido.host.clone(),
-            porta: servidor_escolhido.porta as u16,
-            usuario_ssh: metadados.usuario_ssh.clone(),
-            chave_privada,
-            diretorio_remoto: metadados.diretorio_remoto.clone(),
-        };
-
+        // A cifragem acontece sempre, independente do destino escolhido —
+        // é o Rust que decide como/onde guardar, mas nunca manda conteúdo
+        // em claro pra lugar nenhum.
         let (blob_cifrado, chave) = match cifrar_arquivo(&conteudo) {
             Ok(resultado) => resultado,
             Err(e) => {
@@ -126,30 +131,151 @@ impl ProcessadorArquivo for ProcessadorArquivoService {
             }
         };
 
-        let host_exibicao = conexao.host.clone();
-        let porta_exibicao = conexao.porta;
+        match destino {
+            DestinoUpload::Vm(destino_vm) => {
+                let Some(servidor_escolhido) =
+                    escolher_servidor_menos_carregado(&destino_vm.servidores_disponiveis).cloned()
+                else {
+                    return Ok(Response::new(resposta_erro(
+                        "Nenhum servidor disponível informado pelo Node.",
+                    )));
+                };
 
-        if let Err(e) = enviar_para_servidor(conexao, nome_remoto.clone(), blob_cifrado).await {
-            return Ok(Response::new(resposta_erro(format!(
-                "Falha ao enviar arquivo via SFTP para {host_exibicao}: {e}"
-            ))));
+                if destino_vm.usuario_ssh.is_empty()
+                    || destino_vm.chave_privada_referencia.is_empty()
+                    || destino_vm.diretorio_remoto.is_empty()
+                {
+                    return Ok(Response::new(resposta_erro(
+                        "Credenciais de conexão (usuario_ssh/chave_privada_referencia/diretorio_remoto) não foram informadas pelo Node.",
+                    )));
+                }
+
+                let chave_privada =
+                    match resolver_chave_privada(&destino_vm.chave_privada_referencia).await {
+                        Ok(valor) => valor,
+                        Err(status) => {
+                            return Ok(Response::new(resposta_erro(format!(
+                                "Falha ao buscar credencial SSH no S3: {}",
+                                status.message()
+                            ))));
+                        }
+                    };
+
+                let conexao = ConexaoServidor {
+                    host: servidor_escolhido.host.clone(),
+                    porta: servidor_escolhido.porta as u16,
+                    usuario_ssh: destino_vm.usuario_ssh.clone(),
+                    chave_privada,
+                    diretorio_remoto: destino_vm.diretorio_remoto.clone(),
+                };
+
+                let host_exibicao = conexao.host.clone();
+                let porta_exibicao = conexao.porta;
+
+                if let Err(e) = enviar_para_servidor(conexao, nome_remoto.clone(), blob_cifrado).await
+                {
+                    return Ok(Response::new(resposta_erro(format!(
+                        "Falha ao enviar arquivo via SFTP para {host_exibicao}: {e}"
+                    ))));
+                }
+
+                println!(
+                    "[filepriv-rust] Arquivo '{}' ({} bytes cifrados) do usuário {} enviado via SFTP para {}:{} como '{}'. Chave salva em '{}' (fingerprint: {}...).",
+                    metadados.nome_arquivo, tamanho, metadados.usuario_id,
+                    host_exibicao, porta_exibicao, nome_remoto, chave_referencia, fingerprint_chave
+                );
+
+                Ok(Response::new(RespostaUpload {
+                    sucesso: true,
+                    mensagem_erro: String::new(),
+                    chave_referencia,
+                    servidor_id: servidor_escolhido.id,
+                    tamanho,
+                    hash,
+                    nome_remoto,
+                    armazenado_em_provedor_externo: false,
+                }))
+            }
+
+            DestinoUpload::S3Externo(destino_s3) => {
+                let conexao = match resolver_conexao_s3_externo(
+                    &destino_s3.bucket,
+                    &destino_s3.credencial_referencia,
+                    &destino_s3.regiao,
+                )
+                .await
+                {
+                    Ok(c) => c,
+                    Err(_) => return Ok(Response::new(resposta_erro(ERRO_S3_EXTERNO))),
+                };
+
+                if let Err(_) = s3_storage::enviar(&conexao, &nome_remoto, blob_cifrado).await {
+                    return Ok(Response::new(resposta_erro(ERRO_S3_EXTERNO)));
+                }
+
+                println!(
+                    "[filepriv-rust] Arquivo '{}' ({} bytes cifrados) do usuário {} enviado ao S3 externo (bucket '{}') como '{}'. Chave salva em '{}' (fingerprint: {}...).",
+                    metadados.nome_arquivo, tamanho, metadados.usuario_id,
+                    conexao.bucket, nome_remoto, chave_referencia, fingerprint_chave
+                );
+
+                Ok(Response::new(RespostaUpload {
+                    sucesso: true,
+                    mensagem_erro: String::new(),
+                    chave_referencia,
+                    servidor_id: 0,
+                    tamanho,
+                    hash,
+                    nome_remoto,
+                    armazenado_em_provedor_externo: true,
+                }))
+            },
+            
+            DestinoUpload::GoogleDrive(destino_drive) => {
+                let refresh_token = match buscar_credencial_drive_usuario(&destino_drive.credencial_referencia).await {
+                    Ok(valor) => valor,
+                    Err(e) => {
+                        return Ok(Response::new(resposta_erro(format!(
+                            "Falha ao buscar credencial Drive no cofre: {e}"
+                        ))))
+                    }
+                };
+
+                let conexao = ConexaoGoogleDriveExterno {
+                    pasta_raiz_id: destino_drive.pasta_raiz_id.clone(),
+                    credencial_referencia: destino_drive.credencial_referencia.clone(),
+                };
+
+                let file_id = match drive_storage::enviar(
+                    &conexao,
+                    &refresh_token,
+                    &metadados.categoria,
+                    &metadados.nome_arquivo,
+                    blob_cifrado,
+                )
+                .await
+                {
+                    Ok(id) => id,
+                    Err(e) => return Ok(Response::new(resposta_erro(format!("Falha ao enviar ao Google Drive: {e}")))),
+                };
+
+                println!(
+                    "[filepriv-rust] Arquivo '{}' do usuário {} enviado ao Google Drive (categoria '{}') como fileId '{}'. Chave salva em '{}' (fingerprint: {}...).",
+                    metadados.nome_arquivo, metadados.usuario_id, metadados.categoria, file_id, chave_referencia, fingerprint_chave
+                );
+
+                Ok(Response::new(RespostaUpload {
+                    sucesso: true,
+                    mensagem_erro: String::new(),
+                    chave_referencia,
+                    servidor_id: 0,
+                    tamanho,
+                    hash,
+                    nome_remoto: file_id,
+                    armazenado_em_provedor_externo: true,
+                }))
+            }
         }
-
-        println!(
-            "[filepriv-rust] Arquivo '{}' ({} bytes cifrados) do usuário {} enviado via SFTP para {}:{} como '{}'. Chave salva em '{}' (fingerprint: {}...).",
-            metadados.nome_arquivo, tamanho, metadados.usuario_id,
-            host_exibicao, porta_exibicao, nome_remoto, chave_referencia, fingerprint_chave
-        );
-
-        Ok(Response::new(RespostaUpload {
-            sucesso: true,
-            mensagem_erro: String::new(),
-            chave_referencia,
-            servidor_id: servidor_escolhido.id,
-            tamanho,
-            hash,
-            nome_remoto,
-        }))
     }
 
     async fn verificar_servidores(
@@ -171,46 +297,79 @@ impl ProcessadorArquivo for ProcessadorArquivoService {
     ) -> Result<Response<Self::BaixarArquivoStream>, Status> {
         let req = request.into_inner();
 
-        if req.usuario_ssh.is_empty()
-            || req.chave_privada_referencia.is_empty()
-            || req.diretorio_remoto.is_empty()
-        {
-            return Err(Status::invalid_argument(
-                "Credenciais de conexão não informadas pelo Node.",
-            ));
-        }
         if req.nome_remoto.is_empty() || req.chave_referencia.is_empty() {
             return Err(Status::invalid_argument(
                 "nome_remoto e chave_referencia são obrigatórios.",
             ));
         }
 
+        let Some(destino) = req.destino else {
+            return Err(Status::invalid_argument(
+                "Nenhum destino de armazenamento informado pelo Node.",
+            ));
+        };
+
         let chave_bytes = buscar_chave(&req.chave_referencia)
             .await
             .map_err(Status::internal)?;
 
-        let chave_privada = resolver_chave_privada(&req.chave_privada_referencia).await?;
+        let blob_cifrado = match destino {
+            DestinoDownload::Vm(destino_vm) => {
+                if destino_vm.usuario_ssh.is_empty()
+                    || destino_vm.chave_privada_referencia.is_empty()
+                    || destino_vm.diretorio_remoto.is_empty()
+                {
+                    return Err(Status::invalid_argument(
+                        "Credenciais de conexão não informadas pelo Node.",
+                    ));
+                }
 
-        let conexao = ConexaoServidor {
-            host: req.host.clone(),
-            porta: req.porta as u16,
-            usuario_ssh: req.usuario_ssh.clone(),
-            chave_privada,
-            diretorio_remoto: req.diretorio_remoto.clone(),
+                let chave_privada =
+                    resolver_chave_privada(&destino_vm.chave_privada_referencia).await?;
+
+                let conexao = ConexaoServidor {
+                    host: destino_vm.host.clone(),
+                    porta: destino_vm.porta as u16,
+                    usuario_ssh: destino_vm.usuario_ssh.clone(),
+                    chave_privada,
+                    diretorio_remoto: destino_vm.diretorio_remoto.clone(),
+                };
+
+                baixar_de_servidor(conexao, req.nome_remoto.clone())
+                    .await
+                    .map_err(|e| Status::internal(e.to_string()))?
+            }
+            DestinoDownload::S3Externo(destino_s3) => {
+                let conexao = resolver_conexao_s3_externo(
+                    &destino_s3.bucket,
+                    &destino_s3.credencial_referencia,
+                    &destino_s3.regiao,
+                )
+                .await
+                .map_err(|_| Status::internal(ERRO_S3_EXTERNO))?;
+
+                s3_storage::baixar(&conexao, &req.nome_remoto)
+                    .await
+                    .map_err(|_| Status::internal(ERRO_S3_EXTERNO))?
+            }
+
+            DestinoDownload::GoogleDrive(destino_drive) => {
+                let refresh_token = buscar_credencial_drive_usuario(&destino_drive.credencial_referencia)
+                    .await
+                    .map_err(Status::internal)?;
+
+                drive_storage::baixar(&refresh_token, &req.nome_remoto)
+                    .await
+                    .map_err(Status::internal)?
+            }
         };
-
-        let blob_cifrado = baixar_de_servidor(conexao, req.nome_remoto.clone())
-            .await
-            .map_err(|e| Status::internal(e.to_string()))?;
 
         let conteudo = descriptografar_arquivo(&blob_cifrado, &chave_bytes)
             .map_err(Status::internal)?;
 
         println!(
-            "[filepriv-rust] Download preparado: {} bytes decifrados, de {}:{} ('{}').",
+            "[filepriv-rust] Download preparado: {} bytes decifrados ('{}').",
             conteudo.len(),
-            req.host,
-            req.porta,
             req.nome_remoto
         );
 
@@ -230,44 +389,81 @@ impl ProcessadorArquivo for ProcessadorArquivoService {
     ) -> Result<Response<RespostaExclusao>, Status> {
         let req = request.into_inner();
 
-        if req.usuario_ssh.is_empty()
-            || req.chave_privada_referencia.is_empty()
-            || req.diretorio_remoto.is_empty()
-        {
+        let Some(destino) = req.destino else {
             return Ok(Response::new(RespostaExclusao {
                 sucesso: false,
-                mensagem_erro: "Credenciais de conexão não informadas pelo Node.".into(),
+                mensagem_erro: "Nenhum destino de armazenamento informado pelo Node.".into(),
             }));
-        }
+        };
 
-        let chave_privada = match resolver_chave_privada(&req.chave_privada_referencia).await {
-            Ok(valor) => valor,
-            Err(status) => {
-                return Ok(Response::new(RespostaExclusao {
-                    sucesso: false,
-                    mensagem_erro: format!(
-                        "Falha ao buscar credencial SSH no S3: {}",
-                        status.message()
-                    ),
-                }));
+        let resultado_exclusao: Result<(), String> = match &destino {
+            DestinoExclusao::Vm(destino_vm) => {
+                if destino_vm.usuario_ssh.is_empty()
+                    || destino_vm.chave_privada_referencia.is_empty()
+                    || destino_vm.diretorio_remoto.is_empty()
+                {
+                    return Ok(Response::new(RespostaExclusao {
+                        sucesso: false,
+                        mensagem_erro: "Credenciais de conexão não informadas pelo Node.".into(),
+                    }));
+                }
+
+                let chave_privada =
+                    match resolver_chave_privada(&destino_vm.chave_privada_referencia).await {
+                        Ok(valor) => valor,
+                        Err(status) => {
+                            return Ok(Response::new(RespostaExclusao {
+                                sucesso: false,
+                                mensagem_erro: format!(
+                                    "Falha ao buscar credencial SSH no S3: {}",
+                                    status.message()
+                                ),
+                            }));
+                        }
+                    };
+
+                let conexao = ConexaoServidor {
+                    host: destino_vm.host.clone(),
+                    porta: destino_vm.porta as u16,
+                    usuario_ssh: destino_vm.usuario_ssh.clone(),
+                    chave_privada,
+                    diretorio_remoto: destino_vm.diretorio_remoto.clone(),
+                };
+
+                apagar_de_servidor(conexao, req.nome_remoto.clone())
+                    .await
+                    .map_err(|e| e.to_string())
+            }
+
+            DestinoExclusao::S3Externo(destino_s3) => {
+                match resolver_conexao_s3_externo(
+                    &destino_s3.bucket,
+                    &destino_s3.credencial_referencia,
+                    &destino_s3.regiao,
+                )
+                .await
+                {
+                    Ok(conexao) => s3_storage::apagar(&conexao, &req.nome_remoto)
+                        .await
+                        .map_err(|_| ERRO_S3_EXTERNO.to_string()),
+                    Err(_) => Err(ERRO_S3_EXTERNO.to_string()),
+                }
+            }
+
+            DestinoExclusao::GoogleDrive(destino_drive) => {
+                match buscar_credencial_drive_usuario(&destino_drive.credencial_referencia).await {
+                    Ok(refresh_token) => drive_storage::apagar(&refresh_token, &req.nome_remoto)
+                        .await
+                        .map_err(|e| e.to_string()),
+                    Err(e) => Err(format!("Falha ao buscar credencial Drive no cofre: {e}")),
+                }
             }
         };
 
-        let conexao = ConexaoServidor {
-            host: req.host.clone(),
-            porta: req.porta as u16,
-            usuario_ssh: req.usuario_ssh.clone(),
-            chave_privada,
-            diretorio_remoto: req.diretorio_remoto.clone(),
-        };
-
-        if let Err(e) = apagar_de_servidor(conexao, req.nome_remoto.clone()).await {
+        if let Err(mensagem) = resultado_exclusao {
             return Ok(Response::new(RespostaExclusao {
                 sucesso: false,
-                mensagem_erro: format!(
-                    "Falha ao apagar arquivo em {}:{}: {e}",
-                    req.host, req.porta
-                ),
+                mensagem_erro: mensagem,
             }));
         }
 
@@ -280,10 +476,7 @@ impl ProcessadorArquivo for ProcessadorArquivoService {
             }
         }
 
-        println!(
-            "[filepriv-rust] Arquivo '{}' excluído de {}:{}.",
-            req.nome_remoto, req.host, req.porta
-        );
+        println!("[filepriv-rust] Arquivo '{}' excluído.", req.nome_remoto);
 
         Ok(Response::new(RespostaExclusao {
             sucesso: true,
@@ -291,8 +484,7 @@ impl ProcessadorArquivo for ProcessadorArquivoService {
         }))
     }
 
-    async fn salvar_credencial_ssh(
-        &self,
+    async fn salvar_credencial_ssh(&self,
         request: Request<SalvarCredencialSshRequest>,
     ) -> Result<Response<SalvarCredencialSshResponse>, Status> {
         let req = request.into_inner();
@@ -316,6 +508,146 @@ impl ProcessadorArquivo for ProcessadorArquivoService {
                 mensagem_erro: format!("Falha ao salvar credencial SSH no S3: {e}"),
                 chave_privada_referencia: String::new(),
             })),
+        }
+    }
+
+    async fn conectar_provedor_s3(&self,
+        request: Request<ConectarProvedorS3Request>,
+    ) -> Result<Response<ConectarProvedorS3Response>, Status> {
+        let req = request.into_inner();
+
+        if req.bucket.is_empty() || req.access_key.is_empty() || req.secret_key.is_empty() {
+            return Ok(Response::new(ConectarProvedorS3Response {
+                sucesso: false,
+                mensagem_erro: "bucket, access_key e secret_key são obrigatórios.".into(),
+                credencial_referencia: String::new(),
+                regiao_usada: String::new(),
+            }));
+        }
+
+        let regiao = s3_storage::regiao_efetiva(&req.regiao);
+
+        let conexao = ConexaoS3Externo {
+            bucket: req.bucket.clone(),
+            access_key: req.access_key.clone(),
+            secret_key: req.secret_key.clone(),
+            regiao: regiao.clone(),
+        };
+
+        if s3_storage::testar_conexao(&conexao).await.is_err() {
+            return Ok(Response::new(ConectarProvedorS3Response {
+                sucesso: false,
+                mensagem_erro: ERRO_S3_EXTERNO.into(),
+                credencial_referencia: String::new(),
+                regiao_usada: String::new(),
+            }));
+        }
+
+        match salvar_credencial_s3_usuario(&req.access_key, &req.secret_key).await {
+            Ok(referencia) => {
+                println!(
+                    "[filepriv-rust] Provedor S3 conectado (bucket '{}', região '{}').",
+                    req.bucket, regiao
+                );
+                Ok(Response::new(ConectarProvedorS3Response {
+                    sucesso: true,
+                    mensagem_erro: String::new(),
+                    credencial_referencia: referencia,
+                    regiao_usada: regiao,
+                }))
+            }
+            Err(e) => Ok(Response::new(ConectarProvedorS3Response {
+                sucesso: false,
+                mensagem_erro: format!("Conexão validada, mas falha ao salvar a credencial no cofre: {e}"),
+                credencial_referencia: String::new(),
+                regiao_usada: String::new(),
+            })),
+        }
+    }
+
+    async fn conectar_provedor_drive(&self,
+        request: Request<ConectarProvedorDriveRequest>,
+    ) -> Result<Response<ConectarProvedorDriveResponse>, Status> {
+        let req = request.into_inner();
+
+        if req.code.is_empty() || req.redirect_uri.is_empty() {
+            return Ok(Response::new(ConectarProvedorDriveResponse {
+                sucesso: false,
+                mensagem_erro: "code e redirect_uri são obrigatórios.".into(),
+                credencial_referencia: String::new(),
+                pasta_raiz_id: String::new(),
+            }));
+        }
+
+        let (_access_token, refresh_token) = match drive_storage::trocar_code_por_tokens(&req.code, &req.redirect_uri).await {
+            Ok(tokens) => tokens,
+            Err(e) => {
+                return Ok(Response::new(ConectarProvedorDriveResponse {
+                    sucesso: false,
+                    mensagem_erro: format!("Falha ao trocar code por tokens: {e}"),
+                    credencial_referencia: String::new(),
+                    pasta_raiz_id: String::new(),
+                }));
+            }
+        };
+
+        let pasta_raiz_id = match drive_storage::criar_pasta_raiz(&refresh_token).await {
+            Ok(id) => id,
+            Err(e) => {
+                return Ok(Response::new(ConectarProvedorDriveResponse {
+                    sucesso: false,
+                    mensagem_erro: format!("Tokens obtidos, mas falha ao criar a pasta raiz no Drive: {e}"),
+                    credencial_referencia: String::new(),
+                    pasta_raiz_id: String::new(),
+                }));
+            }
+        };
+
+        match salvar_credencial_drive_usuario(&refresh_token).await {
+            Ok(referencia) => {
+                println!("[filepriv-rust] Provedor Drive conectado (pasta raiz '{pasta_raiz_id}').");
+                Ok(Response::new(ConectarProvedorDriveResponse {
+                    sucesso: true,
+                    mensagem_erro: String::new(),
+                    credencial_referencia: referencia,
+                    pasta_raiz_id,
+                }))
+            }
+            Err(e) => Ok(Response::new(ConectarProvedorDriveResponse {
+                sucesso: false,
+                mensagem_erro: format!("Pasta criada, mas falha ao salvar a credencial no cofre: {e}"),
+                credencial_referencia: String::new(),
+                pasta_raiz_id: String::new(),
+            })),
+        }
+    }
+
+    async fn mover_arquivo_categoria(
+        &self,
+        request: Request<MoverArquivoCategoriaRequest>,
+    ) -> Result<Response<MoverArquivoCategoriaResponse>, Status> {
+        let req = request.into_inner();
+
+        let refresh_token = match buscar_credencial_drive_usuario(&req.credencial_referencia).await {
+            Ok(valor) => valor,
+            Err(e) => {
+                return Ok(Response::new(MoverArquivoCategoriaResponse {
+                    sucesso: false,
+                    mensagem_erro: format!("Falha ao buscar credencial Drive no cofre: {e}"),
+                }));
+            }
+        };
+
+        let conexao = ConexaoGoogleDriveExterno {
+            pasta_raiz_id: req.pasta_raiz_id.clone(),
+            credencial_referencia: req.credencial_referencia.clone(),
+        };
+
+        match drive_storage::mover_entre_categorias(
+            &conexao, &refresh_token, &req.nome_remoto, &req.categoria_antiga, &req.categoria_nova,
+        ).await {
+            Ok(()) => Ok(Response::new(MoverArquivoCategoriaResponse { sucesso: true, mensagem_erro: String::new() })),
+            Err(e) => Ok(Response::new(MoverArquivoCategoriaResponse { sucesso: false, mensagem_erro: e })),
         }
     }
 }

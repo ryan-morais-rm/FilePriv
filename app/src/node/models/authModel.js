@@ -1,12 +1,13 @@
 import prisma from '../config/db.js'; 
 
 const authModel = {
-    async criarUsuario(nome, email, senhaHash) {
+    async criarUsuario(nome, email, senhaHash, categoriaPerfil) {
         const usuario = await prisma.usuario.create({
             data: {
                 nome: nome,
                 email: email,
-                senha: senhaHash
+                senha: senhaHash,
+                categoria_perfil: categoriaPerfil
             }
         });
         return usuario;
@@ -19,7 +20,8 @@ const authModel = {
             select: {
                 id: true,
                 nome: true,
-                email: true
+                email: true,
+                categoria_perfil: true
             }
         });
     }, 
@@ -32,7 +34,8 @@ const authModel = {
             select: { 
                 id: true,
                 nome: true,
-                email: true
+                email: true,
+                categoria_perfil: true
             }
         });
         return usuario;

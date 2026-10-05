@@ -1,6 +1,10 @@
 import authModel from '../models/authModel.js';
+import fileModel from '../models/fileModel.js';
+import provedorModel from '../models/provedorModel.js';
+import { moverArquivoCategoria } from '../services/rustClient.js';
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken'; 
+import jwt from 'jsonwebtoken';
+import { CATEGORIAS_USUARIO, categoriasArquivoValidasParaPerfil, CATEGORIA_ARQUIVO_MIGRACAO } from '../constants/categorias.js';
 
 const userController = {
     
@@ -39,9 +43,15 @@ const userController = {
     
     async createUser(req, res) {
         try {
-            const { nome, email, senha } = req.body;
-            if (!nome || !email || !senha) {
-                return res.status(400).json({ error: 'Nome, email e senha são obrigatórios' });
+            const { nome, email, senha, categoria_perfil } = req.body;
+            if (!nome || !email || !senha || !categoria_perfil) {
+                return res.status(400).json({ error: 'Nome, email, senha e categoria_perfil são obrigatórios' });
+            }
+
+            if (!CATEGORIAS_USUARIO.includes(categoria_perfil)) {
+                return res.status(400).json({
+                    error: `categoria_perfil inválida. Valores aceitos: ${CATEGORIAS_USUARIO.join(', ')}`
+                });
             }
 
             const usuarioExistente = await authModel.buscarPorEmail(email);
@@ -50,7 +60,7 @@ const userController = {
             }
 
             const senhaHash = await bcrypt.hash(senha, 10);
-            const novoUsuario = await authModel.criarUsuario(nome, email, senhaHash);
+            const novoUsuario = await authModel.criarUsuario(nome, email, senhaHash, categoria_perfil);
             delete novoUsuario.senha;
 
             return res.status(201).json(novoUsuario);
@@ -59,6 +69,10 @@ const userController = {
             console.error("Erro ao criar usuário:", error); 
             return res.status(500).json({ error: 'Erro ao cadastrar usuário' }); 
         }
+    },
+
+    async listarCategoriasPerfil(req, res) {
+        return res.status(200).json({ categorias: CATEGORIAS_USUARIO });
     },
 
     async consultUser(req, res) {
@@ -80,10 +94,18 @@ const userController = {
             return res.status(500).json({ error: 'Erro ao consultar usuário' }); 
         }
     },
+
     async updateProfile(req, res) {
         try {
+            
             const userId = req.usuarioId; 
-            const { nome, email, senhaAtual, novaSenha } = req.body;
+            const { nome, email, senhaAtual, novaSenha, categoria_perfil } = req.body;
+            if (nome !== undefined && nome.trim() === '') {
+                return res.status(400).json({ error: 'Nome não pode ficar vazio.' });
+            }
+            if (email !== undefined && email.trim() === '') {
+                return res.status(400).json({ error: 'Email não pode ficar vazio.' });
+            }
 
             const usuarioExistente = await authModel.buscarPorIdComSenha(userId);
             if (!usuarioExistente) {
@@ -106,11 +128,58 @@ const userController = {
                 dadosParaAtualizar.senha = await bcrypt.hash(novaSenha, salt);
             }
 
-            const usuarioAtualizado = authModel.atualizarUsuario(userId, dadosParaAtualizar);
+            // T4 — troca de perfil, com migração de categorias de arquivo
+            let migracaoAplicada = null;
+            if (categoria_perfil && categoria_perfil !== usuarioExistente.categoria_perfil) {
+                if (!CATEGORIAS_USUARIO.includes(categoria_perfil)) {
+                    return res.status(400).json({
+                        error: `categoria_perfil inválida. Valores aceitos: ${CATEGORIAS_USUARIO.join(', ')}`
+                    });
+                }
+                
+                const categoriasValidasNoNovoPerfil = categoriasArquivoValidasParaPerfil(categoria_perfil);
+
+                // Arquivos no Drive são espelhados por subpasta de categoria
+                const provedorDrive = await provedorModel.buscarPorUsuarioETipo(userId, 'DRIVE');
+                if (provedorDrive) {
+                    const arquivosParaMover = await fileModel.listarArquivosParaMigrarPorProvedor(
+                        userId, provedorDrive.id, categoriasValidasNoNovoPerfil
+                    );
+
+                    for (const arquivo of arquivosParaMover) {
+                        try {
+                            const respostaMove = await moverArquivoCategoria({
+                                nomeRemoto: arquivo.nome_remoto,
+                                credencialReferencia: provedorDrive.credencial_referencia,
+                                pastaRaizId: provedorDrive.pasta_raiz_id,
+                                categoriaAntiga: arquivo.categoria,
+                                categoriaNova: CATEGORIA_ARQUIVO_MIGRACAO
+                            });
+                            if (!respostaMove.sucesso) {
+                                console.error(`Falha ao mover arquivo ${arquivo.id} no Drive: ${respostaMove.mensagem_erro}`);
+                            }
+                        } catch (erroMove) {
+                            console.error(`Erro de gRPC ao mover arquivo ${arquivo.id} no Drive:`, erroMove);
+                        }
+                    }
+                };
+
+                const resultado = await fileModel.migrarCategoriasParaMigracao(
+                    userId, categoriasValidasNoNovoPerfil
+                );
+                migracaoAplicada = resultado.count;
+
+                dadosParaAtualizar.categoria_perfil = categoria_perfil;
+            }
+
+            const usuarioAtualizado = await authModel.atualizarUsuario(userId, dadosParaAtualizar);
 
             return res.status(200).json({ 
                 message: 'Perfil atualizado com sucesso!',
-                usuario: usuarioAtualizado
+                usuario: usuarioAtualizado,
+                ...(migracaoAplicada !== null
+                    ? { arquivosMigrados: migracaoAplicada }
+                    : {})
             });
 
         } catch (error) {

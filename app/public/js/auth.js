@@ -1,3 +1,5 @@
+import { popularSelectCategoriasUsuario } from './categoriasLabels.js';
+
 function mostrarPainel(alvo) {
     const track = document.getElementById('authTrack');
     const brandCadastro = document.getElementById('brandCadastro');
@@ -12,9 +14,6 @@ function mostrarPainel(alvo) {
 
     const ehLogin = alvo === 'login';
 
-    // O track tem 200% de largura com os dois cartões lado a lado — mover
-    // -50% desloca exatamente uma "tela" (cadastro sai pela esquerda,
-    // login entra pela direita; e o inverso ao voltar).
     track.classList.toggle('show-login', ehLogin);
 
     brandCadastro.classList.toggle('active', !ehLogin);
@@ -101,6 +100,21 @@ function configurarLogin() {
     });
 }
 
+async function carregarCategoriasPerfil() {
+    const select = document.getElementById('categoriaPerfil');
+    if (!select) return;
+
+    try {
+        const response = await fetch('/usuarios/categorias-perfil');
+        if (!response.ok) throw new Error();
+        const data = await response.json();
+        popularSelectCategoriasUsuario(select, data.categorias || []);
+    } catch (error) {
+        console.error('[auth] Falha ao carregar categorias de perfil:', error);
+        select.innerHTML += '<option value="OUTROS">Uso Pessoal / Outros</option>';
+    }
+}
+
 function configurarCadastro() {
     const form = document.getElementById('registerForm');
     const msgArea = document.getElementById('registerMessageArea');
@@ -117,9 +131,15 @@ function configurarCadastro() {
         const email = document.getElementById('signupEmail').value.trim();
         const senha = document.getElementById('password').value.trim();
         const confirmPass = document.getElementById('confirmPassword').value.trim();
+        const categoriaPerfil = document.getElementById('categoriaPerfil')?.value || '';
 
         if (!user || !email || !senha || !confirmPass) {
             msgArea.innerHTML = `<div class="alert alert-danger">Preencha todos os campos!</div>`;
+            return;
+        }
+
+        if (!categoriaPerfil) {
+            msgArea.innerHTML = `<div class="alert alert-danger">Selecione seu perfil de uso!</div>`;
             return;
         }
 
@@ -139,7 +159,7 @@ function configurarCadastro() {
             const response = await fetch('/usuarios/cadastro', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ nome: user, email, senha })
+                body: JSON.stringify({ nome: user, email, senha, categoria_perfil: categoriaPerfil })
             });
 
             const data = await response.json();
@@ -169,6 +189,7 @@ export function auth() {
     configurarAlternancia();
     configurarLogin();
     configurarCadastro();
+    carregarCategoriasPerfil();
 
     mostrarPainel(window.location.hash === '#login' ? 'login' : 'cadastro');
 }

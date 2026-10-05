@@ -45,6 +45,27 @@ async function updateCounters() {
     }
 }
 
+function popularFiltroCategorias(files) {
+    const select = document.getElementById('categoriaFilter');
+    if (!select) return;
+
+    const valorAtual = select.value;
+    const categoriasUnicas = [...new Set(files.map((f) => f.categoria).filter(Boolean))].sort();
+
+    select.innerHTML = '<option value="">categorias</option>';
+    categoriasUnicas.forEach((categoria) => {
+        const option = document.createElement('option');
+        option.value = categoria;
+        option.textContent = categoria;
+        select.appendChild(option);
+    });
+
+    // Preserva o filtro que o usuário já tinha escolhido, se ele ainda existir
+    if (categoriasUnicas.includes(valorAtual)) {
+        select.value = valorAtual;
+    }
+}
+
 async function fetchFiles() {
     const tbody = document.getElementById('filesTableBody');
     const errorMsg = document.getElementById('errorMessage');
@@ -60,12 +81,13 @@ async function fetchFiles() {
         if (!Array.isArray(allFiles)) allFiles = [];
 
         updateCounters();
+        popularFiltroCategorias(allFiles);
         renderTable(allFiles);            
         if(errorMsg) errorMsg.style.display = 'none';
 
     } catch (error) {
         console.error("Erro fetch:", error);
-        if(tbody) tbody.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Falha ao conectar no servidor.</td></tr>';
+        if(tbody) tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Falha ao conectar no servidor.</td></tr>';
     }
 }
 
@@ -82,13 +104,17 @@ function montarNomeComExtensao(nome, tipo) {
     return nome.toLowerCase().endsWith(extensao) ? nome : `${nome}${extensao}`;
 }
 
+function categoriaBadgeClass(categoria) {
+    return categoria === 'Migração' ? 'text-bg-warning' : 'text-bg-info';
+}
+
 function renderTable(files) {
     const tbody = document.getElementById('filesTableBody');
     if(!tbody) return;
 
     tbody.innerHTML = '';
     if (files.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted">Nenhum arquivo encontrado para este filtro.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">Nenhum arquivo encontrado para este filtro.</td></tr>';
         return;
     }
     
@@ -110,6 +136,7 @@ function renderTable(files) {
             </td>
             <td>${dataFormatada}</td>
             <td>${file.descricao || '-'}</td>
+            <td><span class="badge ${categoriaBadgeClass(file.categoria)}">${file.categoria || '-'}</span></td>
             <td class="text-center">
             <button class="btn btn-icon-action btn-icon-primary" onclick="window.downloadFile('${file.id}', '${montarNomeComExtensao(file.nome_arquivo, tipoReal)}')" title="Baixar arquivo">
                 <i class="bi bi-download"></i>
@@ -126,9 +153,11 @@ function renderTable(files) {
 window.filterFiles = function() {
     const searchInput = document.getElementById('searchInput');
     const extFilter = document.getElementById('extFilter'); 
+    const categoriaFilter = document.getElementById('categoriaFilter');
 
     const term = searchInput ? searchInput.value.toLowerCase() : '';
     const selectedExt = extFilter ? extFilter.value.toLowerCase() : '';
+    const selectedCategoria = categoriaFilter ? categoriaFilter.value : '';
     
     const filtered = allFiles.filter(file => {
         const matchesText = (file.nome_arquivo && file.nome_arquivo.toLowerCase().includes(term)) || 
@@ -140,7 +169,12 @@ window.filterFiles = function() {
             matchesExt = (tipoReal === selectedExt);
         }
 
-        return matchesText && matchesExt;
+        let matchesCategoria = true;
+        if (selectedCategoria !== '') {
+            matchesCategoria = file.categoria === selectedCategoria;
+        }
+
+        return matchesText && matchesExt && matchesCategoria;
     });
     
     renderTable(filtered);
@@ -232,8 +266,6 @@ export async function pullFile() {
         await fetchFiles();
     }
 
-    // Atualiza a lista sozinho quando um upload termina, sem precisar
-    // recarregar a página.
     window.addEventListener('filepriv:arquivo-enviado', () => {
         fetchFiles();
     });

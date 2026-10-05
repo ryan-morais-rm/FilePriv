@@ -15,6 +15,29 @@ async function fetchRules() {
     }
 }
 
+async function fetchCategorias(token) {
+    const select = document.getElementById('fileCategoria');
+    if (!select || !token) return;
+
+    try {
+        const response = await fetch('/arquivos/categorias', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!response.ok) throw new Error();
+
+        const data = await response.json();
+        (data.categorias || []).forEach((categoria) => {
+            const option = document.createElement('option');
+            option.value = categoria;
+            option.textContent = categoria;
+            select.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Erro ao buscar categorias de arquivo:', error);
+        select.innerHTML += '<option value="Outros">Outros</option>';
+    }
+}
+
 async function renderUserProfile(token, userDataJSON) {
     if (!userDataJSON || !token) return;
     
@@ -65,9 +88,6 @@ function isValidExtension(filename) {
     return ALLOWED_EXTS.includes(ext); 
 }
 
-/// Dropzone com arrastar-e-soltar: destaca a área ao arrastar por cima e
-/// atribui o arquivo solto ao input nativo (dispara 'change' pra qualquer
-/// outro listener que dependa dele).
 function setupDropzone(dropzoneEl, fileInputEl) {
     if (!dropzoneEl || !fileInputEl) return;
 
@@ -96,6 +116,49 @@ function setupDropzone(dropzoneEl, fileInputEl) {
     });
 }
 
+async function fetchStatusProvedores(token) {
+     const optS3 = document.getElementById('optMeuS3');
+     const optDrive = document.getElementById('optMeuDrive');
+     const statusEl = document.getElementById('destinoArquivoStatus');
+     if (!optS3 || !optDrive || !statusEl) return;
+
+    if (!token) {
+        checkbox.disabled = true;
+        statusEl.textContent = '';
+        return;
+    }
+
+    try {
+        const response = await fetch('/usuarios/provedores', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!response.ok) throw new Error();
+
+        const data = await response.json();
+        const s3 = data.s3;
+        const drive = data.drive;
+        optS3.disabled = !(s3 && s3.conectado);
+        optDrive.disabled = !(drive && drive.conectado);
+
+        if (optS3.disabled && optDrive.disabled) {
+            statusEl.className = 'form-text';
+            statusEl.innerHTML = 'Nenhum provedor externo conectado. <a href="homepage.html">Conectar na Home</a>.';
+        } else {
+            const conectados = [];
+            if (!optS3.disabled) conectados.push(`S3 (bucket ${s3.bucket})`);
+            if (!optDrive.disabled) conectados.push('Google Drive');
+            statusEl.className = 'form-text text-success';
+            statusEl.textContent = `Conectado: ${conectados.join(' e ')}.`;
+        }
+    } catch (error) {
+        console.error('Erro ao verificar status dos provedores:', error);
+        optS3.disabled = true;
+        optDrive.disabled = true; 
+        statusEl.className = 'form-text text-danger';
+        statusEl.innerHTML = 'Não foi possível verificar os provedores. <a href="homepage.html">Ir para Home</a>.';
+    }
+}
+
 async function handleFileUpload(event, token, form, statusDiv, btn) {
     event.preventDefault(); 
 
@@ -103,9 +166,15 @@ async function handleFileUpload(event, token, form, statusDiv, btn) {
     const fileInput = document.getElementById('fileInput');
     const file = fileInput.files[0];
     const fileDesc = document.getElementById('fileDesc') ? document.getElementById('fileDesc').value : "";
+    const categoria = document.getElementById('fileCategoria')?.value || '';
 
     if (!file) {
         statusDiv.innerHTML = `<div class="alert alert-danger mt-3">Selecione um arquivo!</div>`;
+        return;
+    }
+
+    if (!categoria) {
+        statusDiv.innerHTML = `<div class="alert alert-danger mt-3">Selecione uma categoria!</div>`;
         return;
     }
 
@@ -139,10 +208,15 @@ async function handleFileUpload(event, token, form, statusDiv, btn) {
     statusDiv.innerHTML = '';
 
     try {
+        const destinoEscolhido = document.getElementById('destinoArquivo')?.value || 'distribuido';
         const formData = new FormData();
         formData.append('arquivo', file);
         formData.append('descricao', fileDesc);
         formData.append('nome_customizado', fileName);
+        formData.append('categoria', categoria);
+        if (destinoEscolhido !== 'distribuido') {
++            formData.append('destino', destinoEscolhido); 
+         }
 
         const response = await fetch(`/arquivos/upload`, {
             method: 'POST',
@@ -161,14 +235,9 @@ async function handleFileUpload(event, token, form, statusDiv, btn) {
         form.reset();
         await updateCounters(token);
 
-        // Reativa o botão na hora — antes ficava preso no spinner até o
-        // redirect de 3s acontecer, dando a impressão de que ainda estava
-        // carregando mesmo depois de já ter terminado.
         btn.disabled = false;
         btn.innerHTML = originalBtnText;
 
-        // Avisa o pullFile.js pra atualizar a lista, sem precisar recarregar
-        // a página inteira.
         window.dispatchEvent(new CustomEvent('filepriv:arquivo-enviado'));
 
         document.getElementById('download-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -193,6 +262,8 @@ export async function pushFile() {
     const btn = document.getElementById('submitBtn');
 
     await fetchRules();
+    await fetchCategorias(token);
+    await fetchStatusProvedores(token);
 
     renderUserProfile(token, userDataJSON);
     updateCounters(token);

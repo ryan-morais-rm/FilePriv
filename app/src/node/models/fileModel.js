@@ -1,22 +1,17 @@
 import prisma from '../config/db.js';
+import { CATEGORIA_ARQUIVO_MIGRACAO } from '../constants/categorias.js';
 
 const fileModel = {
-    async criarArquivoPendente(usuario_id, nome_arquivo, descricao, tipo_arquivo) {
+    async criarArquivoPendente(usuario_id, nome_arquivo, descricao, tipo_arquivo, categoria) {
         return await prisma.arquivo.create({
             data: {
                 nome_arquivo,
                 descricao,
                 tipo_arquivo,
                 status: 'PENDENTE',
+                categoria,
                 usuario: { connect: { id: Number(usuario_id) } }
             }
-        });
-    },
-
-    async confirmarArquivo(arquivo_id, { chave_referencia, servidor_id, nome_remoto, tamanho, hash }) {
-        return await prisma.arquivo.update({
-            where: { id: arquivo_id },
-            data: { status: 'CONCLUIDO', chave_referencia, servidor_id, nome_remoto, tamanho, hash }
         });
     },
 
@@ -34,9 +29,6 @@ const fileModel = {
         });
     },
 
-    /// Usado quando a exclusão falha depois de já termos marcado
-    /// EXCLUINDO — devolve o registro pro estado anterior em vez de
-    /// deixá-lo preso.
     async reverterParaConcluido(arquivo_id) {
         return await prisma.arquivo.update({
             where: { id: arquivo_id },
@@ -76,9 +68,14 @@ const fileModel = {
         return await prisma.arquivo.findUnique({ where: { id } });
     },
 
-    async listarPorUsuario(usuario_id) {
+    // T5 — filtro opcional por categoria, sem quebrar quem já chama sem o parâmetro
+    async listarPorUsuario(usuario_id, categoria = null) {
         return await prisma.arquivo.findMany({
-            where: { usuario_id, status: 'CONCLUIDO' },
+            where: {
+                usuario_id,
+                status: 'CONCLUIDO',
+                ...(categoria ? { categoria } : {})
+            },
             orderBy: { data_upload: 'desc' }
         });
     },
@@ -102,9 +99,43 @@ const fileModel = {
         });
     },
 
-    async registrarEventoExclusao(usuario_id) {
+    async registrarEventoExclusao(usuario_id, provedor_externo_id = null) {
         return await prisma.eventoExclusao.create({
-            data: { usuario_id: Number(usuario_id) }
+            data: { 
+                usuario_id: Number(usuario_id),
+                provedor_externo_id: provedor_externo_id || null 
+            }
+        });
+    },
+
+    // T4 — dispara a migração de categoria quando o usuário troca de perfil.
+    // Só toca em arquivos CONCLUIDO; um PENDENTE/ERRO ainda não tem
+    // categoria "definitiva" em uso real, e um EXCLUINDO está prestes a
+    // sumir — mexer nele é trabalho inútil e pode colidir com o
+    // reverterParaConcluido se a exclusão falhar no meio do caminho.
+    async migrarCategoriasParaMigracao(usuario_id, categoriasValidasNoNovoPerfil) {
+        return await prisma.arquivo.updateMany({
+            where: {
+                usuario_id: Number(usuario_id),
+                status: 'CONCLUIDO',
+                categoria: { notIn: categoriasValidasNoNovoPerfil }
+            },
+            data: { categoria: CATEGORIA_ARQUIVO_MIGRACAO }
+        });
+    },
+
+    async confirmarArquivo(arquivo_id, { chave_referencia, servidor_id, provedor_externo_id, nome_remoto, tamanho, hash }) {
+        return await prisma.arquivo.update({
+            where: { id: arquivo_id },
+            data: {
+                status: 'CONCLUIDO',
+                chave_referencia,
+                servidor_id: servidor_id || null,
+                provedor_externo_id: provedor_externo_id || null,
+                nome_remoto,
+                tamanho,
+                hash
+            }
         });
     },
 
@@ -115,7 +146,48 @@ const fileModel = {
         return await prisma.eventoExclusao.count({
             where: { usuario_id: Number(usuario_id), criado_em: { gte: desde } }
         });
-    }
+     },
+
+    async contarArquivosPorProvedor(provedor_externo_id) {
+        return await prisma.arquivo.count({
+            where: { provedor_externo_id, status: 'CONCLUIDO' }
+        });
+    },
+
+    async contarUploadsHojePorProvedor(provedor_externo_id) {
+        const inicioDoDia = new Date();
+        inicioDoDia.setHours(0, 0, 0, 0);
+
+        return await prisma.arquivo.count({
+            where: {
+                provedor_externo_id,
+                status: 'CONCLUIDO',
+                data_upload: { gte: inicioDoDia }
+            }
+        });
+    },
+
+    async contarExclusoesRecentesPorProvedor(provedor_externo_id, dias = 7) {
+        const desde = new Date();
+        desde.setDate(desde.getDate() - dias);
+
+        return await prisma.eventoExclusao.count({
+            where: { provedor_externo_id, criado_em: { gte: desde } }
+        });
+    },
+    
+    async listarArquivosParaMigrarPorProvedor(usuario_id, provedor_externo_id, categoriasValidasNoNovoPerfil) {
+        return await prisma.arquivo.findMany({
+            where: {
+                usuario_id: Number(usuario_id),
+                status: 'CONCLUIDO',
+                provedor_externo_id,
+                categoria: { notIn: categoriasValidasNoNovoPerfil }
+            }
+        });
+    },
 };
+
+
 
 export default fileModel;
