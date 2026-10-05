@@ -1,9 +1,22 @@
 import provedorModel from '../models/provedorModel.js';
 import fileModel from '../models/fileModel.js';
+import jwt from 'jsonwebtoken';
 import { conectarProvedorS3, conectarProvedorDrive } from '../services/rustClient.js';
 
 const GOOGLE_AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
 const GOOGLE_DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
+
+async function metricasDoProvedor(provedor) {
+    if (!provedor) return { conectado: false, stored: 0, deleted: 0, today: 0 };
+
+    const [stored, deleted, today] = await Promise.all([
+        fileModel.contarArquivosPorProvedor(provedor.id),
+        fileModel.contarExclusoesRecentesPorProvedor(provedor.id),
+        fileModel.contarUploadsHojePorProvedor(provedor.id)
+    ]);
+
+    return { conectado: true, stored, deleted, today };
+}
 
 const provedorController = {
     async conectarS3(req, res) {
@@ -105,22 +118,19 @@ const provedorController = {
     async metricasProvedores(req, res) {
         try {
             const usuario_id = req.usuarioId;
-            const provedorS3 = await provedorModel.buscarPorUsuarioETipo(usuario_id, 'S3');
+            const [provedorS3, provedorDrive] = await Promise.all([
+                provedorModel.buscarPorUsuarioETipo(usuario_id, 'S3'),
+                provedorModel.buscarPorUsuarioETipo(usuario_id, 'DRIVE')
+            ]);
 
-            if (!provedorS3) {
-                return res.status(200).json({
-                    s3: { conectado: false, stored: 0, deleted: 0, today: 0 }
-                });
-            }
-
-            const [stored, deleted, today] = await Promise.all([
-                fileModel.contarArquivosPorProvedor(provedorS3.id),
-                fileModel.contarExclusoesRecentesPorProvedor(provedorS3.id),
-                fileModel.contarUploadsHojePorProvedor(provedorS3.id)
+            const [metricasS3, metricasDrive] = await Promise.all([
+                metricasDoProvedor(provedorS3),
+                metricasDoProvedor(provedorDrive)
             ]);
 
             return res.status(200).json({
-                s3: { conectado: true, bucket: provedorS3.bucket, stored, deleted, today }
+                s3: { ...metricasS3, bucket: provedorS3?.bucket },
+                drive: metricasDrive
             });
         } catch (error) {
             console.error('Erro ao buscar métricas de provedores:', error);

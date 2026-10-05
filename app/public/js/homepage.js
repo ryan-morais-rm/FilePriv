@@ -288,30 +288,28 @@ async function atualizarVisualProvedores() {
     const token = localStorage.getItem('token');
     
     let aws = { connected: false, bucket: '', metrics: { stored: 0, deleted: 0, today: 0 } };
-    let drive = { connected: false };
+    let drive = { connected: false, metrics: { stored: 0, deleted: 0, today: 0 } };
 
     if (token) {
         try {
-            const [respMetricas, respProvedores] = await Promise.all([
-                fetch('/usuarios/provedores/metricas', { headers: { 'Authorization': `Bearer ${token}` } }),
-                fetch('/usuarios/provedores', { headers: { 'Authorization': `Bearer ${token}` } })
-            ]);
-
-            if (respMetricas.ok) {
-                const data = await respMetricas.json();
-                const s3Data = data.s3;
-                if (s3Data && s3Data.conectado) {
+            const response = await fetch('/usuarios/provedores/metricas', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                if (data.s3 && data.s3.conectado) {
                     aws = {
                         connected: true,
-                        bucket: s3Data.bucket,
-                        metrics: { stored: s3Data.stored, deleted: s3Data.deleted, today: s3Data.today }
+                        bucket: data.s3.bucket,
+                        metrics: { stored: data.s3.stored, deleted: data.s3.deleted, today: data.s3.today }
                     };
                 }
-            }
-            if (respProvedores.ok) {
-                const data = await respProvedores.json();
+
                 if (data.drive && data.drive.conectado) {
-                    drive = { connected: true };
+                    drive = {
+                        connected: true,
+                        metrics: { stored: data.drive.stored, deleted: data.drive.deleted, today: data.drive.today }
+                    };
                 }
             }
         } catch (error) {

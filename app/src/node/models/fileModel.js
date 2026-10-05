@@ -15,13 +15,6 @@ const fileModel = {
         });
     },
 
-    async confirmarArquivo(arquivo_id, { chave_referencia, servidor_id, nome_remoto, tamanho, hash }) {
-        return await prisma.arquivo.update({
-            where: { id: arquivo_id },
-            data: { status: 'CONCLUIDO', chave_referencia, servidor_id, nome_remoto, tamanho, hash }
-        });
-    },
-
     async marcarArquivoComoErro(arquivo_id) {
         return await prisma.arquivo.update({
             where: { id: arquivo_id },
@@ -112,15 +105,6 @@ const fileModel = {
                 usuario_id: Number(usuario_id),
                 provedor_externo_id: provedor_externo_id || null 
             }
-        });
-    },
-
-    async contarExclusoesRecentes(usuario_id, dias = 7) {
-        const desde = new Date();
-        desde.setDate(desde.getDate() - dias);
-
-        return await prisma.eventoExclusao.count({
-            where: { usuario_id: Number(usuario_id), criado_em: { gte: desde } }
         });
     },
 
